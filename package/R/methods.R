@@ -200,7 +200,7 @@ print.factor.container <- function(x) {
   if(is(e1, "factor.design")) {
     if(is(e2, "factor.design")) {
       for(el in e2) {
-        e1 <- `+.factor.container`(e1, el)
+        e1 <- sys.function()(e1, el)
       }
       return(e1)
     }else if(is(e2, "design.factor")) {
@@ -230,7 +230,7 @@ print.factor.container <- function(x) {
       stop("Second element must be a design factor or factor list!")
     }
   }else if(is(e1, "design.factor")){
-    return(new("factor.design") + e1 + e2)
+    return(sys.function()(sys.function()(new("factor.design"), e1), e2))
   }else{
     stop("First element must be a design.factor (fixed.factor or random.factor) or a factor.design!")
   }

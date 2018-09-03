@@ -10,9 +10,9 @@ permutations <- function(n, lv = seq_len(n)) {
   else if(n == 2L) return(matrix(lv[c(1L,2L,2L,1L)], ncol=2L))
   else{
     ret <- matrix(integer(factorial(n)*n), ncol=n)
-    ret[,1L] <- rep(lv, each=n-1)
+    ret[,1L] <- rep(lv, each=factorial(n-1L))
     for(i in seq_len(n)) {
-      smx <- permutations(n-1L, lv[-i])
+      smx <- sys.function()(n=n-1L, lv=lv[-i])
       ret[seq(1L+(i-1L)*nrow(smx), i*nrow(smx)), -1L] <- smx
     }
     return(ret)
