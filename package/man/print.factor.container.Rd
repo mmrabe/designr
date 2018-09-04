@@ -4,7 +4,7 @@
 \alias{print.factor.container}
 \title{Output a design factor summary}
 \usage{
-print.factor.container(x)
+\method{print}{factor.container}(x)
 }
 \description{
 Output a design factor summary

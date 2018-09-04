@@ -3,7 +3,7 @@ Type: Package
 Title: Balanced Designs in R
 Version: 0.1.0
 URL: https://maxrabe.com/designr
-Authors@R: person("Maximilian", "Rabe", "M.", email = "maximilian.rabe@uni-potsdam.de", role = c("aut", "cre"))
+Authors@R: person("Maximilian", "Rabe", email = "maximilian.rabe@uni-potsdam.de", role = c("aut", "cre"))
 Description: Generate balanced factorial designs with crossed/nested random/fixed effects.
 License: MIT
 Encoding: UTF-8
