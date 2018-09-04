@@ -11,30 +11,55 @@ library(shiny)
 
 #library(designr)
 
-factorPanel <- function(id, random = F, grouping = NULL) {
+factorPanelsFromPreset <- function(...) {
+  args <- list(...)
+  fixfacs <- integer(0)
+  ranfacs <- integer(0)
+  for(i in seq_along(args)) {
+    if(is.null(args[[i]]$name)) args[[i]]$name <- sprintf("Factor_%d", i)
+    names(args[[i]]) <- paste0("val.", names(args[[i]]))
+    args[[i]]$id <- i
+    nf <- as.integer(i)
+    names(nf) <- paste(args[[i]]$val.name, collapse=":")
+    args[[i]]$grouping <- fixfacs
+    args[[i]]$ranfacs <- ranfacs
+    if(is.null(args[[i]]$val.type) || grepl("^fixed($| )", args[[i]]$val.type))
+      fixfacs <- c(fixfacs, nf)
+    else
+      ranfacs <- c(ranfacs, nf)
+  }
+  lapply(args, function(arg) do.call(factorPanel, arg))
+}
+
+factorPanel <- function(id, grouping = integer(0), ranfacs = integer(0), val.name = paste0("Factor_", id), val.type = "fixed char", val.char.levels = "a, b", val.int.offset = 1L, val.int.levels = 2L, val.groups = NULL, val.blocked = F, val.replications = 1L) {
   tags$div(
     id = paste0("factor", id),
     wellPanel(
-      textInput(paste0("factor", id, "Name"), "Factor name", value=paste0("Factor_", id)),
-      selectInput(paste0("factor", id, "Type"), "Levels", list(`Random factor` = c("random"), `Fixed factor` = c(`Boolean (TRUE/FALSE)`="fixed bool", `Integer (1, 2, ...)` = "fixed int", `Custom levels` = "fixed char")), selected = if(random) "random" else "fixed bool"),
-      conditionalPanel(sprintf("input.%s == 'fixed char'", paste0("factor", id, "Type")), textInput(paste0("factor", id, "CharLevels"), NULL, value="a, b")),
-      conditionalPanel(sprintf("input.%s == 'fixed int'", paste0("factor", id, "Type")), helpText("Enter the first value and the number of levels."), numericInput(paste0("factor", id, "IntOffset"), NULL, 1L, min=NA, max=NA, step=1L, width="45%"), numericInput(paste0("factor", id, "IntLevels"), NULL, 2L, min=1L, max=NA, step=1L, width="45%")),
-      if(!is.null(grouping)) conditionalPanel(sprintf("input.%s == 'random'", paste0("factor", id, "Type")) ,selectizeInput(paste0("factor", id, "Groups"), "Grouping factors", multiple = T, choices = grouping)) else tags$div(),
-      conditionalPanel(sprintf("input.%s != 'random'", paste0("factor", id, "Type")), checkboxInput(paste0("factor", id, "Blocked"), "Blocked"))
+      selectInput(paste0("factor", id, "Type"), NULL, list(`Random factor` = c(`Random factor (unit)`="random", `Interaction (constraint)`="assignment"), `Fixed factor` = c(`Boolean (TRUE/FALSE)`="fixed bool", `Integer (1, 2, ...)` = "fixed int", `Custom levels` = "fixed char")), selected = val.type),
+      conditionalPanel(sprintf("input.%s == 'assignment'", paste0("factor", id, "Type")), selectizeInput(paste0("factor", id, "RandomFactors"), NULL, multiple = T, choices = ranfacs, selected = ranfacs[1:2])),
+      conditionalPanel(sprintf("input.%s != 'assignment'", paste0("factor", id, "Type")), textInput(paste0("factor", id, "Name"), NULL, value=val.name)),
+      conditionalPanel(sprintf("input.%s == 'fixed char'", paste0("factor", id, "Type")), textInput(paste0("factor", id, "CharLevels"), NULL, value=val.char.levels)),
+      conditionalPanel(sprintf("input.%s == 'fixed int'", paste0("factor", id, "Type")), helpText("Enter the first value and the number of levels."), tags$div(numericInput(paste0("factor", id, "IntOffset"), NULL, val.int.offset, min=NA, max=NA, step=1L, width="30%"), numericInput(paste0("factor", id, "IntLevels"), NULL, val.int.levels, min=1L, max=NA, step=1L, width="30%"))),
+      if(!is.null(grouping)) conditionalPanel(sprintf("input.%1$s == 'random' || input.%1$s == 'assignment'", paste0("factor", id, "Type")) ,selectizeInput(paste0("factor", id, "Groups"), "Grouping factors", multiple = T, choices = grouping, selected = val.groups)) else tags$div(),
+      conditionalPanel(sprintf("input.%1$s != 'random' && input.%1$s != 'assignment'", paste0("factor", id, "Type")), checkboxInput(paste0("factor", id, "Blocked"), "Blocked factor", value = val.blocked)),
+      conditionalPanel(sprintf("input.%1$s == 'random'", paste0("factor", id, "Type")), checkboxInput(paste0("factor", id, "Replicate"), "Replicate levels", value = val.replications > 1L)),
+      conditionalPanel(sprintf("input.%s == 'random' && input.%s", paste0("factor", id, "Type"), paste0("factor", id, "Replicate")), numericInput(paste0("factor", id, "Replications"), NULL, value = val.replications, min=1L, max=5L, step=1L))
     )
   )
 }
 
-factorPanelAssignment <- function(id, grouping, ranfacs) {
-  tags$div(
-    id = paste0("factor", id),
-    wellPanel(
-      selectizeInput(paste0("factor", id, "RandomFactors"), "Random factors", multiple = T, choices = ranfacs),
-      selectInput(paste0("factor", id, "Type"), NULL, c(Constraint = "assignment"), selected = "assignment"),
-      selectizeInput(paste0("factor", id, "Groups"), "Grouping factors", multiple = T, choices = grouping)
-    )
-  )
-}
+examples <- list(`Recognition study` = factorPanelsFromPreset(
+  list(name="study_lop", type="fixed char", char.levels="deep, shallow"),
+  list(name="test_payoff", type="fixed char", char.levels="low, high"),
+  list(name="Subject", type="random", groups=c(1,2), replications = 2L),
+  list(name="lop_deep_cr", type="fixed bool"),
+  list(name="lop_shallow_cr", type="fixed bool"),
+  list(name="Item", type="random", groups=c(4,5)),
+  list(name="is_old", type="fixed bool"),
+  list(name="study_pos", type="fixed int", int.offset=1L, int.levels=2L),
+  list(name="test_pos", type="fixed int", int.offset=1L, int.levels=4L),
+  list(name=c(3,6), type="assignment", groups=c(7,8,9))
+))
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -45,15 +70,16 @@ ui <- fluidPage(
    # Sidebar with a slider input for number of bins 
    sidebarLayout(
      sidebarPanel(
-       factorPanel("1"),
+       factorPanel(1L),
        tags$div(id = "factorsPlaceholder"),
-       actionButton("add","Add"), actionButton("constrain","Constrain"), tags$span(id="removePlaceholder"),
-       actionButton("go","Generate")
+       actionButton("add","Add"), actionButton("remove","Remove"),
+       actionButton("go","Generate"),
+       selectInput("loadExample", "Load example", choices = c("Select example", names(examples)), selectize = F)
      ),
      
      # Show a plot of the generated distribution
      mainPanel(
-       textOutput("error"),
+       tags$div(textOutput("error"), style="font-weight:bold;color:red"),
        helpText("To install and load the package:"),
        tags$pre("install.packages(\"https://maxrabe.com/software/designr_latest.tar.gz\", repos = NULL)\nlibrary(designr)"),
        helpText("Function syntax of design:"),
@@ -61,6 +87,7 @@ ui <- fluidPage(
        helpText("Factor syntax of design (equivalent):"),
        verbatimTextOutput("designFormula2", placeholder = T),
        helpText("Preview of the design:"),
+       verbatimTextOutput("designOutputSyntax", placeholder = T),
        tableOutput("designMatrix")
      )
    )
@@ -78,52 +105,52 @@ server <- function(input, output, session) {
   
   desout <- reactiveValues(df=data.frame(), ran=character(0), fix=character(0), err=NULL, formula=list(full = character(0), short = character(0)))
   
-  n.factors <- function(set=NULL) {
-    if(is.null(set)) {
-      get("nfactors", envir = sys.frame(1))
-    }else{
-      assign("nfactors", set, envir = sys.frame(1))
-      return(set)
-    }
+  n.factors <- function(input) {
+    i <- 0L
+    while(!is.null(input[[paste0("factor", i+1L, "Type")]])) i <- i + 1L
+    return(i)
   }
-  n.factors(1L)
   
   factor.names <- function() {
-    vapply(seq_len(n.factors()), function(i) if(!is.null(input[[paste0("factor", i, "RandomFactors")]])) paste(input[[paste0("factor", i, "RandomFactors")]], collapse=":") else input[[paste0("factor", i, "Name")]], character(1))
+    vapply(seq_len(n.factors(input)), function(i) if(input[[paste0("factor", i, "Type")]] == "assignment") {if(length(input[[paste0("factor", i, "RandomFactors")]])>0) paste(vapply(input[[paste0("factor", i, "RandomFactors")]], function(j) input[[paste0("factor", j, "Name")]], character(1)), collapse=":") else "?"} else if(nchar(input[[paste0("factor", i, "Name")]])>0) input[[paste0("factor", i, "Name")]] else "?", character(1))
   }
   
-  observeEvent(input$add, {
-    choices <- 1:n.factors()
-    if(n.factors() == 1L) insertUI("#removePlaceholder", "afterBegin", actionButton("remove","Remove"))
-    names(choices) <- factor.names()
-    insertUI("#factorsPlaceholder", "beforeBegin", factorPanel(n.factors(n.factors()+1L), grouping = choices))
+  observeEvent(input$loadExample, {
+    example <- input$loadExample
+    if(example %in% names(examples)) {
+      for(i in n.factors(input):1) {
+        removeUI(paste0("#factor", i))
+      }
+      insertUI("#factorsPlaceholder", "beforeBegin", examples[[example]])
+      updateSelectInput(session, "loadExample", selected = 0L)
+    }
   })
   
-  observeEvent(input$constrain, {
-    ranfacs <- seq_along(desout$ran)
-    names(ranfacs) <- desout$ran
-    choices <- 1:n.factors()
-    names(choices) <- factor.names()
-    if(n.factors() == 1L) insertUI("#removePlaceholder", "afterBegin", actionButton("remove","Remove"))
-    insertUI("#factorsPlaceholder", "beforeBegin", factorPanelAssignment(n.factors(n.factors()+1L), ranfacs = ranfacs, grouping = choices))
+  observeEvent(input$add, {
+    choices <- 1:n.factors(input)
+    names(choices) <- factor.names()[choices]
+    is.fixed <- vapply(seq_along(choices), function(i) grepl("^fixed($| )", input[[paste0("factor", i, "Type")]]), logical(1))
+    fchoices <- choices[is.fixed]
+    rchoices <- choices[!is.fixed]
+    insertUI("#factorsPlaceholder", "beforeBegin", factorPanel(n.factors(input)+1L, grouping = fchoices, ranfacs = rchoices))
   })
+  
   
   observeEvent(input$remove, {
-    if(n.factors() <= 1L) return()
-    if(n.factors() <= 2L) removeUI("#removePlaceholder *")
-    removeUI(paste0("#factor", n.factors()))
-    n.factors(n.factors()-1L)
+    if(n.factors(input) <= 1L) return()
+    removeUI(paste0("#factor", n.factors(input)))
   })
   
-  observeEvent(factor.names(), {
+  observeEvent(quote(factor.names()), event.quoted = T, {
     fnames <- factor.names()
-    for(i in seq_len(n.factors()-1)+1) {
-      choices <- seq_len(i-1)
-      names(choices) <- fnames[seq_len(i-1)]
-      updateSelectizeInput(session, paste0("factor", i, "Groups"), choices = choices, selected = input[[paste0("factor", i, "Groups")]])
-      choices <- seq_along(desout$ran)
-      names(choices) <- desout$ran
-      updateSelectizeInput(session, paste0("factor", i, "RandomFactors"), choices = choices, selected = input[[paste0("factor", i, "RandomFactors")]])
+    for(i in seq_len(n.factors(input)-1)+1) {
+      choices <- 1:(i-1)
+      names(choices) <- factor.names()[choices]
+      is.fixed <- vapply(seq_along(choices), function(i) grepl("^fixed($| )", input[[paste0("factor", i, "Type")]]), logical(1))
+      fchoices <- choices[is.fixed]
+      rchoices <- choices[!is.fixed]
+      updateSelectizeInput(session, paste0("factor", i, "RandomFactors"), choices = rchoices, selected = input[[paste0("factor", i, "RandomFactors")]])
+      updateSelectizeInput(session, paste0("factor", i, "Groups"), choices = fchoices, selected = input[[paste0("factor", i, "Groups")]])
     }
   })
   
@@ -132,7 +159,7 @@ server <- function(input, output, session) {
     desout$formulas$full <- character(0)
     desout$formulas$short <- character(0)
     
-    if(n.factors() > 10) {
+    if(n.factors(input) > 10) {
       design <- "This is just a demo. If you would like to see what you can do with more than 5 factors, please download the library and see on your own computer!"
     }else{
       design <- factor.design()
@@ -140,7 +167,7 @@ server <- function(input, output, session) {
     
     random.names <- character(0)
     
-    for(i in seq_len(n.factors())) {
+    for(i in seq_len(n.factors(input))) {
       
       factype <- strsplit(input[[paste0("factor",i,"Type")]], " ", fixed = T)[[1L]]
       
@@ -165,7 +192,17 @@ server <- function(input, output, session) {
         short <- sprintf("%s%s", paste(ranfacs, collapse=":"), short)
         random.names <- c(random.names, paste(ranfacs, collapse=":"))
       }else if(factype[1] == "random") {
-        if(is(design, "factor.container")) design <- tryCatch(design + random.factor(name = input[[paste0("factor",i,"Name")]], groups = groups), error = function(e) as.character(e))
+        if(input[[paste0("factor",i,"Replicate")]]) {
+          replications <- as.integer(input[[paste0("factor",i,"Replications")]])
+          if(replications < 1L) replications <- 1L
+        }else{
+          replications <- 1L
+        }
+        if(replications>1L) {
+          full <- c(full, sprintf("replications = %dL", replications))
+          short <- c(short, sprintf(" * %d", replications))
+        }
+        if(is(design, "factor.container")) design <- tryCatch(design + random.factor(name = input[[paste0("factor",i,"Name")]], replications = replications, groups = groups), error = function(e) as.character(e))
         full <- sprintf("random.factor(%s)", paste(c(shQuote(input[[paste0("factor",i,"Name")]]), full), collapse=", "))
         short <- paste0(c(input[[paste0("factor",i,"Name")]], short), collapse="")
         random.names <- c(random.names, input[[paste0("factor",i,"Name")]])
@@ -192,6 +229,7 @@ server <- function(input, output, session) {
         short <- sprintf("%s[%s]", input[[paste0("factor",i,"Name")]], shlevels)
         full <- sprintf("fixed.factor(%s, levels = %s)", shQuote(input[[paste0("factor",i,"Name")]]), lglevels)
         if(is(design, "factor.container")) design <- tryCatch(design + fixed.factor(input[[paste0("factor",i,"Name")]], levels = levels, blocked = blocked, block.name = NULL), error=function(e) as.character(e))
+        random.names <- c(random.names, input[[paste0("factor",i,"Name")]])
       }
       
       desout$formulas$full <- c(desout$formulas$full, full)
@@ -223,11 +261,16 @@ server <- function(input, output, session) {
   output$designFormula1 <- renderText({
     if(length(desout$formulas$full) == 0L) return(NULL)
     if(length(desout$formulas$full) == 1L) return(paste0("design <- factor.design() + ", desout$formulas$full))
-    return(paste0("design <- ", paste(desout$formulas$full, collapse = " + ")))
+    return(paste0("design <- ", paste(desout$formulas$full, collapse = " +\n     ")))
   })
   output$designFormula2 <- renderText({
     if(length(desout$formulas$short) == 0L) return(NULL)
-    return(paste0("design <- factor.design(~ ", paste(desout$formulas$short, collapse = " + "), ")"))
+    return(paste0("design <- factor.design(~ \n     ", paste(desout$formulas$short, collapse = " +\n     "), ")"))
+  })
+  output$designOutputSyntax <- renderText({
+    if(length(desout$ran) == 0) return(paste0("output <- output.design(design)\nprint(output$codes)"))
+    else if(length(desout$ran) == 1) return(paste0("output <- output.design(design, order_by=",shQuote(desout$ran),")\nprint(output$codes)  # also check $units[[",shQuote(desout$ran),"]] for group assignments of the random factor ;-)"))
+    else return(paste0("output <- output.design(design, order_by=c(",paste(shQuote(desout$ran[!grepl(':', desout$ran, fixed=T)]), collapse=", "),"))\nprint(output$codes)  # also check $units for group assignments of the random factors ;-)"))
   })
   
   output
