@@ -11,7 +11,7 @@ fixed.factor(name, levels, replications = 1L, blocked = F,
 \arguments{
 \item{name}{Name of the fixed factor.}
 
-\item{levels}{A vector of factor levels. Any atomic data type (character, logical, numeric, integer) can be used.}
+\item{levels}{If not grouped, a vector of factor levels. Any atomic data type (character, logical, numeric, integer) can be used. If grouped, this should be a named list with each entry being a vector (as described before) and its name being a value of the grouping factor(s). If grouped within several factors, i.e. an interaction, the values constituting the names should be concatenated by colons (:), e.g. list(`f1l1:f2l1`=1:2, `f1l2:f2l1`=3:4, ...). If for any group there are no levels specified, a warning will be issued and NA will be assigned as the value for this factor. If this is intended and the warning should be suppressed, please explicitly assign NA as the value for that group, e.g. list(`f1l1:f2l1`=1:2, `f1l2:f2l1`=NA, ...).}
 
 \item{replications}{Either a single integer or an integer vector of the same length as `levels` that is used to determine how many times each factor level should be repeated.}
 
@@ -33,7 +33,7 @@ This function creates an instance of fixed.factor to be used in a `factor.design
 }
 \section{Nesting Fixed Factors}{
 
-If `groups` is used, the function will attempt to nest levels of the newly created factor within levels/interactions of the specified grouping factors. Note that nesting of fixed effects is only allowed within other fixed effects combinations but not within random effects.
+If `groups` is used, the function will attempt to nest levels of the newly created factor within levels/interactions of the specified grouping factors. Note that nesting of fixed effects is only allowed within other fixed effects combinations but not within random effects. For each combination of the grouping factors, e.g. each group, you should specify an individual vector of levels (see above). If you fail to supply levels for any group, NAs will be assigned. This could result in unpredicted behavior when more factors are added. If you know what you are doing and would like to suppress the warning, please explicitly specify NA as the (only) value to assign to that group. At any rate, it is highly recommended to run sanity checks on the balancedness of the design if you are nesting fixed factors!
 }
 
 \examples{

@@ -53,7 +53,7 @@ random.factor <- function(name, replications = 1L, groups = character(0), ...) {
 #' This function creates an instance of fixed.factor to be used in a `factor.design`. Fixed factors typically relate to (quasi-)experimental factors such as experimental conditions/manipulations, subject/item characteristics ect.
 #'
 #' @param name Name of the fixed factor.
-#' @param levels A vector of factor levels. Any atomic data type (character, logical, numeric, integer) can be used.
+#' @param levels If not grouped, a vector of factor levels. Any atomic data type (character, logical, numeric, integer) can be used. If grouped, this should be a named list with each entry being a vector (as described before) and its name being a value of the grouping factor(s). If grouped within several factors, i.e. an interaction, the values constituting the names should be concatenated by colons (:), e.g. list(`f1l1:f2l1`=1:2, `f1l2:f2l1`=3:4, ...). If for any group there are no levels specified, a warning will be issued and NA will be assigned as the value for this factor. If this is intended and the warning should be suppressed, please explicitly assign NA as the value for that group, e.g. list(`f1l1:f2l1`=1:2, `f1l2:f2l1`=NA, ...).
 #' @param replications Either a single integer or an integer vector of the same length as `levels` that is used to determine how many times each factor level should be repeated.
 #' @param blocked Set this to TRUE if the levels of this factor are blocked. In that case, a factor is created whose factor levels are different sequences of the levels specified in the function call.
 #' @param assign If `blocked = TRUE`, you may specify a different method of rotating levels. The default if 'latin.square' but 'permutations' and 'random.order'are also available.
@@ -63,7 +63,7 @@ random.factor <- function(name, replications = 1L, groups = character(0), ...) {
 #' @return An instance of `fixed.factor`.
 #'
 #' @section Nesting Fixed Factors:
-#' If `groups` is used, the function will attempt to nest levels of the newly created factor within levels/interactions of the specified grouping factors. Note that nesting of fixed effects is only allowed within other fixed effects combinations but not within random effects.
+#' If `groups` is used, the function will attempt to nest levels of the newly created factor within levels/interactions of the specified grouping factors. Note that nesting of fixed effects is only allowed within other fixed effects combinations but not within random effects. For each combination of the grouping factors, e.g. each group, you should specify an individual vector of levels (see above). If you fail to supply levels for any group, NAs will be assigned. This could result in unpredicted behavior when more factors are added. If you know what you are doing and would like to suppress the warning, please explicitly specify NA as the (only) value to assign to that group. At any rate, it is highly recommended to run sanity checks on the balancedness of the design if you are nesting fixed factors!
 #'
 #' @examples
 #' fixed.factor("correct", levels=c(T, F))
@@ -77,37 +77,58 @@ random.factor <- function(name, replications = 1L, groups = character(0), ...) {
 #' @export
 fixed.factor <- function(name, levels, replications = 1L, blocked = F, character.as.factor = T, is.ordered = F, block.name = "%1$s.%2$d", groups = character(0), ...) {
   if(!is.character(groups)) stop("Groups must be strings (names of grouping factors)!")
-  if(length(groups) > 0L) stop("Grouping of fixed factors not yet implemented.")
+  is.grouped <- length(groups) > 0L
   if(!is.character(name) || length(name) != 1L) stop("Factor name must be a string (character vector of length 1).")
-  if(!is.vector(levels) || length(levels) < 1L) stop("`levels` must be a vector with a minimum length of 1!")
+  if(length(groups) == 0L && (!is.vector(levels) || length(levels) < 1L)) stop("`levels` must be a vector with a minimum length of 1!")
+  if(length(groups) > 0L && (!is.list(levels) || !all(vapply(levels, function(glevels) is.vector(glevels) && length(glevels) >= 1L, logical(1))))) stop("If `groups` are given (i.e., factor is nested), `levels` must be a list of vectors, each with a minimum length of 1!")
   if(!is.integer(replications) || (length(replications) != length(levels) && length(replications) != 1L)) stop("`replications` must be an integer or integer vector of same length as levels or of length 1!")
   if(any(replications < 1L)) stop("All values of `replications` must be greater than or equal to 1!")
   if(!is.logical(blocked) || length(blocked) != 1L) stop("`blocked` must be a logical (TRUE or FALSE) of length 1!")
   if(!is.logical(character.as.factor) || length(character.as.factor) != 1L) stop("`character.as.factor` must be a logical (TRUE or FALSE) of length 1!")
   if(!is.logical(is.ordered) || length(is.ordered) != 1L) stop("`is.ordered` must be a logical (TRUE or FALSE) of length 1!")
-  if(blocked) {
-    ret <- new("fixed.factor", name = name, blocked = T, replications = 1L, groups = groups, extra = list(...))
-    rotation.function <- find.rot.fun.in.extra(ret, latin.square)
-    levels <- rep(levels, each=replications)
-    mat <- rotation.function(length(levels))
-    lvmat <- do.call(data.frame, lapply(seq_along(levels), function(i) {
-      vals <- levels[mat[,i,drop=T]]
-      if(is.character(vals) && character.as.factor) factor(vals, levels=unique(levels), ordered = is.ordered)
-      else vals
-    }))
-    if(!is.null(block.name)) colnames(lvmat) <- sprintf(block.name, name, seq_along(levels))
-    lvmat[,name] <- factor(apply(lvmat, 1, paste, collapse=":"))
-    if(is.null(block.name)) lvmat[,-ncol(lvmat)] <- NULL
-    ret@levels <- lvmat
-    return(ret)
-  }else {
-    vals <- rep(levels, each=replications)
-    if(is.character(vals) && character.as.factor) levels <- data.frame(factor(vals, levels=unique(levels), ordered = is.ordered))
-    else levels <- data.frame(x=vals)
-    colnames(levels) <- name
-    ret <- new("fixed.factor", name = name, blocked = F, levels = levels, replications = 1L, groups = groups, extra = list(...))
-    return(ret)
+  
+  if(!is.list(levels) && is.vector(levels)) levels <- list(levels)
+  
+  if(length(unique(names(levels))) != length(names(levels))) stop("Names of levels list must be unique!")
+  
+  n.max.levels <- as.integer(max((vapply(levels, length, integer(1L)))))
+  coerce.character <- any(vapply(levels, is.character, logical(1L)))
+  
+  glevels <- sapply(levels, function(levels) {
+    if(blocked) {
+      rotation.function <- find.rot.fun.in.extra(list(...), latin.square)
+      levels <- rep(levels, each=replications)
+      mat <- rotation.function(length(levels))
+      lvmat <- do.call(data.frame, lapply(seq_len(n.max.levels), function(i) {
+        if(i>ncol(mat)) return(NA)
+        vals <- levels[mat[,i,drop=T]]
+        if(!is.character(vals) && coerce.character) vals <- as.character(vals)
+        if(is.character(vals) && character.as.factor) factor(vals, levels=unique(levels), ordered = is.ordered)
+        else vals
+      }))
+      if(!is.null(block.name)) colnames(lvmat) <- sprintf(block.name, name, seq_len(n.max.levels))
+      lvmat[,name] <- factor(apply(lvmat[,seq_along(levels),drop=F], 1, paste, collapse=":"))
+      if(is.null(block.name)) lvmat[,-ncol(lvmat)] <- NULL
+      levels <- lvmat
+    }else {
+      vals <- rep(levels, each=replications)
+      if(!is.character(vals) && coerce.character) vals <- as.character(vals)
+      if(is.character(vals) && character.as.factor) levels <- data.frame(factor(vals, levels=unique(levels), ordered = is.ordered))
+      else levels <- data.frame(x=vals)
+      colnames(levels) <- name
+    }
+    return(levels)
+  }, simplify = F)
+  
+  if(!is.null(names(glevels))) for(i in seq_along(glevels)) {
+    glevels[[i]][,'*'] <- factor(names(glevels)[i], levels=names(glevels))
   }
+  
+  levels <- do.call(rbind, glevels)
+  
+  rownames(levels) <- NULL
+  
+  new("fixed.factor", name = name, blocked = blocked, replications = 1L, groups = groups, levels = levels, extra = list(...))
 }
 
 #' Factorial Designs

@@ -2,17 +2,17 @@
 
 # helper functions
 
-find.rot.fun.in.extra <- function(fac, default) {
+find.rot.fun.in.extra <- function(facExtra, default) {
   rotation.function <- latin.square # default function
-  if("assign" %in% names(fac@extra)) { # check if there is a rotation function given for this factor
-    if(is.function(fac@extra$assign)) rotation.function <- fac@extra$assign
-    else if(!is.character(fac@extra$assign)) stop("`assign` must be a function name or any of 'latin.square', 'permutations', or 'random'")
-    else if(fac@extra$assign %in% c("latin.square","lsq")) rotation.function <- latin.square
-    else if(fac@extra$assign %in% c("random","random.order")) rotation.function <- random.order
-    else if(fac@extra$assign %in% c("permute","permutations")) rotation.function <- permutations
+  if("assign" %in% names(facExtra)) { # check if there is a rotation function given for this factor
+    if(is.function(facExtra$assign)) rotation.function <- facExtra$assign
+    else if(!is.character(facExtra$assign)) stop("`assign` must be a function name or any of 'latin.square', 'permutations', or 'random'")
+    else if(facExtra$assign %in% c("latin.square","lsq")) rotation.function <- latin.square
+    else if(facExtra$assign %in% c("random","random.order")) rotation.function <- random.order
+    else if(facExtra$assign %in% c("permute","permutations")) rotation.function <- permutations
     else {
-      rotation.function <- eval(as.symbol(fac@extra$assign))
-      if(!is.function(rotation.function)) stop(sprintf("`%s` is not a function!", fac@extra$assign))
+      rotation.function <- eval(as.symbol(facExtra$assign))
+      if(!is.function(rotation.function)) stop(sprintf("`%s` is not a function!", facExtra$assign))
     }
   }
   return(rotation.function)
@@ -51,7 +51,7 @@ replicate.factor <- function(fac, context=factor.design()) {
     # to ensure that there are enough realizations in each group, every constituting random factor must be replicated as many times as the realizations frame is long (rows)
     # i.e., n-times for latin.square and n!-times for permutations, where n is number of conditions
 
-    rotation.function <- find.rot.fun.in.extra(fac, latin.square)
+    rotation.function <- find.rot.fun.in.extra(fac@extra, latin.square)
 
     rotations <- rotation.function(nrow(conditions))
 
@@ -69,8 +69,31 @@ replicate.factor <- function(fac, context=factor.design()) {
     assign.to.ids[,paste0('*', fac@name)] <- (assign.to.ids[, fac@name, drop=F] - 1L) * nrow(rotations) + assign.to.ids[, paste0('*', fac@name), drop=F]
 
     return(assign.to.ids)
-  }else{
+  }else if(is.fixed.factor(fac) && length(fac@groups) == 0L){
     df[rep(seq_len(nrow(df)), each=fac@replications), , drop=F]
+  }else if(is.fixed.factor(fac) && length(fac@groups) >= 1L){
+    if(!all(vapply(context[fac@groups], is.fixed.factor, logical(1)))) stop("Fixed factor may only be nested within other fixed factors or fixed factor interactions but not within levels of random factors!")
+    
+    conditions <- do.call(join, lapply(context[fac@groups], function(f) f@levels))
+    conditions[,'*'] <- apply(conditions, 1L, paste, collapse=":")
+    
+    excluded.conditions <- setdiff(conditions[,'*'], df[,'*'])
+    
+    if(length(excluded.conditions)>0L) {
+      warning(sprintf("`%1$s` does not specify levels for groups: %2$s. Note that the `%1$s` column will therefore be NA and could potentially lead to problems further on in the design! If this is intended, to suppress this warning, please specify %3$s in the fixed.factor level list.", fac@name, paste("'",excluded.conditions,"'",sep="",collapse = ", "), paste("`",excluded.conditions,"`=NA",sep="",collapse = ", ")))
+      dummy.df <- do.call(data.frame, lapply(seq_len(ncol(df)), function(i) rep(NA, length(excluded.conditions))))
+      colnames(dummy.df) <- colnames(df)
+      dummy.df[, '*'] <- excluded.conditions
+      df <- rbind(df, dummy.df)
+    }
+    
+    ret <- join(conditions, df[rep(seq_len(nrow(df)), each=fac@replications), , drop=F])
+    ret[,'*'] <- NULL
+    rownames(ret) <- NULL
+    
+    return(ret)
+  }else{
+    stop("Don't know how to expand this factor!")
   }
 }
 
