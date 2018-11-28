@@ -1,5 +1,7 @@
 # class definitions
 
+NULL
+
 setClass("factor.container")
 setClass("design.factor", slots=c(name="character", levels="data.frame", extra="list", replications="integer", groups="character"), contains="factor.container")
 setClass("random.factor", contains="design.factor")

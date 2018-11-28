@@ -19,15 +19,15 @@ output.design(design, group_by = NULL, order_by = NULL,
 \value{
 A list containing the output summary, including the following named entities:
 
-   *$table*: Either a `data.frame` with all experimental codes or a list of data.frames of experimental codes. The list entries are matched to the rows of `$groups`.
+   *$table*: Either a tibble with all experimental codes or a list of tibbles of experimental codes. The list entries are matched to the rows of `$groups`.
 
-   *$groups*: If grouped, contains a data.frame in which each row represents an output group, matched to the entries in $codes. If not grouped, this is `NULL`.
+   *$groups*: If grouped, contains a tibble in which each row represents an output group, matched to the entries in $codes. If not grouped, this is `NULL`.
 
    *$ordered*: If ordered, contains a vector of order criteria. If not ordered, this is `NULL`.
 
    *$randomized*: Value of `randomized`.
 
-   *$units*: A list of random factors and their levels for this design as data.frames. Empty list if no random factors in the design.
+   *$units*: A list of random factors and their levels for this design as tibbles. Empty list if no random factors in the design.
 
    *$fixed.model.formula*: An example model formula for use with functions such as lm().
 

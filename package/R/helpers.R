@@ -57,7 +57,7 @@ replicate.factor <- function(fac, context=factor.design()) {
 
 
     multiplications <- do.call(join, lapply(fac@name, function(f) {
-      x <- data.frame(seq_len(nrow(rotations)))
+      x <- tibble::tibble(seq_len(nrow(rotations)))
       colnames(x) <- paste0('*', f)
       x
     }))
@@ -81,7 +81,7 @@ replicate.factor <- function(fac, context=factor.design()) {
     
     if(length(excluded.conditions)>0L) {
       warning(sprintf("`%1$s` does not specify levels for groups: %2$s. Note that the `%1$s` column will therefore be NA and could potentially lead to problems further on in the design! If this is intended, to suppress this warning, please specify %3$s in the fixed.factor level list.", fac@name, paste("'",excluded.conditions,"'",sep="",collapse = ", "), paste("`",excluded.conditions,"`=NA",sep="",collapse = ", ")))
-      dummy.df <- do.call(data.frame, lapply(seq_len(ncol(df)), function(i) rep(NA, length(excluded.conditions))))
+      dummy.df <- do.call(tibble::tibble, lapply(seq_len(ncol(df)), function(i) rep(NA, length(excluded.conditions))))
       colnames(dummy.df) <- colnames(df)
       dummy.df[, '*'] <- excluded.conditions
       df <- rbind(df, dummy.df)

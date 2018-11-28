@@ -61,6 +61,15 @@ examples <- list(
   #   list(name="test_pos", type="fixed int", int.offset=1L, int.levels=4L),
   #   list(name=c(3,6), type="assignment", groups=c(7,8,9))
   # ),
+  `designr blog example` = factorPanelsFromPreset(
+    list(name="instruction", type="fixed char", char.levels="A, B"),
+    list(name="difficulty", type="fixed char", char.levels="low, high"),
+    list(name="correct_response", type="fixed char", char.levels="X, Y, Z"),
+    list(name="Subject", type="random", groups=c(1,2)),
+    list(name="Item", type="random", groups=c(2,3)),
+    list(name="phrasing", type="fixed char", char.levels="positive, negative"),
+    list(name=c(4,5), type="assignment", groups=6)
+  ),
   `Rating` = factorPanelsFromPreset(
     list(name="instruction", type="fixed char", char.levels="easy, difficult"),
     list(name="Subject", type="random", groups=c(1), replications=5L),
@@ -113,12 +122,7 @@ max.cols <- 20L
 # Define server logic required to draw a histogram
 server <- function(input, output, session) {
   
-  #if(!dir.exists(file.path(getwd(), "designr")))
-  #  install.packages("https://maxrabe.com/software/designr_0.1.0.tar.gz", lib=getwd(), repos=NULL)
-  
   for(file in list.files("designr", "\\.R$", full.names = T)) source(file, local = T)
-  
-  #library("designr", lib.loc = getwd())
   
   desout <- reactiveValues(df=data.frame(), ran=character(0), fix=character(0), err=NULL, formula=list(full = character(0), short = character(0)), analysis = NULL)
   

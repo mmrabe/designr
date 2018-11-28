@@ -2,9 +2,6 @@
 % Please edit documentation in R/methods.R
 \name{+.factor.container}
 \alias{+.factor.container}
-\alias{e1}
-\alias{+}
-\alias{e2}
 \title{Concatenate design factors and designs}
 \usage{
 \method{+}{factor.container}(e1, e2)

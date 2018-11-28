@@ -23,7 +23,7 @@ subset.factor.design <- function(x, subset, select = names(x)) {
   if(any(!select %in% names(x))) stop("Undefined factor names in `select`!")
   x[setdiff(names(x), select)] <- NULL
   keep.columns <- unique(unname(unlist(lapply(x, function(f) colnames(f@levels)))))
-  x@design <- subset.data.frame(x@design, eval(fun.call$subset, x@design), keep.columns)
+  x@design <- subset(x@design, eval(fun.call$subset, x@design), keep.columns)
   return(x)
 }
 
@@ -109,15 +109,15 @@ design.formula <- function(design, lhs = "response", ranefs = T, interactions = 
 #' @param randomize After ordering, remaining rows in the same order rank are randomly shuffled.
 #' @return A list containing the output summary, including the following named entities:
 #'
-#'    *$table*: Either a `data.frame` with all experimental codes or a list of data.frames of experimental codes. The list entries are matched to the rows of `$groups`.
+#'    *$table*: Either a tibble with all experimental codes or a list of tibbles of experimental codes. The list entries are matched to the rows of `$groups`.
 #'
-#'    *$groups*: If grouped, contains a data.frame in which each row represents an output group, matched to the entries in $codes. If not grouped, this is `NULL`.
+#'    *$groups*: If grouped, contains a tibble in which each row represents an output group, matched to the entries in $codes. If not grouped, this is `NULL`.
 #'
 #'    *$ordered*: If ordered, contains a vector of order criteria. If not ordered, this is `NULL`.
 #'
 #'    *$randomized*: Value of `randomized`.
 #'
-#'    *$units*: A list of random factors and their levels for this design as data.frames. Empty list if no random factors in the design.
+#'    *$units*: A list of random factors and their levels for this design as tibbles. Empty list if no random factors in the design.
 #'
 #'    *$fixed.model.formula*: An example model formula for use with functions such as lm().
 #'
@@ -140,11 +140,11 @@ output.design <- function(design, group_by = NULL, order_by = NULL, randomize = 
   if(length(order_by)>0L) data <- data[do.call(order, unname(as.list(data[, order_by, drop=F]))), , drop=F]
   rownames(data) <- NULL
   list(
-    codes = if(length(group_by)>0L) lapply(seq_len(nrow(file_groups)), function(i) {
+    codes = tibble::as.tibble(if(length(group_by)>0L) lapply(seq_len(nrow(file_groups)), function(i) {
       df <- join(file_groups[i, , drop=F], data)
       rownames(df) <- NULL
       return(df)
-    }) else data,
+    }) else data),
     groups = if(length(group_by)>0L) file_groups else NULL,
     ordered = if(length(order_by)>0L) order_by else NULL,
     randomized = randomize,
@@ -168,7 +168,7 @@ print.factor.container <- function(x) {
     cat(sprintf("Factor design with %d factor(s):\n", length(x)))
     print.listof(x)
     cat(sprintf("\nDesign matrix:\n"))
-    print.data.frame(x@design)
+    print(x@design)
   } else if(is(x, "random.factor")) {
     cat(sprintf("Random factor `%s` with %d group(s) and %d replication(s) (%d realization(s) in total)", paste(x@name, collapse=":"), nrow(x@levels), x@replications, nrow(x@levels)*x@replications))
     if(length(x@groups)>0L) {
@@ -191,8 +191,6 @@ print.factor.container <- function(x) {
 #' Concatenate design factors and designs
 #'
 #' By adding factors and designs by "+", a new design is created that contains all of the components.
-#'
-#' @aliases e1 + e2
 #'
 #' @export
 #'

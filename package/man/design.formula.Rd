@@ -4,18 +4,18 @@
 \alias{design.formula}
 \title{Preparing Designs for Model Analysis}
 \usage{
-design.formula(design, lhs = "response", ranefs = T,
-  interactions = T, fixed.interactions = interactions,
-  random.interactions = interactions)
+design.formula(design, contrasts = NULL,
+  expand.contrasts = !is.null(contrasts), interactions = T,
+  intercepts = T, response = "response", env = parent.frame())
 }
 \arguments{
 \item{design}{The `factor.design` to be used.}
 
+\item{interactions}{Should fixed effects be additive or interactive?}
+
 \item{lhs}{The left-hand side of the equation. Typically, this is just the response/dependent variable.}
 
 \item{ranefs}{Should random factors be included as random effects for lme4?}
-
-\item{interactions}{Should fixed effects be additive or interactive?}
 
 \item{fixed.interactions}{Overwrite `interactions` for fixed effects}
 

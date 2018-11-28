@@ -4,7 +4,7 @@
 \alias{subset.factor.design}
 \title{Subset factor designs}
 \usage{
-\method{subset}{factor.design}(x, subset, select = names(x))
+subset.factor.design(x, subset, select = names(x))
 }
 \arguments{
 \item{x}{The factor design to subset}

@@ -49,7 +49,7 @@ and <- function(...) {
 join <- function(...) {
   elements <- list(...)
   if(!all(vapply(elements, is.data.frame, logical(1)))) stop("All arguments must be data.frames!")
-  if(length(elements) == 0L) return(data.frame())
+  if(length(elements) == 0L) return(tibble::tibble())
   ret <- elements[[1]]
   rownames(ret) <- NULL
   for(element in elements[-1]) {
@@ -79,7 +79,7 @@ join <- function(...) {
     ret <- cbind(ret[matches.x, , drop=F], element[matches.y, new.col.ids, drop=F])
     rownames(ret) <- NULL
   }
-  ret
+  tibble::as.tibble(ret)
 }
 
 sorto <- function(vec, order) {
