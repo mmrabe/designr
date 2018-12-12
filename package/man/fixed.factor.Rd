@@ -4,16 +4,14 @@
 \alias{fixed.factor}
 \title{Fixed factors}
 \usage{
-fixed.factor(name, levels, replications = 1L, blocked = F,
-  character.as.factor = T, is.ordered = F,
-  block.name = "\%1$s.\%2$d", groups = character(0), ...)
+fixed.factor(name, levels, blocked = F, character.as.factor = T,
+  is.ordered = F, block.name = "\%1$s.\%2$d", groups = character(0),
+  ..., replications = 1L)
 }
 \arguments{
 \item{name}{Name of the fixed factor.}
 
 \item{levels}{If not grouped, a vector of factor levels. Any atomic data type (character, logical, numeric, integer) can be used. If grouped, this should be a named list with each entry being a vector (as described before) and its name being a value of the grouping factor(s). If grouped within several factors, i.e. an interaction, the values constituting the names should be concatenated by colons (:), e.g. list(`f1l1:f2l1`=1:2, `f1l2:f2l1`=3:4, ...). If for any group there are no levels specified, a warning will be issued and NA will be assigned as the value for this factor. If this is intended and the warning should be suppressed, please explicitly assign NA as the value for that group, e.g. list(`f1l1:f2l1`=1:2, `f1l2:f2l1`=NA, ...).}
-
-\item{replications}{Either a single integer or an integer vector of the same length as `levels` that is used to determine how many times each factor level should be repeated.}
 
 \item{blocked}{Set this to TRUE if the levels of this factor are blocked. In that case, a factor is created whose factor levels are different sequences of the levels specified in the function call.}
 
@@ -22,6 +20,8 @@ fixed.factor(name, levels, replications = 1L, blocked = F,
 \item{block.name}{If `blocked`, by default, there is not only a design matrix column created that contains the complete sequence of block levels but also a column for each position of the sequence with its assigned level. You may specify a different naming pattern using [sprintf()] naming conventions. The first argument passed is the factor name and the second argument is the sequence position (starting at 1). The default column names will be `factor.1`, `factor.2`, ect. If `NULL`, no additional block columns are created.}
 
 \item{groups}{Names of fixed factors in which to nest this fixed factor (see *Nesting fixed factors*).}
+
+\item{replications}{Either a single integer or an integer vector of the same length as `levels` that is used to determine how many times each factor level should be repeated.}
 
 \item{assign}{If `blocked = TRUE`, you may specify a different method of rotating levels. The default if 'latin.square' but 'permutations' and 'random.order'are also available.}
 }

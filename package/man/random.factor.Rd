@@ -4,16 +4,16 @@
 \alias{random.factor}
 \title{Random factors}
 \usage{
-random.factor(name, replications = 1L, groups = character(0), ...)
+random.factor(name, groups = character(0), ..., replications = 1L)
 }
 \arguments{
 \item{name}{Name of the random factor as a character vector. Typically, this should be a length-1 vector (i.e., a single string) but you may pass multiple names of random factors whose interaction is to be nested in groups (see *Assignment Constraints*).}
 
-\item{replications}{Number of times (as a single integer value) each level (instantiation) is to be replicated.}
-
 \item{groups}{Names of fixed and random factors that are to be used as grouping (nesting/between) levels.}
 
 \item{...}{Additional arguments to be stored as *extra* values.}
+
+\item{replications}{Number of times (as a single integer value) each level (instantiation) is to be replicated.}
 }
 \value{
 An instance of the class `random.factor`.

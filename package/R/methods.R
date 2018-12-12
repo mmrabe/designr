@@ -188,6 +188,10 @@ print.factor.container <- function(x) {
   }
 }
 
+#' @describeIn print.factor.container Show a design factor summary
+#' @export
+show.factor.container <- function(object) print.factor.container(x=object)
+
 #' Concatenate design factors and designs
 #'
 #' By adding factors and designs by "+", a new design is created that contains all of the components.
@@ -278,6 +282,8 @@ fixed.factors <- function(design) {
 setMethod("+", signature(e1="factor.container", e2="factor.container"), `+.factor.container`)
 
 setMethod("print", "factor.container", `print.factor.container`)
+
+setMethod("show", "factor.container", `show.factor.container`)
 
 setMethod("subset", signature(x="factor.design"), `subset.factor.design`)
 
