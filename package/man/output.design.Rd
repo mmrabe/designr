@@ -29,9 +29,7 @@ A list containing the output summary, including the following named entities:
 
    *$units*: A list of random factors and their levels for this design as tibbles. Empty list if no random factors in the design.
 
-   *$fixed.model.formula*: An example model formula for use with functions such as lm().
-
-   *$mixed.model.formula*: An example model formula for use with functions such as lmer().
+   *$formulas*: Example model formulae for use with functions such as lm() and lmer().
 }
 \description{
 This function creates a useful summary of a factor design, including the design matrix itself as well as other parameters and a list of random factors as experimental units.

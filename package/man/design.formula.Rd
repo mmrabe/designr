@@ -11,18 +11,20 @@ design.formula(design, contrasts = NULL,
 \arguments{
 \item{design}{The `factor.design` to be used.}
 
+\item{contrasts}{The contrasts to override (NULL if none to override)}
+
+\item{expand.contrasts}{If TRUE, factors with more than one contrast are replaced by so many contrasts, i.e. the result contains the names of the individual contrasts, not of the factors.}
+
 \item{interactions}{Should fixed effects be additive or interactive?}
 
-\item{lhs}{The left-hand side of the equation. Typically, this is just the response/dependent variable.}
+\item{intercepts}{Should an intercept be included?}
 
-\item{ranefs}{Should random factors be included as random effects for lme4?}
+\item{response}{The left-hand side of the equation. Typically, this is just the response/dependent variable.}
 
-\item{fixed.interactions}{Overwrite `interactions` for fixed effects}
-
-\item{random.interactions}{Overwrite `interactions` for random effects.}
+\item{env}{The environment in which to embed the formula}
 }
 \value{
-A `formula` object
+A named list of `formula` objects, each name corresponding to the type of model it is suited for.
 }
 \description{
 Based on a given design, this function creates a model formula that can be used to analyze data with functions such as lm or lmer.
