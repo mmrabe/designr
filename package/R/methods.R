@@ -98,7 +98,7 @@ design.formula <- function(design, contrasts = NULL, expand.contrasts = !is.null
   else {
     fixed <- lapply(names(fixed.factors(design)), as.symbol)
     random <- lapply(random.factors(design, include.interactions = F), function(fac) {
-      c(list(add_them(lapply(fac@name, as.symbol), ':')), lapply(intersect(colnames(fac@levels), fixed), as.symbol))
+      c(list(add_them(lapply(fac@name, as.symbol), ':')), lapply(setdiff(fixed, colnames(fac@levels)), as.symbol))
     })
   }
   random_lmer <- lapply(random, function(el) call('(', call('|', add_them(c(if(intercepts) list(1) else list(), list(add_them(el[-1L], if(interactions&&!expand.contrasts) '*' else '+'))), '+'), el[[1L]])))
