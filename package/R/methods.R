@@ -74,30 +74,42 @@ write.design <- function(design, group_by = NULL, order_by = NULL, randomize = F
 #' Based on a given design, this function creates a model formula that can be used to analyze data with functions such as lm or lmer.
 #'
 #' @param design The `factor.design` to be used.
-#' @param lhs The left-hand side of the equation. Typically, this is just the response/dependent variable.
-#' @param ranefs Should random factors be included as random effects for lme4?
+#' @param contrasts The contrasts to override (NULL if none to override)
+#' @param expand.contrasts If TRUE, factors with more than one contrast are replaced by so many contrasts, i.e. the result contains the names of the individual contrasts, not of the factors.
+#' @param response The left-hand side of the equation. Typically, this is just the response/dependent variable.
+#' @param intercepts Should an intercept be included?
+#' @param env The environment in which to embed the formula
 #' @param interactions Should fixed effects be additive or interactive?
-#' @param fixed.interactions Overwrite `interactions` for fixed effects
-#' @param random.interactions Overwrite `interactions` for random effects.
-#' @return A `formula` object
+#' @return A named list of `formula` objects, each name corresponding to the type of model it is suited for.
 #' @export
-design.formula <- function(design, lhs = "response", ranefs = T, interactions = T, fixed.interactions = interactions, random.interactions = interactions) {
-  as.sym <- function(y) vapply(y, function(f) {if(grepl("(^[^a-zA-Z_.])?[^a-zA-Z0-9_.]", f)) paste0("`", f ,"`") else as.character(f)}, character(1))
-  make.name <- function(y) paste(y@name, collapse=":")
-  elements <- "1"
-  fs <- vapply(fixed.factors(design), make.name, character(1))
-  if(length(fs)>0L) elements <- c(elements, paste(fs, collapse = if(fixed.interactions) " * " else " + "))
-  if(ranefs) {
-    fs <- vapply(design[vapply(design, function(f) length(f@name) == 1L && is.random.factor(f), logical(1))], function(f) {
-      name <- make.name(f)
-      within <- design[vapply(design, function(of) is.fixed.factor(of) &&  !any(of@name %in% f@groups), logical(1))]
-      slopes <- c("1", paste(vapply(within, make.name, character(1)), collapse = if(random.interactions) " * " else " + "))
-      paste0("( ",paste(slopes, collapse = " + ")," | ",name," )")
-    }, character(1))
-    if(length(fs)>0L) elements <- c(elements, paste(fs, collapse =if(interactions) " * " else " + "))
+design.formula <- function(design, contrasts = NULL, expand.contrasts = !is.null(contrasts), interactions=T, intercepts=T, response = "response", env = parent.frame()) {
+  add_them <- function(l, op) {
+    ret <- l[[1L]]
+    for(el in l[-1L])
+      ret <- call(op, ret, el)
+    return(ret)
   }
-  return(as.formula(paste0(lhs,"~",paste(elements,collapse="+"))))
+  if(expand.contrasts) {
+    fixed <- contrast.names(design, ranfac = NULL, contrasts = contrasts, interactions = interactions, intercept = F, as.symbols = T)
+    random <- lapply(random.factors(design, include.interactions = F), function(fac) {
+      c(list(add_them(lapply(fac@name, as.symbol), ':')), contrast.names(design, ranfac = fac@name, contrasts = contrasts, interactions = interactions, intercept = F, as.symbols = T))
+    })
+  }
+  else {
+    fixed <- lapply(names(fixed.factors(design)), as.symbol)
+    random <- lapply(random.factors(design, include.interactions = F), function(fac) {
+      c(list(add_them(lapply(fac@name, as.symbol), ':')), lapply(intersect(colnames(fac@levels), fixed), as.symbol))
+    })
+  }
+  random_lmer <- lapply(random, function(el) call('(', call('|', add_them(c(if(intercepts) list(1) else list(), list(add_them(el[-1L], if(interactions&&!expand.contrasts) '*' else '+'))), '+'), el[[1L]])))
+  random_aov <- lapply(random, function(el) call('Error', if(length(el)>1L) call('/', el[[1L]], add_them(el[-1],'*')) else el[[1L]]))
+  list(
+    lm = call('~',as.symbol(response),add_them(c(if(intercepts) list(1) else list(), list(add_them(fixed, if(interactions&&!expand.contrasts) '*' else '+'))), '+')),
+    lmer = call('~',as.symbol(response),add_them(c(if(intercepts) list(1) else list(), list(add_them(fixed, if(interactions&&!expand.contrasts) '*' else '+')), random_lmer), '+')),
+    aov = call('~',as.symbol(response),add_them(c(if(intercepts) list(1) else list(), list(add_them(fixed, if(interactions&&!expand.contrasts) '*' else '+')), random_aov), '+'))
+  )
 }
+setMethod("formula", signature = "factor.design", function(x, ...) design.formula(design=x, ...)$lmer )
 
 #' Summary of Factor Designs
 #'
@@ -119,9 +131,7 @@ design.formula <- function(design, lhs = "response", ranefs = T, interactions = 
 #'
 #'    *$units*: A list of random factors and their levels for this design as tibbles. Empty list if no random factors in the design.
 #'
-#'    *$fixed.model.formula*: An example model formula for use with functions such as lm().
-#'
-#'    *$mixed.model.formula*: An example model formula for use with functions such as lmer().
+#'    *$formulas*: Example model formulae for use with functions such as lm() and lmer().
 #'
 #' @seealso [design.formula()] for more options generating model formulae other than the suggested default ones in the summary.
 #'
@@ -154,8 +164,7 @@ output.design <- function(design, group_by = NULL, order_by = NULL, randomize = 
       rownames(df) <- NULL
       return(df)
     }, simplify = F, USE.NAMES = T),
-    fixed.model.formula = tryCatch(design.formula(design, ranefs = F), error=function(e) NULL),
-    mixed.model.formula = tryCatch(design.formula(design, random.interactions = F), error=function(e) NULL)
+    formulas = design.formula(design)
   )
 }
 

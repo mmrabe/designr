@@ -171,34 +171,6 @@ default.fixed.means <- function(design, mean = 0.0, interactions = T, intercept 
 }
 
 
-design.formula <- function(design, contrasts = NULL, expand.contrasts = !is.null(contrasts), interactions=T, intercepts=T, response = "response", env = parent.frame()) {
-  add_them <- function(l, op) {
-    ret <- l[[1L]]
-    for(el in l[-1L])
-      ret <- call(op, ret, el)
-    return(ret)
-  }
-  if(expand.contrasts) {
-    fixed <- contrast.names(design, ranfac = NULL, contrasts = contrasts, interactions = interactions, intercept = F, as.symbols = T)
-    random <- lapply(random.factors(design, include.interactions = F), function(fac) {
-      c(list(add_them(lapply(fac@name, as.symbol), ':')), contrast.names(design, ranfac = fac@name, contrasts = contrasts, interactions = interactions, intercept = F, as.symbols = T))
-    })
-  }
-  else {
-    fixed <- lapply(names(fixed.factors(design)), as.symbol)
-    random <- lapply(random.factors(design, include.interactions = F), function(fac) {
-      c(list(add_them(lapply(fac@name, as.symbol), ':')), lapply(intersect(colnames(fac@levels), fixed), as.symbol))
-    })
-  }
-  random_lmer <- lapply(random, function(el) call('(', call('|', add_them(c(if(intercepts) list(1) else list(), list(add_them(el[-1L], if(interactions&&!expand.contrasts) '*' else '+'))), '+'), el[[1L]])))
-  random_aov <- lapply(random, function(el) call('Error', if(length(el)>1L) call('/', el[[1L]], add_them(el[-1],'*')) else el[[1L]]))
-  list(
-    lm = call('~',as.symbol(response),add_them(c(if(intercepts) list(1) else list(), list(add_them(fixed, if(interactions&&!expand.contrasts) '*' else '+'))), '+')),
-    lmer = call('~',as.symbol(response),add_them(c(if(intercepts) list(1) else list(), list(add_them(fixed, if(interactions&&!expand.contrasts) '*' else '+')), random_lmer), '+')),
-    aov = call('~',as.symbol(response),add_them(c(if(intercepts) list(1) else list(), list(add_them(fixed, if(interactions&&!expand.contrasts) '*' else '+')), random_aov), '+'))
-  )
-}
-setMethod("formula", signature = "factor.design", function(x, ...) design.formula(design=x, ...)$lmer )
 
 
 simulate.response <- function(design, contrasts = NULL, means = default.fixed.means(design, contrasts = contrasts), varcov = default.random.cov(design, contrasts = contrasts, include = names(means)), residual.sd = 1.0, collapse.contrasts = T, empirical = F) {
