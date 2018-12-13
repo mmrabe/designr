@@ -210,6 +210,11 @@ show.factor.container <- function(object) print.factor.container(x=object)
 `+.factor.container` <- function(e1, e2) {
   if(is(e1, "factor.design")) {
     if(is(e2, "factor.design")) {
+      if(length(e1) == 0) {
+        return(e2)
+      } else if(length(e2) == 0) {
+        return(e1)
+      }
       for(el in e2) {
         e1 <- sys.function()(e1, el)
       }
