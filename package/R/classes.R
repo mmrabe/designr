@@ -44,6 +44,7 @@ setClass("factor.design", slots=c(design="data.frame"), contains=c("list", "fact
 #' @export
 random.factor <- function(name, groups = character(0), ..., replications = 1L) {
   if(!is.character(name)) stop("Factor name must be a string (character vector of length 1).")
+  if(any(vapply(name, function(n) substr(n,1,1) == '*', logical(1)))) stop("Factor names must not start with an asterisk!")
   if(!is.numeric(replications) || length(replications) != 1L || replications < 1L) stop("`replications` must be an integer (integer vector of length 1, minimum value 1)!")
   if(!is.character(groups)) stop("Groups must be groups (names of grouping factors)")
   levels <- do.call(data.frame, sapply(name, function(n) NA_integer_, USE.NAMES = T, simplify = F))
@@ -81,6 +82,7 @@ fixed.factor <- function(name, levels, blocked = F, character.as.factor = T, is.
   if(!is.character(groups)) stop("Groups must be strings (names of grouping factors)!")
   is.grouped <- length(groups) > 0L
   if(!is.character(name) || length(name) != 1L) stop("Factor name must be a string (character vector of length 1).")
+  if(substr(name,1,1) == '*') stop("Factor names must not start with an asterisk!")
   if(length(groups) == 0L && (!is.vector(levels) || length(levels) < 1L)) stop("`levels` must be a vector with a minimum length of 1!")
   if(length(groups) > 0L && (!is.list(levels) || !all(vapply(levels, function(glevels) is.vector(glevels) && length(glevels) >= 1L, logical(1))))) stop("If `groups` are given (i.e., factor is nested), `levels` must be a list of vectors, each with a minimum length of 1!")
   if(!is.numeric(replications) || (length(replications) != length(levels) && length(replications) != 1L)) stop("`replications` must be an integer or integer vector of same length as levels or of length 1!")

@@ -34,7 +34,7 @@ replicate.factor <- function(fac, context=factor.design()) {
 
     df[, fac@name] <- seq_len(nrow(df))
     rownames(df) <- NULL
-    df
+    return(tibble::as.tibble(df))
   }else if(is.random.factor(fac) && length(fac@name) > 1L){
     id.factors <- unique(unlist(lapply(context[fac@name], function(f) colnames(f@levels)), use.names = F)) # these are the factors that define one level of this interaction
     ids <- unique(context@design[, id.factors]) # these are all the realizations of this interaction
@@ -68,30 +68,30 @@ replicate.factor <- function(fac, context=factor.design()) {
     assign.to.ids <- do.call(rbind, lapply(id.groups, join, multiplications)) # the *facname columns will help create new random factor levels
     assign.to.ids[,paste0('*', fac@name)] <- (assign.to.ids[, fac@name, drop=F] - 1L) * nrow(rotations) + assign.to.ids[, paste0('*', fac@name), drop=F]
 
-    return(assign.to.ids)
+    return(tibble::as.tibble(assign.to.ids))
   }else if(is.fixed.factor(fac) && length(fac@groups) == 0L){
-    df[rep(seq_len(nrow(df)), each=fac@replications), , drop=F]
+    return(tibble::as.tibble(df[rep(seq_len(nrow(df)), each=fac@replications), , drop=F]))
   }else if(is.fixed.factor(fac) && length(fac@groups) >= 1L){
     if(!all(vapply(context[fac@groups], is.fixed.factor, logical(1)))) stop("Fixed factor may only be nested within other fixed factors or fixed factor interactions but not within levels of random factors!")
     
     conditions <- do.call(join, lapply(context[fac@groups], function(f) f@levels))
     conditions[,'*'] <- apply(conditions, 1L, paste, collapse=":")
     
-    excluded.conditions <- setdiff(conditions[,'*'], df[,'*'])
+    excluded.conditions <- setdiff(conditions[,'*',drop=T], df[,'*',drop=T])
     
     if(length(excluded.conditions)>0L) {
       warning(sprintf("`%1$s` does not specify levels for groups: %2$s. Note that the `%1$s` column will therefore be NA and could potentially lead to problems further on in the design! If this is intended, to suppress this warning, please specify %3$s in the fixed.factor level list.", fac@name, paste("'",excluded.conditions,"'",sep="",collapse = ", "), paste("`",excluded.conditions,"`=NA",sep="",collapse = ", ")))
-      dummy.df <- do.call(tibble::tibble, lapply(seq_len(ncol(df)), function(i) rep(NA, length(excluded.conditions))))
+      dummy.df <- do.call(data.frame, lapply(seq_len(ncol(df)), function(i) rep(NA, length(excluded.conditions))))
       colnames(dummy.df) <- colnames(df)
       dummy.df[, '*'] <- excluded.conditions
       df <- rbind(df, dummy.df)
     }
     
-    ret <- join(conditions, df[rep(seq_len(nrow(df)), each=fac@replications), , drop=F])
+    ret <- join(as.data.frame(conditions), as.data.frame(df[rep(seq_len(nrow(df)), each=fac@replications), , drop=F]))
     ret[,'*'] <- NULL
     rownames(ret) <- NULL
     
-    return(ret)
+    return(tibble::as.tibble(ret))
   }else{
     stop("Don't know how to expand this factor!")
   }

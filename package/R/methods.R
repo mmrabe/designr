@@ -150,11 +150,11 @@ output.design <- function(design, group_by = NULL, order_by = NULL, randomize = 
   if(length(order_by)>0L) data <- data[do.call(order, unname(as.list(data[, order_by, drop=F]))), , drop=F]
   rownames(data) <- NULL
   list(
-    codes = tibble::as.tibble(if(length(group_by)>0L) lapply(seq_len(nrow(file_groups)), function(i) {
+    codes = if(length(group_by)>0L) lapply(seq_len(nrow(file_groups)), function(i) {
       df <- join(file_groups[i, , drop=F], data)
       rownames(df) <- NULL
-      return(df)
-    }) else data),
+      return(tibble::as.tibble(df))
+    }) else tibble::as.tibble(data),
     groups = if(length(group_by)>0L) file_groups else NULL,
     ordered = if(length(order_by)>0L) order_by else NULL,
     randomized = randomize,
@@ -229,9 +229,6 @@ show.factor.container <- function(object) print.factor.container(x=object)
         e2@levels <- join(e2@levels, do.call(join, lapply(e1[match(e2@groups, old.ids)], function(f) f@levels)))
       } else if(is.fixed.factor(e2) && length(e2@groups) > 0L) {
         if(!all(vapply(e1[e2@groups], is.fixed.factor, logical(1)))) stop(sprintf("Cannot add `%s` to factor list because all its grouping factors must be fixed.", new.id))
-        nest <- do.call(join, lapply(e1[e2@groups], function(f) f@levels))
-        if(nrow(nest) != nrow(e2@levels)) warning(sprintf("Nesting %d level(s) within %d level(s) of %s (%s)! Nested levels (%s) are recycled or truncated!", nrow(e2@levels), nrow(nest), paste(e2@groups, collapse = ":"), paste(apply(nest, 1, paste, collapse=":"), collapse=", "), paste(apply(e2@levels, 1, paste, collapse=":"), collapse=", ")))
-        e2@levels <- cbind(nest, e2@levels[(seq_len(nrow(nest))-1L)%%nrow(e2@levels)+1L, , drop=F])
       }
       e1[[new.id]] <- e2
       add.to.design <- replicate.factor(e2, e1)
@@ -292,6 +289,61 @@ fixed.factors <- function(design) {
   return(design[vapply(design, is.fixed.factor, logical(1))])
 }
 
+#' Retrieve factors or design matrix from an factor design object
+#' @usage
+#' design[i, col]
+#' design[i, NULL]
+#' design[, col]
+#' design[, NULL]
+#' design[[fac]]
+#' design[facs]
+#' 
+#' @param i The row number (number of the planned observation) to retrieve from the design matrix. Leave empty (but don't leave the comma out!) to select all rows.
+#' @param col The column[s] (factor name[s]) to select from the matrix. Leave empty (but don't leave the comma out!) to select all columns.
+#' @param fac,facs The factor name(s) to select from the factor list.
+#' 
+#' The design[i, col] syntax can be used to retrieve the design matrix (instead of the design object itself). You may leave names/indices for rows out in order to select all rows. You ALWAYS have to specify columns by names, indices or select all by using NULL or a single TRUE value.
+#' 
+#' If you use design[facs], you are selecting factor objects as a list from the design object, specified by names or indices in facs.
+#' 
+#' If you use design[[fac]], you are selecting a single factor object, specified by a name or index.
+#' 
+#' @export
+`[.factor.design` <- function(x, i, j) {
+  if(missing(j)) {
+    y <- as(x, "list")
+    names(y) <- names(x)
+    if(is.null(i)) {
+      i <- T
+    }
+    return(y[i])
+  }
+  else return(x@design[i, j, drop=F])
+}
+
+#' Design matrix dimensions
+#' @usage
+#' nrow(design)
+#' ncol(design)
+#' dim(design)
+#' nobs(design)
+#' 
+#' @param design A factor design object.
+#' 
+#' You can use nrow(design) or nobs(design) to retrieve the number of rows (planned observations) and ncol(design) to retrieve the number of columns of the design. dim(design) retrieves both as a 2-length integer vector.
+#' 
+#' @export
+dim.factor.design <- function(x) dim(x@design)
+
+#' @describeIn dim.factor.design Number of observations
+#' @export
+nobs.factor.design <- function(object) nrow(object)
+
+
+
+setMethod("[", c(x="factor.design"), `[.factor.design`)
+setMethod("dim", "factor.design", dim.factor.design)
+setMethod("nobs", "factor.design", nobs.factor.design)
 
 setMethod("+", signature(e1="factor.container", e2="factor.container"), `+.factor.container`)
 
