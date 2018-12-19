@@ -4,7 +4,7 @@
 \alias{simulate.lmer}
 \title{Simulate and fit a linear mixed model based on the given design and effects.}
 \usage{
-\method{simulate}{lmer}(design, formula = NULL,
+simulate.lmer(design, formula = NULL,
   fixefs = default.fixed.means(design),
   varcov = default.random.cov(design), residual.sd = 1,
   contrasts = NULL, empirical = F)

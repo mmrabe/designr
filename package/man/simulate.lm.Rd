@@ -4,7 +4,7 @@
 \alias{simulate.lm}
 \title{Simulate and fit a linear model based on the given design and effects.}
 \usage{
-\method{simulate}{lm}(design, formula = NULL,
+simulate.lm(design, formula = NULL,
   fixefs = default.fixed.means(design),
   varcov = default.random.cov(design, sd = 0), residual.sd = 1,
   collapse = names(random.factors(design))[-1], collapse.method = mean,

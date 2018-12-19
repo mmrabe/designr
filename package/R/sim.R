@@ -172,7 +172,20 @@ default.fixed.means <- function(design, mean = 0.0, interactions = T, intercept 
 
 
 
-
+#' Simulate a response variable
+#' 
+#' Given a factor design, cell means (fixed effects) and random-level covariance matrices (random effects), simulate a normally distributed response variable.
+#' 
+#' @param design The factor design to use
+#' @param contrasts Contrast codes to be used
+#' @param means A named numeric vector with each mean (fixed effect)
+#' @param varvoc Variance-covariance matrices for each level. This should be a named list of named symmetric matrices. Names of list entries should match the names of the random factors and row/column names of the listed matrices should match the names of the effects (ideally the same as in `means`).
+#' @param include Only use these factors (instead of the factors listed in `means`)
+#' @param residual.sd The residual error standard deviation in each cell of the design
+#' @param empirical Are the means and (co-)variances empirical or population values? If true, analyzing the simulated response should yield the recovered parameters. If false, a sufficiently large sample of analyses should be representative of those values (appropriate for power simulations). 
+#' 
+#'
+#' @export
 simulate.response <- function(design, contrasts = NULL, means = default.fixed.means(design, contrasts = contrasts), varcov = default.random.cov(design, contrasts = contrasts, include = names(means)), residual.sd = 1.0, collapse.contrasts = T, empirical = F) {
   
   # argument checks
@@ -227,6 +240,15 @@ simulate.response <- function(design, contrasts = NULL, means = default.fixed.me
   
   return(response)
 }
+
+setMethod("simulate", c(object="factor.design"), function(object, nsim=1, seed=NULL, ...) {
+  if(!is.null(seed)) {
+    set.seed(seed)
+  }
+  if(nsim < 1) stop("`nsim` must be greater than or equal to 1!")
+  else if(nsim > 1) return(lapply(seq_len(nsim), function(i) simulate.response(design = object, ...)))
+  else return(simulate.response(design = object, ...))
+})
 
 #' Extend the experimental design by replicating the codes along a given fixed or random factor.
 #' 
