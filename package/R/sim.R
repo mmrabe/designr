@@ -205,6 +205,8 @@ simulate.response <- function(design, contrasts = NULL, means = default.fixed.me
   
   # add random effects
   
+  blups <- list()
+  
   for(ranfac in random.factors(design, include.interactions = F)) {
     if(is.null(varcov[[ranfac@name]])) warning(sprintf("There is no covariance matrix specified for `%s`! Assuming zero (co-)variance at that level.", ranfac@name))
     else if(!is.matrix(varcov[[ranfac@name]])) stop(sprintf("`varcov` entry for `%s` is not a matrix!", ranfac@name))
@@ -215,7 +217,7 @@ simulate.response <- function(design, contrasts = NULL, means = default.fixed.me
       ranlevels <- unique(design@design[,ranfac@name,drop=T])
       rmat <- MASS::mvrnorm(length(ranlevels), mu = rep(0, ncol(varcov[[ranfac@name]])), Sigma = varcov[[ranfac@name]], empirical = empirical) # columns is effects, rows is random factor levels
       colnames(rmat) <- colnames(varcov[[ranfac@name]])
-      
+      blups[[ranfac@name]] <- rmat
       response[,colnames(rmat)] <- response[,colnames(rmat),drop=F] + rmat[design@design[,ranfac@name,drop=T],,drop=F]
       
     }
@@ -237,6 +239,9 @@ simulate.response <- function(design, contrasts = NULL, means = default.fixed.me
   
   if(collapse.contrasts)
     response <- unname(rowSums(response))
+  
+  attr(response, "ranefs") <- blups
+  attr(response, "fixefs") <- means
   
   return(response)
 }
