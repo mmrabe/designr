@@ -1,13 +1,13 @@
 Package: designr
 Type: Package
 Title: Balanced Designs in R
-Version: 0.1.2
+Version: 0.1.3
 Date: 2018-11-27
 URL: https://maxrabe.com/designr
-Authors@R: c(person("Maximilian", "Rabe", email = "maximilian.rabe@uni-potsdam.de", role = c("aut", "cre")), person("Reinhold", "Kliegl", email = "kliegl@uni-potsdam.de", role = c("ctb")), person("Daniel", "Schad", email = "daniel.schad@uni-potsdam.de", role = c("ctb")))
+Authors@R: c(person("Maximilian", "Rabe", email = "maximilian.rabe@uni-potsdam.de", role = c("aut", "cre")), person("Reinhold", "Kliegl", email = "kliegl@uni-potsdam.de", role = c("aut")), person("Schad", "Daniel", email = "schad@uni-potsdam.de", role = c("aut")))
 Description: Generate balanced factorial designs with crossed and nested random and fixed effects.
 License: MIT
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.1.1
-Imports: MASS, ggplot2, lme4, parallel, tibble
+Imports: MASS, ggplot2, lme4, parallel, tibble, crossdes
