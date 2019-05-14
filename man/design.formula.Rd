@@ -6,7 +6,7 @@
 \usage{
 design.formula(design, contrasts = NULL,
   expand.contrasts = !is.null(contrasts), interactions = T,
-  intercepts = T, response = "response", env = parent.frame())
+  intercepts = T, response = "dv", env = parent.frame())
 }
 \arguments{
 \item{design}{The `factor.design` to be used.}

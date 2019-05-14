@@ -82,11 +82,14 @@ write.design <- function(design, group_by = NULL, order_by = NULL, randomize = F
 #' @param interactions Should fixed effects be additive or interactive?
 #' @return A named list of `formula` objects, each name corresponding to the type of model it is suited for.
 #' @export
-design.formula <- function(design, contrasts = NULL, expand.contrasts = !is.null(contrasts), interactions=T, intercepts=T, response = "response", env = parent.frame()) {
+design.formula <- function(design, contrasts = NULL, expand.contrasts = !is.null(contrasts), interactions=T, intercepts=T, response = "dv", env = parent.frame()) {
   add_them <- function(l, op) {
+    if(length(l) < 1) return(NULL)
     ret <- l[[1L]]
-    for(el in l[-1L])
+    for(el in l[-1L]) {
+      if(is.null(el)) next
       ret <- call(op, ret, el)
+    }
     return(ret)
   }
   if(expand.contrasts) {

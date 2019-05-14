@@ -186,7 +186,7 @@ default.fixed.means <- function(design, mean = 0.0, interactions = T, intercept 
 #' 
 #'
 #' @export
-simulate.response <- function(design, contrasts = NULL, means = default.fixed.means(design, contrasts = contrasts), varcov = default.random.cov(design, contrasts = contrasts, include = names(means)), residual.sd = 1.0, collapse.contrasts = T, empirical = F) {
+simulate.response <- function(design, contrasts = NULL, means = default.fixed.means(design, contrasts = contrasts), varcov = default.random.cov(design, contrasts = contrasts, include = names(means), sd = 0), residual.sd = 1.0, collapse.contrasts = T, empirical = F) {
   
   # argument checks
   if(!inherits(means, c("double","numeric")) || length(means) > 0 && is.null(names(means))) stop("`means` must be a numeric vector, named after the contrasts in the design.")
@@ -216,6 +216,7 @@ simulate.response <- function(design, contrasts = NULL, means = default.fixed.me
     else {
       ranlevels <- unique(design@design[,ranfac@name,drop=T])
       rmat <- MASS::mvrnorm(length(ranlevels), mu = rep(0, ncol(varcov[[ranfac@name]])), Sigma = varcov[[ranfac@name]], empirical = empirical) # columns is effects, rows is random factor levels
+      if(!is.matrix(rmat)) rmat <- matrix(rmat, nrow = 1)
       colnames(rmat) <- colnames(varcov[[ranfac@name]])
       blups[[ranfac@name]] <- rmat
       response[,colnames(rmat)] <- response[,colnames(rmat),drop=F] + rmat[design@design[,ranfac@name,drop=T],,drop=F]
@@ -234,7 +235,7 @@ simulate.response <- function(design, contrasts = NULL, means = default.fixed.me
     }
     response[w,"Residual"] <- MASS::mvrnorm(sum(w), mu=0, Sigma=residual.sd**2, empirical = empirical)
   }
-
+  
   response[,colnames(dmat)] <- response[,colnames(dmat),drop=F] * as.matrix(dmat)
   
   if(collapse.contrasts)
@@ -311,11 +312,12 @@ collapse.design.matrix <- function(dmat, collapse, var.name, method = mean) {
 #' @return A fitted lmerMod object
 #' @seealso [lme4::lmer()]
 #' @export
-simulate.lmer <- function(design, formula = NULL, fixefs = default.fixed.means(design), varcov = default.random.cov(design), residual.sd = 1.0, contrasts = NULL, empirical = F) {
-  if(is.null(formula)) formula <- as.formula(design.formula(design, contrasts = contrasts, expand.contrasts = T)$lmer)
+simulate.lmer <- function(design, formula = NULL, fixefs = default.fixed.means(design), varcov = default.random.cov(design, sd = 1), residual.sd = 1.0, contrasts = NULL, empirical = F) {
+  if(is.null(formula)) formula <- as.formula(design.formula(design, contrasts = contrasts, expand.contrasts = F)$lmer)
   df <- design.contrasts(design, contrasts = contrasts, expand = T, intercept=T, interactions = F, include.random.levels = T)
-  df$response <- simulate.response(design, contrasts = contrasts, means = fixefs, varcov = varcov, residual.sd = residual.sd, empirical = empirical)
-  model <- do.call(lme4::lmer, list(formula=formula, data=df, contrasts=contrasts))
+  df$dv <- simulate.response(design, contrasts = contrasts, means = fixefs, varcov = varcov, residual.sd = residual.sd, empirical = empirical)
+  dat <- cbind(design@design, dv = df$dv)
+  model <- do.call(lme4::lmer, list(formula=formula, data=quote(dat), contrasts=quote(contrasts)))
   attr(model, "trueVals") <- lapply(match.call(), eval.parent)
   return(model)
 }
@@ -333,13 +335,14 @@ simulate.lmer <- function(design, formula = NULL, fixefs = default.fixed.means(d
 #' @return A fitted lm object
 #' @seealso [lm()]
 #' @export
-simulate.lm <- function(design, formula = NULL, fixefs = default.fixed.means(design), varcov = default.random.cov(design, sd=0), residual.sd = 1.0, collapse=names(random.factors(design))[-1], collapse.method = mean, contrasts = NULL, empirical = F) {
+simulate.lm <- function(design, formula = NULL, fixefs = default.fixed.means(design), varcov = default.random.cov(design, sd = 0), residual.sd = 1.0, collapse=names(random.factors(design))[-1], collapse.method = mean, contrasts = NULL, empirical = F) {
   if(missing(collapse) && length(collapse) != 0L) warning(sprintf("There are at least two random factors in the design and `%s` was automatically determined to be collapsed across. Please explicitly specify the factor!", paste0(collapse, collapse = ":")))
-  if(is.null(formula)) formula <- as.formula(design.formula(design, contrasts = contrasts, expand.contrasts = T)$lm)
+  if(is.null(formula)) formula <- as.formula(design.formula(design, contrasts = contrasts, response = "dv")$lm)
   df <- design.contrasts(design, contrasts = contrasts, expand = T, intercept=T, interactions = F, include.random.levels = T)
-  df$response <- simulate.response(design, contrasts = contrasts, means = fixefs, varcov = varcov, residual.sd = residual.sd, empirical = empirical)
-  if(length(collapse)>0L) df <- collapse.design.matrix(df, collapse, "response", collapse.method)
-  model <- do.call(lm, list(formula=formula, data=df, contrasts=contrasts))
+  df$dv <- simulate.response(design, contrasts = contrasts, means = fixefs, varcov = varcov, residual.sd = residual.sd, empirical = empirical)
+  dat <- cbind(design@design, dv = df$dv)
+  if(length(collapse)>0L) dat <- collapse.design.matrix(dat, collapse, "dv", collapse.method)
+  model <- do.call("lm", list(formula=formula, data=quote(dat), contrasts=quote(contrasts)))
   attr(model, "trueVals") <- lapply(match.call(), eval.parent)
   return(model)
 }
@@ -403,7 +406,7 @@ model.power.sim <- function(model, tests, nsim = 1000L, cl = NULL, alpha = NULL)
 #' @return A matrix with the results of all simulations
 #' @seealso [model.power.sim()], [design.power.sim()], [tests()], [lme4::lmer()], [stats::lm()]
 #' @export
-design.power.sim <- function(design, formula = NULL, tests, modelClass="lmer", contrasts = NULL, fixefs = default.fixed.means(design, contrasts = contrasts), varcov = default.random.cov(design, contrasts = contrasts), residual.sd = 1, ...) {
+design.power.sim <- function(design, formula = NULL, tests, modelClass="lmer", contrasts = NULL, fixefs = default.fixed.means(design, contrasts = contrasts), varcov = default.random.cov(design, contrasts = contrasts, sd = if(modelClass == "lm" || identical(modelClass, stats::lm)) 0 else 1), residual.sd = 1, ...) {
   model <- design.contrasts(design, contrasts = contrasts, expand = T, intercept=T, interactions = F, include.random.levels = T)
   if(modelClass == "lm" || identical(modelClass, stats::lm))
     attr(model, "trueVals") <- list(simulate.lm, design = design, formula = formula, fixefs = fixefs, varcov = varcov, residual.sd = residual.sd, collapse=names(random.factors(design))[-1], collapse.method = mean, contrasts = contrasts)

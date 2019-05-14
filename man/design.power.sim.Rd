@@ -6,8 +6,9 @@
 \usage{
 design.power.sim(design, formula = NULL, tests, modelClass = "lmer",
   contrasts = NULL, fixefs = default.fixed.means(design, contrasts =
-  contrasts), varcov = default.random.cov(design, contrasts = contrasts),
-  residual.sd = 1, ...)
+  contrasts), varcov = default.random.cov(design, contrasts = contrasts,
+  sd = if (modelClass == "lm" || identical(modelClass, stats::lm)) 0 else
+  1), residual.sd = 1, ...)
 }
 \arguments{
 \item{design}{A design object}

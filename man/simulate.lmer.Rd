@@ -6,7 +6,7 @@
 \usage{
 simulate.lmer(design, formula = NULL,
   fixefs = default.fixed.means(design),
-  varcov = default.random.cov(design), residual.sd = 1,
+  varcov = default.random.cov(design, sd = 1), residual.sd = 1,
   contrasts = NULL, empirical = F)
 }
 \arguments{

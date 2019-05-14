@@ -7,7 +7,7 @@
 simulate.response(design, contrasts = NULL,
   means = default.fixed.means(design, contrasts = contrasts),
   varcov = default.random.cov(design, contrasts = contrasts, include =
-  names(means)), residual.sd = 1, collapse.contrasts = T,
+  names(means), sd = 0), residual.sd = 1, collapse.contrasts = T,
   empirical = F)
 }
 \arguments{
