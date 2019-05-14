@@ -59,7 +59,7 @@ random.factor <- function(name, groups = character(0), ..., replications = 1L) {
 #' @param levels If not grouped, a vector of factor levels. Any atomic data type (character, logical, numeric, integer) can be used. If grouped, this should be a named list with each entry being a vector (as described before) and its name being a value of the grouping factor(s). If grouped within several factors, i.e. an interaction, the values constituting the names should be concatenated by colons (:), e.g. list(`f1l1:f2l1`=1:2, `f1l2:f2l1`=3:4, ...). If for any group there are no levels specified, a warning will be issued and NA will be assigned as the value for this factor. If this is intended and the warning should be suppressed, please explicitly assign NA as the value for that group, e.g. list(`f1l1:f2l1`=1:2, `f1l2:f2l1`=NA, ...).
 #' @param replications Either a single integer or an integer vector of the same length as `levels` that is used to determine how many times each factor level should be repeated.
 #' @param blocked Set this to TRUE if the levels of this factor are blocked. In that case, a factor is created whose factor levels are different sequences of the levels specified in the function call.
-#' @param assign If `blocked = TRUE`, you may specify a different method of rotating levels. The default if 'latin.square' but 'permutations' and 'random.order'are also available.
+#' @param assign If `blocked = TRUE`, you may specify a different method of rotating levels. The default if 'latin.square' but 'permutations', 'williams', and 'random.order' are also available.
 #' @param character.as.factor If this is `TRUE`, character vectors passed in `levels` are automatically converted to a factor type.
 #' @param block.name If `blocked`, by default, there is not only a design matrix column created that contains the complete sequence of block levels but also a column for each position of the sequence with its assigned level. You may specify a different naming pattern using [sprintf()] naming conventions. The first argument passed is the factor name and the second argument is the sequence position (starting at 1). The default column names will be `factor.1`, `factor.2`, ect. If `NULL`, no additional block columns are created.
 #' @param groups Names of fixed factors in which to nest this fixed factor (see *Nesting fixed factors*).
@@ -78,7 +78,7 @@ random.factor <- function(name, groups = character(0), ..., replications = 1L) {
 #'
 #' @seealso [random.factor()]
 #' @export
-fixed.factor <- function(name, levels, blocked = F, character.as.factor = T, is.ordered = F, block.name = "%1$s.%2$d", groups = character(0), ..., replications = 1L) {
+fixed.factor <- function(name, levels, blocked = FALSE, character.as.factor = TRUE, is.ordered = FALSE, block.name = "%1$s.%2$d", groups = character(0), assign = "latin.square", replications = 1L, ...) {
   if(!is.character(groups)) stop("Groups must be strings (names of grouping factors)!")
   is.grouped <- length(groups) > 0L
   if(!is.character(name) || length(name) != 1L) stop("Factor name must be a string (character vector of length 1).")
@@ -100,7 +100,7 @@ fixed.factor <- function(name, levels, blocked = F, character.as.factor = T, is.
   
   glevels <- sapply(levels, function(levels) {
     if(blocked) {
-      rotation.function <- find.rot.fun.in.extra(list(...), latin.square)
+      rotation.function <- find.rot.fun.in.extra(list(assign=assign), latin.square)
       levels <- rep(levels, each=replications)
       mat <- rotation.function(length(levels))
       lvmat <- do.call(data.frame, lapply(seq_len(n.max.levels), function(i) {
@@ -111,7 +111,7 @@ fixed.factor <- function(name, levels, blocked = F, character.as.factor = T, is.
         else vals
       }))
       if(!is.null(block.name)) colnames(lvmat) <- sprintf(block.name, name, seq_len(n.max.levels))
-      lvmat[,name] <- factor(apply(lvmat[,seq_along(levels),drop=F], 1, paste, collapse=":"))
+      lvmat[,name] <- factor(apply(lvmat[,seq_along(levels),drop=F], 1, paste, collapse="-"))
       if(is.null(block.name)) lvmat[,-ncol(lvmat)] <- NULL
       levels <- lvmat
     }else {

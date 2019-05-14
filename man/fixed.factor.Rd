@@ -4,9 +4,10 @@
 \alias{fixed.factor}
 \title{Fixed factors}
 \usage{
-fixed.factor(name, levels, blocked = F, character.as.factor = T,
-  is.ordered = F, block.name = "\%1$s.\%2$d", groups = character(0),
-  ..., replications = 1L)
+fixed.factor(name, levels, blocked = FALSE, character.as.factor = TRUE,
+  is.ordered = FALSE, block.name = "\%1$s.\%2$d",
+  groups = character(0), assign = "latin.square", replications = 1L,
+  ...)
 }
 \arguments{
 \item{name}{Name of the fixed factor.}
@@ -21,9 +22,9 @@ fixed.factor(name, levels, blocked = F, character.as.factor = T,
 
 \item{groups}{Names of fixed factors in which to nest this fixed factor (see *Nesting fixed factors*).}
 
-\item{replications}{Either a single integer or an integer vector of the same length as `levels` that is used to determine how many times each factor level should be repeated.}
+\item{assign}{If `blocked = TRUE`, you may specify a different method of rotating levels. The default if 'latin.square' but 'permutations', 'williams', and 'random.order' are also available.}
 
-\item{assign}{If `blocked = TRUE`, you may specify a different method of rotating levels. The default if 'latin.square' but 'permutations' and 'random.order'are also available.}
+\item{replications}{Either a single integer or an integer vector of the same length as `levels` that is used to determine how many times each factor level should be repeated.}
 }
 \value{
 An instance of `fixed.factor`.

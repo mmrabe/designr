@@ -10,6 +10,7 @@ find.rot.fun.in.extra <- function(facExtra, default) {
     else if(facExtra$assign %in% c("latin.square","lsq")) rotation.function <- latin.square
     else if(facExtra$assign %in% c("random","random.order")) rotation.function <- random.order
     else if(facExtra$assign %in% c("permute","permutations")) rotation.function <- permutations
+    else if(facExtra$assign %in% c("williams")) rotation.function <- crossdes::williams
     else {
       rotation.function <- eval(as.symbol(facExtra$assign))
       if(!is.function(rotation.function)) stop(sprintf("`%s` is not a function!", facExtra$assign))
