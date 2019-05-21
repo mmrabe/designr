@@ -5,8 +5,9 @@
 \alias{default.fixed.means}
 \title{Specifying effect sizes for simulations}
 \usage{
-default.random.cov(design, include = NULL, random.intercepts = T,
-  random.slope.interactions = T, sd = 1, contrasts = NULL)
+default.random.cov(design, include = NULL, include.factors = NULL,
+  random.intercepts = T, random.slope.interactions = T, sd = 1,
+  contrasts = NULL)
 
 default.fixed.means(design, mean = 0, interactions = T,
   intercept = T, contrasts = NULL)

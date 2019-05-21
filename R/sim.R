@@ -156,8 +156,14 @@ covmat <- function(sds, cormat = diag(length(sds)), set.names = names(sds)) {
 #' @param contrasts Contrasts to use in the fixed/random effects. This should match the contrasts passed to the model.
 #' @return A list of variance matrices (for default.random.cov) or a named numeric vector (for default.fixed.means).
 #' @export
-default.random.cov <- function(design, include = NULL, random.intercepts = T, random.slope.interactions = T, sd = 1.0, contrasts = NULL) {
-  lapply(random.factors(design, include.interactions = F), function(fac) {
+default.random.cov <- function(design, include = NULL, include.factors = NULL, random.intercepts = T, random.slope.interactions = T, sd = 1.0, contrasts = NULL) {
+  facs <- random.factors(design, include.interactions = F)
+  if(!is.null(include.factors)) {
+    if(!is.character(include.factors)) stop("`include.factors` must be a character vector of random factors to include!")
+    if(length(setdiff(include.factors, names(facs)))>0) stop("`include.factors` contains names that are not random factors of the design!")
+    facs <- facs[include.factors]
+  }
+  lapply(facs, function(fac) {
     cnames <- contrast.names(design, fac@name, interactions = random.slope.interactions, intercept = random.intercepts, contrasts = contrasts)
     if(!is.null(include)) cnames <- intersect(cnames, include)
     covmat(sds = rep(sd, length(cnames)), set.names = cnames)
