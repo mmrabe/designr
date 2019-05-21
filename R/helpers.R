@@ -40,7 +40,7 @@ replicate.factor <- function(fac, context=factor.design()) {
     id.factors <- unique(unlist(lapply(context[fac@name], function(f) colnames(f@levels)), use.names = F)) # these are the factors that define one level of this interaction
     ids <- unique(context@design[, id.factors]) # these are all the realizations of this interaction
 
-    between.conditions <- setdiff(colnames(ids), fac@name) # group factor levels by main factor groups
+    between.conditions <- setdiff(intersect(names(context), colnames(ids)), fac@name) # group factor levels by main factor groups
     if(length(between.conditions) > 0L) {
       id.groups <- split(ids[, fac@name, drop=F], lapply(between.conditions, function(cond) ids[, cond]))
     }else{
@@ -63,7 +63,7 @@ replicate.factor <- function(fac, context=factor.design()) {
       x
     }))
 
-    map.multiplications.to.conditions <- vapply(seq_len(nrow(multiplications)), function(i) rotations[((i-1)%/%ncol(rotations)%%nrow(rotations))+1, (i-1)%%ncol(rotations)+1, drop=T], integer(1))
+    map.multiplications.to.conditions <- vapply(seq_len(nrow(multiplications)), function(i) rotations[((i-1)%/%ncol(rotations)%%nrow(rotations))+1, (i-1)%%ncol(rotations)+1, drop=T], numeric(1))
     multiplications <- cbind(multiplications, conditions[map.multiplications.to.conditions, , drop=F])
 
     assign.to.ids <- do.call(rbind, lapply(id.groups, join, multiplications)) # the *facname columns will help create new random factor levels

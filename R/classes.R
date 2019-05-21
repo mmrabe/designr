@@ -132,7 +132,7 @@ fixed.factor <- function(name, levels, blocked = FALSE, character.as.factor = TR
   
   rownames(levels) <- NULL
   
-  new("fixed.factor", name = name, blocked = blocked, replications = 1L, groups = groups, levels = levels, extra = list(...))
+  new("fixed.factor", name = name, blocked = blocked, replications = 1L, groups = groups, levels = levels, extra = list(assign = assign, ...))
 }
 
 #' Factorial Designs
