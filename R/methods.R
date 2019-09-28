@@ -13,12 +13,13 @@ write.design.json <- function(..., dataframe="columns") write.design(..., file.e
 #' @param x The factor design to subset
 #' @param subset Criteria along which to filter in planned observations / design matrix rows.
 #' @param select Names of columns to keep in the design matrix
+#' @param ... (ignored)
 #'
 #' @return A factor design with updated design matrix.
 #'
 #' @export
-subset.factor.design <- function(x, subset, select = names(x)) {
-  if(as.character(sys.calls()[[1]][[1]]) != "subset.factor.design") fun.call <- match.call(call=sys.call(-1L))
+subset.factorDesign <- function(x, subset, select = names(x), ...) {
+  if(as.character(sys.calls()[[1]][[1]]) != "subset.factorDesign") fun.call <- match.call(call=sys.call(-1L))
   else fun.call <- match.call()
   if(any(!select %in% names(x))) stop("Undefined factor names in `select`!")
   x[setdiff(names(x), select)] <- NULL
@@ -31,7 +32,7 @@ subset.factor.design <- function(x, subset, select = names(x)) {
 #'
 #' This function writes a design into a set of files. For each random factor, a unit list is created that contains a list of all levels (instances) of the random factor and the factor levels to which that level is assigned. Moreover, code files are created that contain a complete set of experimental codes.
 #'
-#' @param design The `factor.design` to be written into files.
+#' @param design The `factorDesign` to be written into files.
 #' @param group_by Experimental codes are to be grouped by these factors. If `NULL`, all codes are written into one file. Also see [output.design()] for grouping design output.
 #' @param run.files The pattern to be used for the file names of the run files (i.e., files containing the experimental codes). By default, file names are "run_Group1_Othergroup4.ext" ect.
 #' @param order_by The experimental codes are to be ordered by these columns.  Also see [output.design()] for ordering design output.
@@ -73,7 +74,7 @@ write.design <- function(design, group_by = NULL, order_by = NULL, randomize = F
 #'
 #' Based on a given design, this function creates a model formula that can be used to analyze data with functions such as lm or lmer.
 #'
-#' @param design The `factor.design` to be used.
+#' @param design The `factorDesign` to be used.
 #' @param contrasts The contrasts to override (NULL if none to override)
 #' @param expand.contrasts If TRUE, factors with more than one contrast are replaced by so many contrasts, i.e. the result contains the names of the individual contrasts, not of the factors.
 #' @param response The left-hand side of the equation. Typically, this is just the response/dependent variable.
@@ -112,13 +113,13 @@ design.formula <- function(design, contrasts = NULL, expand.contrasts = !is.null
     aov = call('~',as.symbol(response),add_them(c(if(intercepts) list(1) else list(), list(add_them(fixed, if(interactions&&!expand.contrasts) '*' else '+')), random_aov), '+'))
   )
 }
-setMethod("formula", signature = "factor.design", function(x, ...) design.formula(design=x, ...)$lmer )
+setMethod("formula", signature = "factorDesign", function(x, ...) design.formula(design=x, ...)$lmer )
 
 #' Summary of Factor Designs
 #'
 #' This function creates a useful summary of a factor design, including the design matrix itself as well as other parameters and a list of random factors as experimental units.
 #'
-#' @param design The `factor.design` object to summarize.
+#' @param design The `factorDesign` object to summarize.
 #' @param group_by If not `NULL`, the design matrix is grouped by these factors. Factors must be valid columns of the design matrix. If used, `$codes` will be a list matched to the entries in `$groups`.
 #' @param order_by If not `NULL`, output within each output group is ordered by these columns.
 #' @param randomize After ordering, remaining rows in the same order rank are randomly shuffled.
@@ -143,7 +144,7 @@ setMethod("formula", signature = "factor.design", function(x, ...) design.formul
 output.design <- function(design, group_by = NULL, order_by = NULL, randomize = F) {
   if(is.null(order_by)) order_by <- character(0)
   if(is.null(group_by)) group_by <- character(0)
-  if(!is.factor.design(design)) stop("`design` must be a factor design!")
+  if(!is.factorDesign(design)) stop("`design` must be a factor design!")
   if(any(!group_by %in% colnames(design@design))) stop("Not all of the grouping variables are part of the design!")
   if(any(!order_by %in% colnames(design@design))) stop("Not all of the ordering variables are part of the design!")
   if(!is.logical(randomize)) stop("`randomize` must be logical (TRUE or FALSE)!")
@@ -172,27 +173,29 @@ output.design <- function(design, group_by = NULL, order_by = NULL, randomize = 
 }
 
 #' Output a design factor summary
+#' 
+#' @param object the factor container to display
 #'
 #' @export
 #'
-print.factor.container <- function(x) {
-  if(is(x, "factor.design")) {
-    cat(sprintf("Factor design with %d factor(s):\n", length(x)))
-    print.listof(x)
+show.factorContainer <- function(object) {
+  if(is(object, "factorDesign")) {
+    cat(sprintf("Factor design with %d factor(s):\n", length(object)))
+    print.listof(object)
     cat(sprintf("\nDesign matrix:\n"))
-    print(x@design)
-  } else if(is(x, "random.factor")) {
-    cat(sprintf("Random factor `%s` with %d group(s) and %d replication(s) (%d realization(s) in total)", paste(x@name, collapse=":"), nrow(x@levels), x@replications, nrow(x@levels)*x@replications))
-    if(length(x@groups)>0L) {
+    show(object@design)
+  } else if(is(object, "randomFactor")) {
+    cat(sprintf("Random factor `%s` with %d group(s) and %d instance(s) (%d level(s) in total)", paste(object@name, collapse=":"), nrow(object@levels), object@replications, nrow(object@levels)*object@replications))
+    if(length(object@groups)>0L) {
       cat(", grouped by ")
-      cat(paste(x@groups, collapse=":"))
+      cat(paste(object@groups, collapse=":"))
     }
     cat("\n")
-  } else if(is(x, "fixed.factor")) {
-    cat(sprintf("Fixed factor `%s` with %d level(s) (%s) and %d replication(s)", paste(x@name, collapse=":"), nrow(x@levels), paste(x@levels[,x@name], collapse=", "), x@replications))
-    if(length(x@groups)>0L) {
+  } else if(is(object, "fixedFactor")) {
+    cat(sprintf("Fixed factor `%s` with %d level(s) (%s) and %d replication(s)", paste(object@name, collapse=":"), nrow(object@levels), paste(object@levels[,object@name], collapse=", "), object@replications))
+    if(length(object@groups)>0L) {
       cat(", grouped by ")
-      cat(paste(x@groups, collapse=":"))
+      cat(paste(object@groups, collapse=":"))
     }
     cat("\n")
   } else {
@@ -200,19 +203,15 @@ print.factor.container <- function(x) {
   }
 }
 
-#' @describeIn print.factor.container Show a design factor summary
-#' @export
-show.factor.container <- function(object) print.factor.container(x=object)
-
 #' Concatenate design factors and designs
 #'
 #' By adding factors and designs by "+", a new design is created that contains all of the components.
 #'
 #' @export
 #'
-`+.factor.container` <- function(e1, e2) {
-  if(is(e1, "factor.design")) {
-    if(is(e2, "factor.design")) {
+`+.factorContainer` <- function(e1, e2) {
+  if(is(e1, "factorDesign")) {
+    if(is(e2, "factorDesign")) {
       if(length(e1) == 0) {
         return(e2)
       } else if(length(e2) == 0) {
@@ -222,16 +221,16 @@ show.factor.container <- function(object) print.factor.container(x=object)
         e1 <- sys.function()(e1, el)
       }
       return(e1)
-    }else if(is(e2, "design.factor")) {
+    }else if(is(e2, "designFactor")) {
       new.id <- paste(e2@name, collapse = ":")
       old.ids <- vapply(e1, function(f) paste(f@name, collapse=":"), character(1))
       if(new.id %in% old.ids) stop(sprintf("Cannot add `%s` to factor list because it already exists.", new.id))
       if(any(!e2@groups %in% old.ids)) stop(sprintf("Cannot add `%s` to factor list because not all grouping factors exist yet.", new.id))
       if(length(e2@name)>1L && !all(e2@name %in% names(e1))) stop(sprintf("Cannot add `%s` to factor list because all main factors must be added first!", new.id))
-      if(is.random.factor(e2) && length(e2@groups) > 0L) {
+      if(is.randomFactor(e2) && length(e2@groups) > 0L) {
         e2@levels <- join(e2@levels, do.call(join, lapply(e1[match(e2@groups, old.ids)], function(f) f@levels)))
-      } else if(is.fixed.factor(e2) && length(e2@groups) > 0L) {
-        if(!all(vapply(e1[e2@groups], is.fixed.factor, logical(1)))) stop(sprintf("Cannot add `%s` to factor list because all its grouping factors must be fixed.", new.id))
+      } else if(is.fixedFactor(e2) && length(e2@groups) > 0L) {
+        if(!all(vapply(e1[e2@groups], is.fixedFactor, logical(1)))) stop(sprintf("Cannot add `%s` to factor list because all its grouping factors must be fixed.", new.id))
       }
       e1[[new.id]] <- e2
       add.to.design <- replicate.factor(e2, e1)
@@ -245,22 +244,22 @@ show.factor.container <- function(object) print.factor.container(x=object)
     }else{
       stop("Second element must be a design factor or factor list!")
     }
-  }else if(is(e1, "design.factor")){
-    return(sys.function()(sys.function()(new("factor.design"), e1), e2))
+  }else if(is(e1, "designFactor")){
+    return(sys.function()(sys.function()(new("factorDesign"), e1), e2))
   }else{
-    stop("First element must be a design.factor (fixed.factor or random.factor) or a factor.design!")
+    stop("First element must be a designFactor (fixed.factor or random.factor) or a factorDesign!")
   }
 }
 
-#' @describeIn is.design.factor Check if argument is a random factor.
+#' @describeIn is.designFactor Check if argument is a random factor.
 #' @export
-is.random.factor <- function(fac) is(fac, "random.factor")
-#' @describeIn is.design.factor Check if argument is a fixed factor.
+is.randomFactor <- function(fac) is(fac, "randomFactor")
+#' @describeIn is.designFactor Check if argument is a fixed factor.
 #' @export
-is.fixed.factor <- function(fac) is(fac, "fixed.factor")
-#' @describeIn is.design.factor Check if argument is a factor design.
+is.fixedFactor <- function(fac) is(fac, "fixedFactor")
+#' @describeIn is.designFactor Check if argument is a factor design.
 #' @export
-is.factor.design <- function(fac) is(fac, "factor.design")
+is.factorDesign <- function(fac) is(fac, "factorDesign")
 #' Checking factor design data types
 #'
 #' Check if argument is a design factor (either random or fixed factor), specifically a random factor, a fixed factor or a factor design.
@@ -269,13 +268,13 @@ is.factor.design <- function(fac) is(fac, "factor.design")
 #'
 #' @return `TRUE` or `FALSE`
 #' @export
-is.design.factor <- function(fac) is(fac, "design.factor")
+is.designFactor <- function(fac) is(fac, "designFactor")
 
 #' @describeIn fixed.factors Return fixed factors
 #' @export
 random.factors <- function(design, include.interactions = T) {
-  if(!is.factor.design(design)&&!is.list(design)) stop("`design` must be a design factor or list!")
-  return(design[vapply(design, if(include.interactions) is.random.factor else function(f) is.random.factor(f) && length(f@name) == 1L, logical(1))])
+  if(!is.factorDesign(design)&&!is.list(design)) stop("`design` must be a design factor or list!")
+  return(design[vapply(design, if(include.interactions) is.randomFactor else function(f) is.randomFactor(f) && length(f@name) == 1L, logical(1))])
 }
 
 #' Extract factors by type
@@ -288,8 +287,8 @@ random.factors <- function(design, include.interactions = T) {
 #'
 #' @export
 fixed.factors <- function(design) {
-  if(!is.factor.design(design)&&!is.list(design)) stop("`design` must be a design factor or list!")
-  return(design[vapply(design, is.fixed.factor, logical(1))])
+  if(!is.factorDesign(design)&&!is.list(design)) stop("`design` must be a design factor or list!")
+  return(design[vapply(design, is.fixedFactor, logical(1))])
 }
 
 #' Retrieve factors or design matrix from an factor design object
@@ -312,7 +311,7 @@ fixed.factors <- function(design) {
 #' If you use design[[fac]], you are selecting a single factor object, specified by a name or index.
 #' 
 #' @export
-`[.factor.design` <- function(x, i, j) {
+`[.factorDesign` <- function(x, i, j) {
   if(missing(j)) {
     y <- as(x, "list")
     names(y) <- names(x)
@@ -336,23 +335,15 @@ fixed.factors <- function(design) {
 #' You can use nrow(design) or nobs(design) to retrieve the number of rows (planned observations) and ncol(design) to retrieve the number of columns of the design. dim(design) retrieves both as a 2-length integer vector.
 #' 
 #' @export
-dim.factor.design <- function(x) dim(x@design)
+dim.factorDesign <- function(x) dim(x@design)
 
-#' @describeIn dim.factor.design Number of observations
-#' @export
-nobs.factor.design <- function(object) nrow(object)
+setMethod("[", c(x="factorDesign"), `[.factorDesign`)
+setMethod("dim", "factorDesign", dim.factorDesign)
+setMethod("nobs", "factorDesign", function(object) nrow(object))
 
+setMethod("+", signature(e1="factorContainer", e2="factorContainer"), `+.factorContainer`)
 
+setMethod("show", "factorContainer", `show.factorContainer`)
 
-setMethod("[", c(x="factor.design"), `[.factor.design`)
-setMethod("dim", "factor.design", dim.factor.design)
-setMethod("nobs", "factor.design", nobs.factor.design)
-
-setMethod("+", signature(e1="factor.container", e2="factor.container"), `+.factor.container`)
-
-setMethod("print", "factor.container", `print.factor.container`)
-
-setMethod("show", "factor.container", `show.factor.container`)
-
-setMethod("subset", signature(x="factor.design"), `subset.factor.design`)
+setMethod("subset", signature(x="factorDesign"), `subset.factorDesign`)
 

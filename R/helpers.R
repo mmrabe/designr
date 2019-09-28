@@ -21,14 +21,14 @@ find.rot.fun.in.extra <- function(facExtra, default) {
 
 replicate.factor <- function(fac, context=factor.design()) {
   df <- fac@levels
-  if(is.random.factor(fac) && length(fac@name) == 1L) {
+  if(is.randomFactor(fac) && length(fac@name) == 1L) {
     df <- df[rep(seq_len(nrow(df)), each=fac@replications), , drop=F]
 
-    for(fixed.nest in lapply(context[vapply(names(context), function(f) f %in% fac@groups && is.fixed.factor(context[[f]]), logical(1))], replicate.factor)) {
+    for(fixed.nest in lapply(context[vapply(names(context), function(f) f %in% fac@groups && is.fixedFactor(context[[f]]), logical(1))], replicate.factor)) {
       df <- merge(df, fixed.nest)
     }
 
-    for(random.fac in context[vapply(names(context), function(f) f %in% fac@groups && is.random.factor(context[[f]]), logical(1))]) {
+    for(random.fac in context[vapply(names(context), function(f) f %in% fac@groups && is.randomFactor(context[[f]]), logical(1))]) {
       random.nest <- unique(context@design[,colnames(random.fac@levels),drop=F])
       df <- merge(df[,!colnames(df)%in%random.fac@name,drop=F], random.nest)
     }
@@ -36,7 +36,7 @@ replicate.factor <- function(fac, context=factor.design()) {
     df[, fac@name] <- seq_len(nrow(df))
     rownames(df) <- NULL
     return(tibble::as.tibble(df))
-  }else if(is.random.factor(fac) && length(fac@name) > 1L){
+  }else if(is.randomFactor(fac) && length(fac@name) > 1L){
     id.factors <- unique(unlist(lapply(context[fac@name], function(f) colnames(f@levels)), use.names = F)) # these are the factors that define one level of this interaction
     ids <- unique(context@design[, id.factors]) # these are all the realizations of this interaction
 
@@ -70,10 +70,10 @@ replicate.factor <- function(fac, context=factor.design()) {
     assign.to.ids[,paste0('*', fac@name)] <- (assign.to.ids[, fac@name, drop=F] - 1L) * nrow(rotations) + assign.to.ids[, paste0('*', fac@name), drop=F]
 
     return(tibble::as.tibble(assign.to.ids))
-  }else if(is.fixed.factor(fac) && length(fac@groups) == 0L){
+  }else if(is.fixedFactor(fac) && length(fac@groups) == 0L){
     return(tibble::as.tibble(df[rep(seq_len(nrow(df)), each=fac@replications), , drop=F]))
-  }else if(is.fixed.factor(fac) && length(fac@groups) >= 1L){
-    if(!all(vapply(context[fac@groups], is.fixed.factor, logical(1)))) stop("Fixed factor may only be nested within other fixed factors or fixed factor interactions but not within levels of random factors!")
+  }else if(is.fixedFactor(fac) && length(fac@groups) >= 1L){
+    if(!all(vapply(context[fac@groups], is.fixedFactor, logical(1)))) stop("Fixed factor may only be nested within other fixed factors or fixed factor interactions but not within levels of random factors!")
     
     conditions <- do.call(join, lapply(context[fac@groups], function(f) f@levels))
     conditions[,'*'] <- apply(conditions, 1L, paste, collapse=":")
@@ -101,7 +101,7 @@ replicate.factor <- function(fac, context=factor.design()) {
 join.random.factors <- function(...) {
   elements <- list(...)
   if(length(elements) == 0L) stop("Argument list cannot be empty!")
-  if(!all(vapply(elements, is.random.factor, logical(1)))) stop("Arguments to join must be random factors!")
+  if(!all(vapply(elements, is.randomFactor, logical(1)))) stop("Arguments to join must be random factors!")
   ret <- elements[[1]]
   for(el in elements[-1]) {
     ret@name <- c(ret@name, setdiff(el@name, ret@name))
@@ -175,10 +175,10 @@ parse.factor.language <- function(lang, ...) {
         stop("Replication operator (*) must occur with a number and a design factor (or list of factors)!")
       }
       if(repl < 1L) stop("Replication multiplier must be an integer greater than or equal to 1!")
-      if(is.design.factor(fact)) {
+      if(is.designFactor(fact)) {
         fact@replications <- fact@replications * repl
         return(fact)
-      }else if(is.list(fact)||is("design.factor", fact)) {
+      }else if(is.list(fact)||is("designFactor", fact)) {
         return(lapply(fact, function(f) {
           f@replications <- f@replications*repl
           return(f)
@@ -188,7 +188,7 @@ parse.factor.language <- function(lang, ...) {
   }
   # supplying additional arguments to factor
   fac <- parse.factor.language(lang[[1]])
-  if(!is.design.factor(fac)) stop("Syntax error! Expected factor definition before parantheses.")
+  if(!is.designFactor(fac)) stop("Syntax error! Expected factor definition before parantheses.")
   if(is.null(names(lang))) {
     # argument list is completely unnamed -> all arguments are grouping factors
     group.args <- lang[-1L]

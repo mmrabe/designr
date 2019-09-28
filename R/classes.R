@@ -2,11 +2,11 @@
 
 NULL
 
-setClass("factor.container")
-setClass("design.factor", slots=c(name="character", levels="data.frame", extra="list", replications="integer", groups="character"), contains="factor.container")
-setClass("random.factor", contains="design.factor")
-setClass("fixed.factor", slots=c(blocked="logical"), contains="design.factor")
-setClass("factor.design", slots=c(design="data.frame"), contains=c("list", "factor.container"))
+setClass("factorContainer")
+setClass("designFactor", slots=c(name="character", levels="data.frame", extra="list", replications="integer", groups="character"), contains="factorContainer")
+setClass("randomFactor", contains="designFactor")
+setClass("fixedFactor", slots=c(blocked="logical"), contains="designFactor")
+setClass("factorDesign", slots=c(design="data.frame"), contains=c("list", "factorContainer"))
 
 
 
@@ -18,10 +18,10 @@ setClass("factor.design", slots=c(design="data.frame"), contains=c("list", "fact
 #' This function creates an instance of random.factor to be used in a factor.design. A random factor is typically related to an experimental unit such as Subject, Item, Experimenter, ect. and does not have preset levels.
 #'
 #' @param name Name of the random factor as a character vector. Typically, this should be a length-1 vector (i.e., a single string) but you may pass multiple names of random factors whose interaction is to be nested in groups (see *Assignment Constraints*).
-#' @param replications Number of times (as a single integer value) each level (instantiation) is to be replicated.
+#' @param instances Number of times (as a single integer value) each level (instantiation) is to be replicated.
 #' @param groups Names of fixed and random factors that are to be used as grouping (nesting/between) levels.
 #' @param ... Additional arguments to be stored as *extra* values.
-#' @return An instance of the class `random.factor`.
+#' @return An instance of the class `randomFactor`.
 #'
 #' @section Nesting Random Factors:
 #' A typical case of nesting in a psychological experiment is to vary a factor between subjects. That means that each subject would only be assigned to one condition of the nesting fixed factor (such as type of instruction). All other fixed factors that are not listed under `groups` are considered to vary within the random factor. Note that nesting increases the number of replications of the random factor.
@@ -42,13 +42,13 @@ setClass("factor.design", slots=c(design="data.frame"), contains=c("list", "fact
 #'
 #' @seealso [fixed.factor()]
 #' @export
-random.factor <- function(name, groups = character(0), ..., replications = 1L) {
+random.factor <- function(name, groups = character(0), ..., instances = 1L) {
   if(!is.character(name)) stop("Factor name must be a string (character vector of length 1).")
   if(any(vapply(name, function(n) substr(n,1,1) == '*', logical(1)))) stop("Factor names must not start with an asterisk!")
-  if(!is.numeric(replications) || length(replications) != 1L || replications < 1L) stop("`replications` must be an integer (integer vector of length 1, minimum value 1)!")
+  if(!is.numeric(instances) || length(instances) != 1L || instances < 1L) stop("`replications` must be an integer (integer vector of length 1, minimum value 1)!")
   if(!is.character(groups)) stop("Groups must be groups (names of grouping factors)")
   levels <- do.call(data.frame, sapply(name, function(n) NA_integer_, USE.NAMES = T, simplify = F))
-  new("random.factor", name = name, levels=levels, groups=groups, replications = as.integer(replications), extra = list(...))
+  new("randomFactor", name = name, levels=levels, groups=groups, replications = as.integer(instances), extra = list(...))
 }
 
 #' Fixed factors
@@ -63,14 +63,14 @@ random.factor <- function(name, groups = character(0), ..., replications = 1L) {
 #' @param character.as.factor If this is `TRUE`, character vectors passed in `levels` are automatically converted to a factor type.
 #' @param block.name If `blocked`, by default, there is not only a design matrix column created that contains the complete sequence of block levels but also a column for each position of the sequence with its assigned level. You may specify a different naming pattern using [sprintf()] naming conventions. The first argument passed is the factor name and the second argument is the sequence position (starting at 1). The default column names will be `factor.1`, `factor.2`, ect. If `NULL`, no additional block columns are created.
 #' @param groups Names of fixed factors in which to nest this fixed factor (see *Nesting fixed factors*).
-#' @return An instance of `fixed.factor`.
+#' @return An instance of `fixedFactor`.
 #'
 #' @section Nesting Fixed Factors:
 #' If `groups` is used, the function will attempt to nest levels of the newly created factor within levels/interactions of the specified grouping factors. Note that nesting of fixed effects is only allowed within other fixed effects combinations but not within random effects. For each combination of the grouping factors, e.g. each group, you should specify an individual vector of levels (see above). If you fail to supply levels for any group, NAs will be assigned. This could result in unpredicted behavior when more factors are added. If you know what you are doing and would like to suppress the warning, please explicitly specify NA as the (only) value to assign to that group. At any rate, it is highly recommended to run sanity checks on the balancedness of the design if you are nesting fixed factors!
 #'
 #' @examples
-#' fixed.factor("correct", levels=c(T, F))
-#' ~correct[T, F]
+#' fixed.factor("correct", levels=c(TRUE, FALSE))
+#' ~correct[TRUE, FALSE]
 #' fixed.factor("age", levels=c("child", "youth", "adult"))
 #' ~age[child, youth, adult]
 #' fixed.factor("order", levels=c("task1", "task2", "task3"), assign="latin.square")
@@ -132,7 +132,7 @@ fixed.factor <- function(name, levels, blocked = FALSE, character.as.factor = TR
   
   rownames(levels) <- NULL
   
-  new("fixed.factor", name = name, blocked = blocked, replications = 1L, groups = groups, levels = levels, extra = list(assign = assign, ...))
+  new("fixedFactor", name = name, blocked = blocked, replications = 1L, groups = groups, levels = levels, extra = list(assign = assign, ...))
 }
 
 #' Factorial Designs
@@ -140,7 +140,7 @@ fixed.factor <- function(name, levels, blocked = FALSE, character.as.factor = TR
 #' The main function of this package is to create factorial designs with this function.
 #'
 #' @param ... Factors to add to the design.
-#' @return An instance of `factor.design` with the complete factorial design and all fixed and random factors.
+#' @return An instance of `factorDesign` with the complete factorial design and all fixed and random factors.
 #' @seealso [fixed.factor()] and [random.factor()] for creating factors to add to the design. [output.design()] and [write.design()] for creating a useful summary and writing it into output files.
 #' @examples
 #' # To create an empty design:
@@ -150,7 +150,7 @@ fixed.factor <- function(name, levels, blocked = FALSE, character.as.factor = TR
 #' design <- factor.design(fixed.factor("type",levels=c("pic","word")), fixed.factor("status",levels=c("old","new")), random.factor("subject", groups="type"), random.factor("item", groups="type"), random.factor(c("subject","item"), groups="status"))
 #'
 #' # This is identical to:
-#' design <- fixed.factor("type",levels=c("pic","word")) + fixed.factor("status",levels=c("old","new")) + random.factor("subject", groups="type") + random.factor("item", groups="type") + random.factor(c("subject","item"), groups="status"))
+#' design <- fixed.factor("type",levels=c("pic","word")) + fixed.factor("status",levels=c("old","new")) + random.factor("subject", groups="type") + random.factor("item", groups="type") + random.factor(c("subject","item"), groups="status")
 #'
 #' # Or:
 #' design <- factor.design(~type[pic,word]+status[old,new]+subject(type)+item(type)+subject:item(status))
@@ -163,16 +163,16 @@ fixed.factor <- function(name, levels, blocked = FALSE, character.as.factor = TR
 #' @export
 factor.design <- function(...) {
   elements <- unname(list(...))
-  ret <- as(list(), "factor.design")
+  ret <- as(list(), "factorDesign")
   for(element in elements) {
-    if(is(element, "design.factor")) {
-      ret <- `+.factor.container`(ret, element)
-    }else if(is(element, "factor.design")) {
-      ret <- `+.factor.container`(ret, element)
+    if(is(element, "designFactor")) {
+      ret <- `+.factorContainer`(ret, element)
+    }else if(is(element, "factorDesign")) {
+      ret <- `+.factorContainer`(ret, element)
     }else if(is.language(element)) {
       element <- parse.factor.language(element)
-      if(is.list(element)) ret <- `+.factor.container`(ret, do.call(factor.design, element))
-      else ret <- `+.factor.container`(ret, element)
+      if(is.list(element)) ret <- `+.factorContainer`(ret, do.call(factor.design, element))
+      else ret <- `+.factorContainer`(ret, element)
     }else{
       stop("All arguments must be design factors (random or fixed), factor lists or factor formulae!")
     }
