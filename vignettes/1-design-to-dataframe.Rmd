@@ -159,7 +159,7 @@ Continuing with the last example, it may also make sense to vary not only _Age_,
 
 **Design formula:**
 ```
-_Age(2) x Speed(3) x 6 Item x 10 Subj[Age x Speed]
+Age(2) x Speed(3) x 6 Item x 10 Subj[Age x Speed]
 ```
 The total number of subjects is 10 x 2 x 3 = 60. This design generates **360 observations**. 
 
