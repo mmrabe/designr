@@ -155,7 +155,7 @@ The total number of subjects is 25 x 2 = 50. This design generates **900 observa
 
 ##  _Age_ between-subject/within-item, _Speed_ between-subject/within-item; no counterbalancing
 
-Continuing with the last example, it may also make sense to vary not only _Age_, but als _Speed_ between subjects. Thus, every subject is either _old_ or _young_ (i.e., a quasi-experimental factor) and is randomly assigned to one of the three _Speed_ conditions (i.e., an experimental factor). For this specification the two factors are included as a vector for the `groups` argument. For the minimal design we need only 1 replication because 2 x 3 = 6. This means we generate codes for 1 subject in each of the six design cells, but each subjects reads each text in this condition (i.e., there are six measures for each subject.) To get code for 10 subjects in each of the 2 x 3  = 6 design cells (i.e., a total of 60 subjects), we set `instances=10`. 
+Continuing with the last example, it may also make sense to vary not only _Age_, but als _Speed_ between subjects. Thus, every subject is either _old_ or _young_ (i.e., a quasi-experimental factor) and is randomly assigned to one of the three _Speed_ conditions (i.e., an experimental factor). For this specification the two factors are included as a vector for the `groups` argument. For the minimal design we need only 1 instance because 2 x 3 = 6. This means we generate codes for 1 subject in each of the six design cells, but each subjects reads each text in this condition (i.e., there are six measures for each subject.) To get code for 10 subjects in each of the 2 x 3  = 6 design cells (i.e., a total of 60 subjects), we set `instances=10`. 
 
 **Design formula:**
 ```
@@ -193,10 +193,10 @@ We start with the minimal design of 6 subjects reading 6 texts.
 
 **Design formula:**
 ```
-Speed(3) x Load(2) x 1 Item[Speed x Load] x 1 Subj[Speed x Load] x 1 Item-by-Subj[Speed x Load], 
+Speed(3) x Load(2) x 1 Item[Speed x Load] x 1 Subj[Speed x Load] x (3 x 2) Item-by-Subj[Speed x Load], 
 ````
 
-We have 1 item and 1 subject nested under the levels of the _Speed_ x _Load_ design. Thus, there are 6 instances of the random factor resulting from the multiplication of the random factors _Item_ and _Subj_. The design generates **36 observations**.
+We have 1 item and 1 subject nested under the levels of the _Speed_ x _Load_ design. There are 36 instances of the random factor resulting from the multiplication of the random factors _Item_ and _Subj_. The design generates 3 x 2 x 1 x 1 x (3 x 2) **36 observations**.
 
 ```{r}
 design5 <- 
@@ -231,8 +231,8 @@ will generate codes for 60 subjects and 24 texts.
 design6 <- 
   fixed.factor("Speed", levels=c("slow", "medium", "fast")) +
   fixed.factor("Load",  levels=c("simple", "complex")) +
-  random.factor("Subj", replications=10) + 
-  random.factor("Item", replications=4) +
+  random.factor("Subj", instances=10) + 
+  random.factor("Item", instances=4) +
   random.factor(c("Subj", "Item"), groups=c("Speed", "Load"))
 
 
@@ -246,12 +246,12 @@ length(unique(paste(codes6$Subj, codes6$Item)))
 
 **Design formula:**
 ```
-Speed(3) x Load(2) x 4 Item[Speed x Load] x 10 Subj[Speed x Load] x 6 Item-by-Subj[Speed x Load x Item[Speed x Load]  x  Subj[Speed x Load]] 
+Speed(3) x Load(2) x 4 Item[Speed x Load] x 10 Subj[Speed x Load] x 
+(3 x 2) Item-by-Subj[Speed x Load x Item[Speed x Load]  x  Subj[Speed x Load]] 
 ````
 
-The total number of items is 4 x 3 x 2 = 24; the total number of subjects is 10 x 3 x 2 = 60. The total number of instances of _Item-by-Subj_ is 6 x 3 x 2 x 4 x 10 = 1440. The experimental design results in **1440 observations**.
+The total number of items is 4 x 3 x 2 = 24; the total number of subjects is 10 x 3 x 2 = 60. The total number of instances of _Item-by-Subj_ is 3 x 2 x (3 x 2) x 4 x 10 = 1440. The design yields 3 x 2 x 4 x 10 x (3 x 2) = **1440 observations**.
 
-COMMENT: WE NEED  A TABLE THAT SHOWS WHERE THE 6 in front of "6 Item-by-Subj[Speed x Load x Item[Speed x Load]  x  Subj[Speed x Load]]" COMES FROM. 
 
 # Outlook
 
