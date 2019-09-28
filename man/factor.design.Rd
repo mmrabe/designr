@@ -10,7 +10,7 @@ factor.design(...)
 \item{...}{Factors to add to the design.}
 }
 \value{
-An instance of `factor.design` with the complete factorial design and all fixed and random factors.
+An instance of `factorDesign` with the complete factorial design and all fixed and random factors.
 }
 \description{
 The main function of this package is to create factorial designs with this function.
@@ -23,7 +23,7 @@ design <- factor.design()
 design <- factor.design(fixed.factor("type",levels=c("pic","word")), fixed.factor("status",levels=c("old","new")), random.factor("subject", groups="type"), random.factor("item", groups="type"), random.factor(c("subject","item"), groups="status"))
 
 # This is identical to:
-design <- fixed.factor("type",levels=c("pic","word")) + fixed.factor("status",levels=c("old","new")) + random.factor("subject", groups="type") + random.factor("item", groups="type") + random.factor(c("subject","item"), groups="status"))
+design <- fixed.factor("type",levels=c("pic","word")) + fixed.factor("status",levels=c("old","new")) + random.factor("subject", groups="type") + random.factor("item", groups="type") + random.factor(c("subject","item"), groups="status")
 
 # Or:
 design <- factor.design(~type[pic,word]+status[old,new]+subject(type)+item(type)+subject:item(status))

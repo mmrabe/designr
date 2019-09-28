@@ -27,7 +27,7 @@ fixed.factor(name, levels, blocked = FALSE, character.as.factor = TRUE,
 \item{replications}{Either a single integer or an integer vector of the same length as `levels` that is used to determine how many times each factor level should be repeated.}
 }
 \value{
-An instance of `fixed.factor`.
+An instance of `fixedFactor`.
 }
 \description{
 This function creates an instance of fixed.factor to be used in a `factor.design`. Fixed factors typically relate to (quasi-)experimental factors such as experimental conditions/manipulations, subject/item characteristics ect.
@@ -38,8 +38,8 @@ If `groups` is used, the function will attempt to nest levels of the newly creat
 }
 
 \examples{
-fixed.factor("correct", levels=c(T, F))
-~correct[T, F]
+fixed.factor("correct", levels=c(TRUE, FALSE))
+~correct[TRUE, FALSE]
 fixed.factor("age", levels=c("child", "youth", "adult"))
 ~age[child, youth, adult]
 fixed.factor("order", levels=c("task1", "task2", "task3"), assign="latin.square")

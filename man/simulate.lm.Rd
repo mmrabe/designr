@@ -2,7 +2,7 @@
 % Please edit documentation in R/sim.R
 \name{simulate.lm}
 \alias{simulate.lm}
-\title{Simulate and fit a linear model based on the given design and effects.}
+\title{Linear regression simulation}
 \usage{
 simulate.lm(design, formula = NULL,
   fixefs = default.fixed.means(design),

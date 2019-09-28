@@ -36,9 +36,9 @@ contrast.names(design, ranfac = NULL, as.symbols = F, ...)
 A design matrix (if expand==TRUE, default) or a list of factor levels (if expand==FALSE) for design.contrasts or contrast names for contrast.names.
 }
 \description{
-Retrieve contrast codes for a design
+This function can be used to retrieve contrast codes based on experimental codes / planned observations.
 
-Retrieve contrast names for a design
+Use this function to retrieve the names for contrasts in an experimental design, such as used by lm, lmer and many other regression models.
 }
 \section{Functions}{
 \itemize{

@@ -6,7 +6,7 @@
 \usage{
 plot.design.power.curve(x, ci = 0.95, ignore.failed.models = T,
   add_p_breaks = c(attr(sim.out, "alpha_level"), 0.8), ncol = 3,
-  plot.mean = "p", plot.error = "e")
+  plot.mean = "p", plot.error = "e", ...)
 }
 \arguments{
 \item{x}{A power curve object (from design.power.curve(...))}
@@ -22,6 +22,8 @@ plot.design.power.curve(x, ci = 0.95, ignore.failed.models = T,
 \item{plot.mean}{How should the mean power (beta) be plotted? Valid values are: line, l, point, p}
 
 \item{plot.error}{How should the confidence interval be plotted? Valid values are: line, l, errorbar, e, ribbon, r, point, p}
+
+\item{...}{(ignored)}
 }
 \value{
 A ggplot plot

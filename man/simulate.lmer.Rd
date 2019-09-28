@@ -2,7 +2,7 @@
 % Please edit documentation in R/sim.R
 \name{simulate.lmer}
 \alias{simulate.lmer}
-\title{Simulate and fit a linear mixed model based on the given design and effects.}
+\title{Mixed model simulation}
 \usage{
 simulate.lmer(design, formula = NULL,
   fixefs = default.fixed.means(design),

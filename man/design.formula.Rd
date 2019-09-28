@@ -9,7 +9,7 @@ design.formula(design, contrasts = NULL,
   intercepts = T, response = "dv", env = parent.frame())
 }
 \arguments{
-\item{design}{The `factor.design` to be used.}
+\item{design}{The `factorDesign` to be used.}
 
 \item{contrasts}{The contrasts to override (NULL if none to override)}
 

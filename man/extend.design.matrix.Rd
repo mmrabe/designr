@@ -3,7 +3,7 @@
 \name{extend.design.matrix}
 \alias{extend.design.matrix}
 \alias{extend.design}
-\title{Extend the experimental design by replicating the codes along a given fixed or random factor.}
+\title{Extend an existing design matrix}
 \usage{
 extend.design.matrix(df, factor, n)
 

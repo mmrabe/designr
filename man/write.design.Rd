@@ -19,7 +19,7 @@ write.design(design, group_by = NULL, order_by = NULL, randomize = F,
 \arguments{
 \item{...}{Other parameters to be passed on to `write.design` and the underlying output handler.}
 
-\item{design}{The `factor.design` to be written into files.}
+\item{design}{The `factorDesign` to be written into files.}
 
 \item{group_by}{Experimental codes are to be grouped by these factors. If `NULL`, all codes are written into one file. Also see [output.design()] for grouping design output.}
 

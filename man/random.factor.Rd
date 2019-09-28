@@ -4,7 +4,7 @@
 \alias{random.factor}
 \title{Random factors}
 \usage{
-random.factor(name, groups = character(0), ..., replications = 1L)
+random.factor(name, groups = character(0), ..., instances = 1L)
 }
 \arguments{
 \item{name}{Name of the random factor as a character vector. Typically, this should be a length-1 vector (i.e., a single string) but you may pass multiple names of random factors whose interaction is to be nested in groups (see *Assignment Constraints*).}
@@ -13,10 +13,10 @@ random.factor(name, groups = character(0), ..., replications = 1L)
 
 \item{...}{Additional arguments to be stored as *extra* values.}
 
-\item{replications}{Number of times (as a single integer value) each level (instantiation) is to be replicated.}
+\item{instances}{Number of times (as a single integer value) each level (instantiation) is to be replicated.}
 }
 \value{
-An instance of the class `random.factor`.
+An instance of the class `randomFactor`.
 }
 \description{
 This function creates an instance of random.factor to be used in a factor.design. A random factor is typically related to an experimental unit such as Subject, Item, Experimenter, ect. and does not have preset levels.

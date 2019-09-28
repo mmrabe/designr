@@ -8,7 +8,7 @@ output.design(design, group_by = NULL, order_by = NULL,
   randomize = F)
 }
 \arguments{
-\item{design}{The `factor.design` object to summarize.}
+\item{design}{The `factorDesign` object to summarize.}
 
 \item{group_by}{If not `NULL`, the design matrix is grouped by these factors. Factors must be valid columns of the design matrix. If used, `$codes` will be a list matched to the entries in `$groups`.}
 
