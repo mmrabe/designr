@@ -114,92 +114,58 @@ join.random.factors <- function(...) {
 }
 
 parse.factor.language <- function(lang, ...) {
-  extra = list(...)
-  if(is.symbol(lang)) {
-    return(random.factor(name=as.character(lang)))
-  }
-  if(!is.language(lang)) stop(sprintf("`lang` must be a language object! Unknown token: %s", as.character(lang)))
-  tilde.pos <- find.in.list('~', lang)
-  if(length(tilde.pos) > 0L) {
-    if(length(lang) <= tilde.pos) {
-      stop("If including the tilde operator (~), the factor formula is expected after it.")
-    }
-    return(parse.factor.language(lang[[tilde.pos+1]]))
-  }
-  if(is.symbol(lang[[1]])) {
-    if(lang[[1]]=='+') {
-      return(c(parse.factor.language(lang[[2]]), parse.factor.language(lang[[3]])))
-    } else if(lang[[1]]=='[') {
-      #this is a fixed factor definition
-      args <- list()
-      if(is.null(names(lang))) {
-        levels <- lang[-c(1L,2L)]
-      }else{
-        levels <- lang[which(nchar(names(lang))==0L)[-c(1L,2L)]]
-        for(i in which(nchar(names(lang))>0L)) {
-          args[[names(lang)[i]]] <- eval(lang[[i]])
+  extra <- list(...)
+  if(is.language(lang)) {
+    if(is.name(lang)) {
+      return(random.factor(as.character(lang)))
+    } else if(is.expression(lang)) {
+      return(factor.design(parse.factor.language(lang[[1]], ...)))
+    } else if(is.call(lang)) {
+      if(lang[[1]] == "~") {
+        if(length(lang) > 2) {
+          stop("If using a formula operator (~), the left-hand side must be empty!")
+        } else {
+          return(factor.design(parse.factor.language(lang[[2]], ...)))
         }
-      }
-      args$levels <- unname(unlist(lapply(levels, function(level) {
-        reps <- 1L
-        if(is.language(level)&&!is.symbol(level)&&level[[1]]==':') {
-          if(!is.numeric(level[[2]])||!is.numeric(level[[3]])) stop(": only allowed for numbers, such as 2:5")
-          return(seq(level[[2]], level[[3]]))
-        }else if(is.language(level)&&!is.symbol(level)&&level[[1]]=='*') {
-          if(!is.numeric(level[[2]])) stop("* only allowed for level multiplication, such as 2*level")
-          reps <- as.integer(level[[2]])
-          level <- level[[3]]
-        }else if(length(level)==1){
-          level <- level
+      } else if(lang[[1]] == "[") {
+        fac <- parse.factor.language(lang[[2]])
+        if(!is.designFactor(fac)) {
+          stop(sprintf("Object of [] operation must be a designFactor (%s given)!", class(fac)))
         }
-        if(is.symbol(level)) return(rep(as.character(level), reps))
-        else if(inherits(level, c("character","logical","integer","numeric"))) return(rep(level, reps))
-        else stop("Unnamed arguments in level brackets must be levels or multiplied levels (2*level)!")
-      })))
-      args$name <- as.character(lang[[2]])
-
-      return(do.call(fixed.factor, args))
-    } else if(lang[[1]]=='(') {
-      if(length(lang)==2) return(parse.factor.language(lang[[2]]))
-      else return(lapply(lang[-1], parse.factor.language))
-    } else if(lang[[1]]==':') {
-      return(do.call(join.random.factors, lapply(lang[-1], parse.factor.language)))
-    } else if(lang[[1]]=='*') {
-      if(is.numeric(lang[[2]])) {
-        repl <- as.integer(lang[[2]])
-        fact <- parse.factor.language(lang[[3]])
-      }else if(is.numeric(lang[[3]])){
-        repl <- as.integer(lang[[3]])
-        fact <- parse.factor.language(lang[[2]])
-      }else{
-        stop("Replication operator (*) must occur with a number and a design factor (or list of factors)!")
-      }
-      if(repl < 1L) stop("Replication multiplier must be an integer greater than or equal to 1!")
-      if(is.designFactor(fact)) {
-        fact@replications <- fact@replications * repl
-        return(fact)
-      }else if(is.list(fact)||is("designFactor", fact)) {
-        return(lapply(fact, function(f) {
-          f@replications <- f@replications*repl
-          return(f)
-        }))
+        fac@groups <- vapply(lang[c(-1,-2)], as.character, character(1))
+        return(fac)
+      } else if(lang[[1]] == "+") {
+        fac1 <- parse.factor.language(lang[[2]])
+        fac2 <- parse.factor.language(lang[[3]])
+        if(!is(fac1, "factorContainer") || !is(fac2, "factorContainer")) {
+          stop(sprintf("Objects combined with a + operator must evaluate to designFactors (%s and %s given)!", class(fac1), class(fac2)))
+        }
+        return(factor.design(fac1, fac2))
+      } else if(lang[[1]] == "*") {
+        if(!is.numeric(lang[[2]]) || lang[[2]] < 1) {
+          stop("When using the multiplication sign (*), the left-hand side must be a number and the right-hand side must be factors!")
+        }
+        fac1 <- as.integer(lang[[2]])
+        fac2 <- factor.design(parse.factor.language(lang[[3]]))
+        for(i in seq_along(fac2)) {
+          fac2[[i]]@replications <- fac2[[i]]@replications * fac1
+        }
+        return(fac2)
+      } else if(lang[[1]] == ":") {
+        fac1 <- lang[[2]]
+        fac2 <- parse.factor.language(lang[[3]])
+        if(!is.name(fac1) || !is(fac2, "designFactor")) {
+          stop("When using the interaction operator (:), it must combine valid variable names!")
+        }
+        fac2@name <- c(as.character(fac1), fac2@name)
+        return(fac2)
+      } else if(is.name(lang[[1]])) {
+        return(fixed.factor(as.character(lang[[1]]), levels = vapply(lang[-1], as.character, character(1))))
+      } else {
+        stop(sprintf("Unknown operator %s!", as.character(lang[[1]])))
       }
     }
+  } else {
+    stop(sprintf("`lang` must be a language object but is of class %s!", class(lang)))
   }
-  # supplying additional arguments to factor
-  fac <- parse.factor.language(lang[[1]])
-  if(!is.designFactor(fac)) stop("Syntax error! Expected factor definition before parantheses.")
-  if(is.null(names(lang))) {
-    # argument list is completely unnamed -> all arguments are grouping factors
-    group.args <- lang[-1L]
-  }else{
-    group.args <- lang[which(nchar(names(lang))==0L)[-1L]]
-    for(i in which(nchar(names(lang))>0L)) {
-      argname <- names(lang)[i]
-      argval <- if(is.symbol(lang[[i]])) as.character(lang[[i]]) else eval(lang[[i]])
-      fac@extra[[argname]] <- argval
-    }
-  }
-  fac@groups <- vapply(group.args, as.character, character(1))
-  return(fac)
 }
