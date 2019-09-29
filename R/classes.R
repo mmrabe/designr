@@ -163,7 +163,7 @@ fixed.factor <- function(name, levels, blocked = FALSE, character.as.factor = TR
 #' @export
 factor.design <- function(...) {
   elements <- unname(list(...))
-  ret <- as(list(), "factorDesign")
+  ret <- new("factorDesign")
   for(element in elements) {
     if(is(element, "designFactor")) {
       ret <- `+.factorContainer`(ret, element)
@@ -171,8 +171,7 @@ factor.design <- function(...) {
       ret <- `+.factorContainer`(ret, element)
     }else if(is.language(element)) {
       element <- parse.factor.language(element)
-      if(is.list(element)) ret <- `+.factorContainer`(ret, do.call(factor.design, element))
-      else ret <- `+.factorContainer`(ret, element)
+      ret <- `+.factorContainer`(ret, element)
     }else{
       stop("All arguments must be design factors (random or fixed), factor lists or factor formulae!")
     }

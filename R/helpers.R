@@ -146,10 +146,9 @@ parse.factor.language <- function(lang, ...) {
           stop("When using the multiplication sign (*), the left-hand side must be a number and the right-hand side must be factors!")
         }
         fac1 <- as.integer(lang[[2]])
-        fac2 <- factor.design(parse.factor.language(lang[[3]]))
-        for(i in seq_along(fac2)) {
-          fac2[[i]]@replications <- fac2[[i]]@replications * fac1
-        }
+        fac2 <- parse.factor.language(lang[[3]])
+        fac2@replications <- fac2@replications * fac1
+        show(fac2)
         return(fac2)
       } else if(lang[[1]] == ":") {
         fac1 <- lang[[2]]
