@@ -16,7 +16,7 @@
 #' @param as.symbols Return contrast names as symbols rather than strings (character vectors).
 #' @return A design matrix (if expand==TRUE, default) or a list of factor levels (if expand==FALSE) for design.contrasts or contrast names for contrast.names.
 #' @export
-design.contrasts <- function(design, factors = names(fixed.factors(design)), contrasts = NULL, expand = T, rename.contrasts = "%1$s%2$s", intercept = F, interactions = F, include.random.levels = F) {
+design.contrasts <- function(design, factors = names(fixed.factors(design)), contrasts = NULL, expand = TRUE, rename.contrasts = "%1$s%2$s", intercept = FALSE, interactions = FALSE, include.random.levels = FALSE) {
   if(!is(design, "factorDesign")) stop("`design` must be a factor design!")
   if(!is.null(contrasts)&&!is.list(contrasts)) stop("`contrasts` must be NULL or a named list!")
   main.contrasts <- lapply(design[factors], function(fac) {
@@ -26,7 +26,7 @@ design.contrasts <- function(design, factors = names(fixed.factors(design)), con
       if(!is.factor(retfac)) retfac <- factor(retfac)
       if(!is.null(contrasts)&&!is.null(contrasts[[fac@name]])) {
         if(is.character(contrasts[[fac@name]]) || is.function(contrasts[[fac@name]]))
-          contrasts(retfac) <- do.call(contrasts[[fac@name]], list(length(retfac), contrasts = T, sparse = F))
+          contrasts(retfac) <- do.call(contrasts[[fac@name]], list(length(retfac), contrasts = TRUE, sparse = FALSE))
         else if(is.matrix(contrasts[[fac@name]]))
           contrasts(retfac) <- contrasts[[fac@name]]
         else
@@ -34,7 +34,7 @@ design.contrasts <- function(design, factors = names(fixed.factors(design)), con
       }
       retfac <- contrasts(retfac)
       if(expand) {
-        retfac <- retfac[design@design[,fac@name],,drop=F]
+        retfac <- retfac[design@design[,fac@name],,drop=FALSE]
         rownames(retfac) <- NULL
       }
       if(!is.null(rename.contrasts))
@@ -42,10 +42,10 @@ design.contrasts <- function(design, factors = names(fixed.factors(design)), con
       return(retfac)
     }else if(inherits(fac@levels[,fac@name], c("numeric", "integer"))) {
       if(expand) {
-        retfac <- design@design[,fac@name,drop=F]
+        retfac <- design@design[,fac@name,drop=FALSE]
         rownames(retfac) <- NULL
       } else
-        retfac <- fac@levels[,fac@name,drop=F]
+        retfac <- fac@levels[,fac@name,drop=FALSE]
       if(!is.null(rename.contrasts))
         colnames(retfac) <- fac@name
       return(retfac)
@@ -60,7 +60,7 @@ design.contrasts <- function(design, factors = names(fixed.factors(design)), con
       ncontrasts <- c(ncontrasts, main.contrasts[i], lapply(seq_along(ncontrasts), function(j) {
         do.call(cbind, do.call(cbind, lapply(colnames(main.contrasts[[i]]), function(icol) {
           lapply(colnames(ncontrasts[[j]]), function(jcol) {
-            ret <- main.contrasts[[i]][,icol,drop=F] * ncontrasts[[j]][,jcol,drop=F]
+            ret <- main.contrasts[[i]][,icol,drop=FALSE] * ncontrasts[[j]][,jcol,drop=FALSE]
             colnames(ret) <- paste0(jcol,':',icol)
             rownames(ret) <- NULL
             return(ret)
@@ -73,12 +73,12 @@ design.contrasts <- function(design, factors = names(fixed.factors(design)), con
       names(ncontrasts[[1]])[1] = "(Intercept)"
     }
     if(include.random.levels) {
-      for(ranfac in random.factors(design, include.interactions = F)){
+      for(ranfac in random.factors(design, include.interactions = FALSE)){
         if(expand) {
-          main.contrasts <- c(main.contrasts, list(design@design[,ranfac@name,drop=F]))
+          main.contrasts <- c(main.contrasts, list(design@design[,ranfac@name,drop=FALSE]))
           names(main.contrasts)[length(main.contrasts)] <- ranfac@name
         }else {
-          main.contrasts <- c(main.contrasts, list(sort(unique(design@design[,ranfac@name,drop=T]))))
+          main.contrasts <- c(main.contrasts, list(sort(unique(design@design[,ranfac@name,drop=TRUE]))))
           names(main.contrasts)[length(main.contrasts)] <- ranfac@name
         }
       }
@@ -92,12 +92,12 @@ design.contrasts <- function(design, factors = names(fixed.factors(design)), con
       names(main.contrasts[[1]])[1] = "(Intercept)"
     }
     if(include.random.levels) {
-      for(ranfac in random.factors(design, include.interactions = F)){
+      for(ranfac in random.factors(design, include.interactions = FALSE)){
         if(expand) {
-          main.contrasts <- c(main.contrasts, list(design@design[,ranfac@name,drop=F]))
+          main.contrasts <- c(main.contrasts, list(design@design[,ranfac@name,drop=FALSE]))
           names(main.contrasts)[length(main.contrasts)] <- ranfac@name
         }else {
-          main.contrasts <- c(main.contrasts, list(sort(unique(design@design[,ranfac@name,drop=T]))))
+          main.contrasts <- c(main.contrasts, list(sort(unique(design@design[,ranfac@name,drop=TRUE]))))
           names(main.contrasts)[length(main.contrasts)] <- ranfac@name
         }
       }
@@ -118,7 +118,7 @@ design.contrasts <- function(design, factors = names(fixed.factors(design)), con
 #' 
 #' @describeIn design.contrasts Retrieve contrast names for a design
 #' @export
-contrast.names <- function(design, ranfac = NULL, as.symbols = F, ...) {
+contrast.names <- function(design, ranfac = NULL, as.symbols = FALSE, ...) {
   facnames <- names(fixed.factors(design))
   if(!is.null(ranfac)) {
     if(is.null(design[[ranfac]])||!is.randomFactor(design[[ranfac]])) stop(sprintf("Random factor `%s` does not exist", ranfac))
@@ -126,7 +126,7 @@ contrast.names <- function(design, ranfac = NULL, as.symbols = F, ...) {
   }
   cnames <- colnames(design.contrasts(design = design, factors = facnames, ...))
   if(as.symbols) {
-    cnames <- lapply(strsplit(cnames, ':', T), function(nm) {
+    cnames <- lapply(strsplit(cnames, ':', TRUE), function(nm) {
       ret <- as.symbol(nm[1L])
       for(el in nm[-1L])
         ret <- call(':', ret, as.symbol(el))
@@ -160,8 +160,8 @@ covmat <- function(sds, cormat = diag(length(sds)), set.names = names(sds)) {
 #' @param contrasts Contrasts to use in the fixed/random effects. This should match the contrasts passed to the model.
 #' @return A list of variance matrices (for default.random.cov) or a named numeric vector (for default.fixed.means).
 #' @export
-default.random.cov <- function(design, include = NULL, include.factors = NULL, random.intercepts = T, random.slope.interactions = T, sd = 1.0, contrasts = NULL) {
-  facs <- random.factors(design, include.interactions = F)
+default.random.cov <- function(design, include = NULL, include.factors = NULL, random.intercepts = TRUE, random.slope.interactions = TRUE, sd = 1.0, contrasts = NULL) {
+  facs <- random.factors(design, include.interactions = FALSE)
   if(!is.null(include.factors)) {
     if(!is.character(include.factors)) stop("`include.factors` must be a character vector of random factors to include!")
     if(length(setdiff(include.factors, names(facs)))>0) stop("`include.factors` contains names that are not random factors of the design!")
@@ -176,7 +176,7 @@ default.random.cov <- function(design, include = NULL, include.factors = NULL, r
 
 #' @describeIn default.random.cov Specify default fixed means
 #' @export
-default.fixed.means <- function(design, mean = 0.0, interactions = T, intercept = T, contrasts = NULL) {
+default.fixed.means <- function(design, mean = 0.0, interactions = TRUE, intercept = TRUE, contrasts = NULL) {
   vapply(contrast.names(design, interactions = interactions, intercept = intercept, contrasts = contrasts), function(fac) mean, double(1))
 }
 
@@ -196,13 +196,13 @@ default.fixed.means <- function(design, mean = 0.0, interactions = T, intercept 
 #' 
 #'
 #' @export
-simulate.response <- function(design, contrasts = NULL, means = default.fixed.means(design, contrasts = contrasts), varcov = default.random.cov(design, contrasts = contrasts, include = names(means), sd = 0), residual.sd = 1.0, collapse.contrasts = T, empirical = F) {
+simulate.response <- function(design, contrasts = NULL, means = default.fixed.means(design, contrasts = contrasts), varcov = default.random.cov(design, contrasts = contrasts, include = names(means), sd = 0), residual.sd = 1.0, collapse.contrasts = TRUE, empirical = FALSE) {
   
   # argument checks
   if(!inherits(means, c("double","numeric")) || length(means) > 0 && is.null(names(means))) stop("`means` must be a numeric vector, named after the contrasts in the design.")
   if(!is.list(varcov) || length(varcov) > 0 && is.null(names(varcov))) stop("`varcov` must be named list of covariance matrices, named after the random factors of the design.")
   
-  dmat <- design.contrasts(design, contrasts = contrasts, expand = T, interactions = T, intercept = T)
+  dmat <- design.contrasts(design, contrasts = contrasts, expand = TRUE, interactions = TRUE, intercept = TRUE)
   
   all.cnames <- colnames(dmat)
   
@@ -211,25 +211,25 @@ simulate.response <- function(design, contrasts = NULL, means = default.fixed.me
   
   if(!all(names(means) %in% all.cnames)) stop("Not all contrasts in `means` are valid contrasts of the design")
   
-  response[,names(means)] <- response[,names(means),drop=F] + matrix(means, byrow=T, ncol=length(means), nrow=nrow(response))
+  response[,names(means)] <- response[,names(means),drop=FALSE] + matrix(means, byrow=TRUE, ncol=length(means), nrow=nrow(response))
   
   # add random effects
   
   blups <- list()
   
-  for(ranfac in random.factors(design, include.interactions = F)) {
+  for(ranfac in random.factors(design, include.interactions = FALSE)) {
     if(is.null(varcov[[ranfac@name]])) warning(sprintf("There is no covariance matrix specified for `%s`! Assuming zero (co-)variance at that level.", ranfac@name))
     else if(!is.matrix(varcov[[ranfac@name]])) stop(sprintf("`varcov` entry for `%s` is not a matrix!", ranfac@name))
     else if(!isSymmetric(varcov[[ranfac@name]])) stop(sprintf("Random effects matrix for `%s` is not symmetrical!", ranfac@name))
     else if(is.null(colnames(varcov[[ranfac@name]]))) stop(sprintf("Random effects matrix for `%s` must be named after constrast names!", ranfac@name))
     else if(any(!setdiff(colnames(varcov[[ranfac@name]]),c("","Intercept","(Intercept)","1")) %in% colnames(dmat))) stop(sprintf("Random effects matrix for `%s` contains unknown contrast names!", ranfac@name))
     else {
-      ranlevels <- unique(design@design[,ranfac@name,drop=T])
+      ranlevels <- unique(design@design[,ranfac@name,drop=TRUE])
       rmat <- MASS::mvrnorm(length(ranlevels), mu = rep(0, ncol(varcov[[ranfac@name]])), Sigma = varcov[[ranfac@name]], empirical = empirical) # columns is effects, rows is random factor levels
       if(!is.matrix(rmat)) rmat <- matrix(rmat, nrow = 1)
       colnames(rmat) <- colnames(varcov[[ranfac@name]])
       blups[[ranfac@name]] <- rmat
-      response[,colnames(rmat)] <- response[,colnames(rmat),drop=F] + rmat[design@design[,ranfac@name,drop=T],,drop=F]
+      response[,colnames(rmat)] <- response[,colnames(rmat),drop=FALSE] + rmat[design@design[,ranfac@name,drop=TRUE],,drop=FALSE]
       
     }
   }
@@ -239,14 +239,14 @@ simulate.response <- function(design, contrasts = NULL, means = default.fixed.me
   cells <- unique(design@design[,names(fixed.factors(design)),])
   
   for(i in seq_len(nrow(cells))) {
-    w <- rep(T, nrow(design@design))
+    w <- rep(TRUE, nrow(design@design))
     for(j in colnames(cells)) {
       w <- w & design@design[, j] == cells[i, j]
     }
     response[w,"Residual"] <- MASS::mvrnorm(sum(w), mu=0, Sigma=residual.sd**2, empirical = empirical)
   }
   
-  response[,colnames(dmat)] <- response[,colnames(dmat),drop=F] * as.matrix(dmat)
+  response[,colnames(dmat)] <- response[,colnames(dmat),drop=FALSE] * as.matrix(dmat)
   
   if(collapse.contrasts)
     response <- unname(rowSums(response))
@@ -279,10 +279,10 @@ setMethod("simulate", c(object="factorDesign"), function(object, nsim=1, seed=NU
 extend.design.matrix <- function(df, factor, n) {
   if(!is.character(factor)||length(factor)!=1L) stop("Factor must be single character string")
   if(!factor %in% colnames(df)) stop("Factor must be in design")
-  levels <- unique(df[,factor,drop=F])
+  levels <- unique(df[,factor,drop=FALSE])
   rownames(levels) <- NULL
   do.call(rbind, lapply(seq_len(nrow(levels)), function(i) {
-    x <- levels[i,,drop=F]
+    x <- levels[i,,drop=FALSE]
     ndf <- merge(x, df)
     rownames(ndf) <- NULL
     do.call(rbind, lapply(seq_len(n)-1L, function(j) {
@@ -308,8 +308,8 @@ extend.design <- function(design, factor, n) {
 collapse.design.matrix <- function(dmat, collapse, var.name, method = mean) {
   if(!is.character(collapse)||length(collapse)<1L) stop("`collapse` must be character vector with at least one element.")
   if(!all(collapse %in% colnames(dmat))) stop("Not all factors named in `collapse` are actual factors/columns in `dmat`!")
-  ret <- unique(dmat[,!colnames(dmat) %in% c(collapse, var.name),drop=F])
-  ret[,var.name] <- vapply(seq_len(nrow(ret)), function(i) method(merge(ret[i,,drop=F], dmat)[,var.name]), double(1))
+  ret <- unique(dmat[,!colnames(dmat) %in% c(collapse, var.name),drop=FALSE])
+  ret[,var.name] <- vapply(seq_len(nrow(ret)), function(i) method(merge(ret[i,,drop=FALSE], dmat)[,var.name]), double(1))
   return(ret)
 }
 
@@ -327,9 +327,9 @@ collapse.design.matrix <- function(dmat, collapse, var.name, method = mean) {
 #' @return A fitted lmerMod object
 #' @seealso [lme4::lmer()]
 #' @export
-simulate.lmer <- function(design, formula = NULL, fixefs = default.fixed.means(design), varcov = default.random.cov(design, sd = 1), residual.sd = 1.0, contrasts = NULL, empirical = F) {
-  if(is.null(formula)) formula <- as.formula(design.formula(design, contrasts = contrasts, expand.contrasts = F)$lmer)
-  df <- design.contrasts(design, contrasts = contrasts, expand = T, intercept=T, interactions = F, include.random.levels = T)
+simulate.lmer <- function(design, formula = NULL, fixefs = default.fixed.means(design), varcov = default.random.cov(design, sd = 1), residual.sd = 1.0, contrasts = NULL, empirical = FALSE) {
+  if(is.null(formula)) formula <- as.formula(design.formula(design, contrasts = contrasts, expand.contrasts = FALSE)$lmer)
+  df <- design.contrasts(design, contrasts = contrasts, expand = TRUE, intercept=TRUE, interactions = FALSE, include.random.levels = TRUE)
   df$dv <- simulate.response(design, contrasts = contrasts, means = fixefs, varcov = varcov, residual.sd = residual.sd, empirical = empirical)
   dat <- cbind(design@design, dv = df$dv)
   model <- do.call(lme4::lmer, list(formula=formula, data=quote(dat), contrasts=quote(contrasts)))
@@ -352,10 +352,10 @@ simulate.lmer <- function(design, formula = NULL, fixefs = default.fixed.means(d
 #' @return A fitted lm object
 #' @seealso [lm()]
 #' @export
-simulate.lm <- function(design, formula = NULL, fixefs = default.fixed.means(design), varcov = default.random.cov(design, sd = 0), residual.sd = 1.0, collapse=names(random.factors(design))[-1], collapse.method = mean, contrasts = NULL, empirical = F) {
+simulate.lm <- function(design, formula = NULL, fixefs = default.fixed.means(design), varcov = default.random.cov(design, sd = 0), residual.sd = 1.0, collapse=names(random.factors(design))[-1], collapse.method = mean, contrasts = NULL, empirical = FALSE) {
   if(missing(collapse) && length(collapse) != 0L) warning(sprintf("There are at least two random factors in the design and `%s` was automatically determined to be collapsed across. Please explicitly specify the factor!", paste0(collapse, collapse = ":")))
   if(is.null(formula)) formula <- as.formula(design.formula(design, contrasts = contrasts, response = "dv")$lm)
-  df <- design.contrasts(design, contrasts = contrasts, expand = T, intercept=T, interactions = F, include.random.levels = T)
+  df <- design.contrasts(design, contrasts = contrasts, expand = TRUE, intercept=TRUE, interactions = FALSE, include.random.levels = TRUE)
   df$dv <- simulate.response(design, contrasts = contrasts, means = fixefs, varcov = varcov, residual.sd = residual.sd, empirical = empirical)
   dat <- cbind(design@design, dv = df$dv)
   if(length(collapse)>0L) dat <- collapse.design.matrix(dat, collapse, "dv", collapse.method)
@@ -385,7 +385,7 @@ model.power.sim <- function(model, tests, nsim = 1000L, cl = NULL, alpha = NULL)
       df <- model.frame(model)
     args <- attr(model, "trueVals")
     newFit <- do.call(args[[1]], args[-1]) # call the same function for simulation again
-    if(any(vapply(tests, function(test) getTestParam(test$name,"lmerTest",F), logical(1))) && inherits(newFit, "lmerMod")) {
+    if(any(vapply(tests, function(test) getTestParam(test$name,"lmerTest",FALSE), logical(1))) && inherits(newFit, "lmerMod")) {
       # newFit is a lmerMod and at least one test requires lmerMods to be converted to lmerModLmerTests!
       newFit <- lmerTest::as_lmerModLmerTest(newFit)
     }
@@ -401,7 +401,7 @@ model.power.sim <- function(model, tests, nsim = 1000L, cl = NULL, alpha = NULL)
   else ret <- t(ret)
   if(!is.null(alpha)) {
     ret <- vapply(seq_len(ncol(ret)), function(itest, alpha, qs) {
-      c(sum(ret[,itest]<alpha, na.rm=T), sum(ret[,itest]>=alpha, na.rm=T), nrow(ret))
+      c(sum(ret[,itest]<alpha, na.rm=TRUE), sum(ret[,itest]>=alpha, na.rm=TRUE), nrow(ret))
     }, integer(3), alpha = alpha)
     rownames(ret) <- c("H1","H0","nsim")
   }
@@ -424,7 +424,7 @@ model.power.sim <- function(model, tests, nsim = 1000L, cl = NULL, alpha = NULL)
 #' @seealso [model.power.sim()], [design.power.sim()], [tests()], [lme4::lmer()], [stats::lm()]
 #' @export
 design.power.sim <- function(design, formula = NULL, tests, modelClass="lmer", contrasts = NULL, fixefs = default.fixed.means(design, contrasts = contrasts), varcov = default.random.cov(design, contrasts = contrasts, sd = if(modelClass == "lm" || identical(modelClass, stats::lm)) 0 else 1), residual.sd = 1, ...) {
-  model <- design.contrasts(design, contrasts = contrasts, expand = T, intercept=T, interactions = F, include.random.levels = T)
+  model <- design.contrasts(design, contrasts = contrasts, expand = TRUE, intercept=TRUE, interactions = FALSE, include.random.levels = TRUE)
   if(modelClass == "lm" || identical(modelClass, stats::lm))
     attr(model, "trueVals") <- list(simulate.lm, design = design, formula = formula, fixefs = fixefs, varcov = varcov, residual.sd = residual.sd, collapse=names(random.factors(design))[-1], collapse.method = mean, contrasts = contrasts)
   else if(modelClass == "lmer" || identical(modelClass, lme4::lmer))
@@ -496,7 +496,7 @@ design.power.curve <- function(design, formula = NULL, contrasts = NULL, along, 
 #' @return A ggplot plot
 #' @seealso [design.power.sim()], [design.power.curve()], [ggplot2::ggplot()]
 #' @export
-plot.design.power.curve <- function(x, ci=.95, ignore.failed.models = T, add_p_breaks = c(attr(sim.out,"alpha_level"),.80), ncol=3, plot.mean = "p", plot.error="e", ...) {
+plot.design.power.curve <- function(x, ci=.95, ignore.failed.models = TRUE, add_p_breaks = c(attr(sim.out,"alpha_level"),.80), ncol=3, plot.mean = "p", plot.error="e", ...) {
   if(!inherits(x, c("designr.power.curve", "data.frame"))) {
     stop("Parameter `x` must be a data frame or designr.power.curve object (output from design.power.curve(...))!")
   }
@@ -510,14 +510,14 @@ plot.design.power.curve <- function(x, ci=.95, ignore.failed.models = T, add_p_b
     ggplot2::theme_bw() + ggplot2::theme(legend.position = if(length(ci)>1L) "bottom" else "none", panel.grid.minor = ggplot2::element_blank(), panel.grid.major = ggplot2::element_blank()) + 
     ggplot2::scale_fill_grey(start=max(.7,1-.1*length(ci)),end=.9) +
     ggplot2::scale_color_grey(start=.5,end=.9) +
-    ggplot2::facet_wrap(~test, labeller = function(x) data.frame(label = attr(sim.out, "tests")[x$test], stringsAsFactors = F), ncol=ncol) + 
+    ggplot2::facet_wrap(~test, labeller = function(x) data.frame(label = attr(sim.out, "tests")[x$test], stringsAsFactors = FALSE), ncol=ncol) + 
     ggplot2::scale_x_continuous(breaks = attr(sim.out, "nlevels"), minor_breaks = NULL, labels = sprintf("%dN\n(%d)", attr(sim.out, "replications"), attr(sim.out, "nlevels"))) +
     ggplot2::scale_y_continuous(limits = c(0,1), labels = function(x) sprintf("%d%%", x*100)) +
     ggplot2::labs(x=substitute(N[unit], list(unit=attr(sim.out,"unit"))), y=substitute(P(p<alev), list(alev=attr(sim.out,"alpha"))), fill="Coverage", color="Coverage")
   if(is.null(ci) && !is.null(attr(sim.out, "ci_width"))) ci <- attr(sim.out,"ci_width")
   if(!is.null(ci)) {
-    ci <- sort(ci, T)
-    sim.out2 <- sim.out[,setdiff(colnames(sim.out), c("ci_l","ci_u")),drop=F]
+    ci <- sort(ci, TRUE)
+    sim.out2 <- sim.out[,setdiff(colnames(sim.out), c("ci_l","ci_u")),drop=FALSE]
     sim.out2 <- do.call(rbind, lapply(seq_along(ci), function(cil) {
       x <- t(vapply(seq_len(nrow(sim.out2)), function(i) {
         qs <- c((1-ci[cil])/2,1-(1-ci[cil])/2) # quantiles to determine (lower and upper bound of CI)
@@ -537,13 +537,13 @@ plot.design.power.curve <- function(x, ci=.95, ignore.failed.models = T, add_p_b
     sim.out2$ci_level <- factor(sim.out2$ci_level, levels = seq_along(ci), labels = sprintf("%.1f%%", ci*100))
     for(cil in seq_along(ci)) {
       if(plot.error %in% c("line","lines","linerange","l"))
-        ret <- ret + ggplot2::geom_linerange(ggplot2::aes(x=n,ymin=ci_l,ymax=ci_u,color=ci_level,group=paste(ci_level,test)), data = sim.out2[as.numeric(sim.out2$ci_level)==cil,,drop=F])
+        ret <- ret + ggplot2::geom_linerange(ggplot2::aes(x=n,ymin=ci_l,ymax=ci_u,color=ci_level,group=paste(ci_level,test)), data = sim.out2[as.numeric(sim.out2$ci_level)==cil,,drop=FALSE])
       else if(plot.error %in% c("errorbar","errorbars","errbar","errbars","e"))
-        ret <- ret + ggplot2::geom_errorbar(ggplot2::aes(x=n,ymin=ci_l,ymax=ci_u,color=ci_level,group=paste(ci_level,test)), data = sim.out2[as.numeric(sim.out2$ci_level)==cil,,drop=F], width=.25)
+        ret <- ret + ggplot2::geom_errorbar(ggplot2::aes(x=n,ymin=ci_l,ymax=ci_u,color=ci_level,group=paste(ci_level,test)), data = sim.out2[as.numeric(sim.out2$ci_level)==cil,,drop=FALSE], width=.25)
       else if(plot.error %in% c("ribbon","ribbons","r"))
-        ret <- ret + ggplot2::geom_ribbon(ggplot2::aes(x=n,ymin=ci_l,ymax=ci_u,fill=ci_level,group=paste(ci_level,test)), data = sim.out2[as.numeric(sim.out2$ci_level)==cil,,drop=F])
+        ret <- ret + ggplot2::geom_ribbon(ggplot2::aes(x=n,ymin=ci_l,ymax=ci_u,fill=ci_level,group=paste(ci_level,test)), data = sim.out2[as.numeric(sim.out2$ci_level)==cil,,drop=FALSE])
       else if(plot.error %in% c("point","points","p"))
-        ret <- ret + ggplot2::geom_pointrange(ggplot2::aes(x=n,ymin=ci_l,ymax=ci_u,color=ci_level,group=paste(ci_level,test)), data = sim.out2[as.numeric(sim.out2$ci_level)==cil,,drop=F])
+        ret <- ret + ggplot2::geom_pointrange(ggplot2::aes(x=n,ymin=ci_l,ymax=ci_u,color=ci_level,group=paste(ci_level,test)), data = sim.out2[as.numeric(sim.out2$ci_level)==cil,,drop=FALSE])
       else
         stop("`plot.error` must be one of 'linerange', 'line', 'l', 'errorbar', 'errbar', 'e', 'ribbon', or 'r'!")
     }
@@ -594,7 +594,7 @@ setMethod("plot", signature("designr.power.curve"), plot.design.power.curve)
       cf[coef, "Pr(>|t|)"]
     },
     name = function(coef = "Intercept", ...) sprintf("p(>|t(%s)|)", coef),
-    params = list(lmerTest=T)
+    params = list(lmerTest=TRUE)
   ),
   simr = list(
     do = function(model, testClass, ...) {

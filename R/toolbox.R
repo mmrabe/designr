@@ -26,7 +26,7 @@ random.order <- function(n, m=n) {
   return(ret)
 }
 
-find.in.list <- function(what, where, all=T) {
+find.in.list <- function(what, where, all=TRUE) {
   ret <- integer(0)
   for(i in seq_along(where))
     if(where[[i]] == what) {
@@ -41,8 +41,8 @@ and <- function(...) {
   #if(!all(vapply(elements, is.logical, logical(1)))) stop("All arguments must be logical!")
   #if(!all(vapply(elements[-1], function(vec) length(vec), integer(1))==length(elements[[1]]))) stop("All arguments must be same length!")
   if(length(elements) == 0) return(logical(0))
-  ret <- ifelse(is.na(elements[[1]]), T, elements[[1]])
-  for(element in elements[-1]) ret <- ret & ifelse(is.na(element), T, element)
+  ret <- ifelse(is.na(elements[[1]]), TRUE, elements[[1]])
+  for(element in elements[-1]) ret <- ret & ifelse(is.na(element), TRUE, element)
   ret
 }
 

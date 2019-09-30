@@ -3,7 +3,7 @@
 
 #' @describeIn write.design Using default settings for writing CSV files
 #' @export
-write.design.csv <- function(..., quote=F, row.names=F) write.design(..., file.extension = ".csv", output.handler=utils::write.csv, quote=quote, row.names=row.names)
+write.design.csv <- function(..., quote=FALSE, row.names=FALSE) write.design(..., file.extension = ".csv", output.handler=utils::write.csv, quote=quote, row.names=row.names)
 #' @describeIn write.design Using default settings for writing JSON files
 #' @export
 write.design.json <- function(..., dataframe="columns") write.design(..., file.extension = ".json", output.handler=jsonlite::write_json, dataframe=dataframe)
@@ -44,7 +44,7 @@ subset.factorDesign <- function(x, subset, select = names(x), ...) {
 #' @param ... Other parameters to be passed on to `write.design` and the underlying output handler.
 #' @seealso [output.design()] for use of `order_by` and `group_by`.
 #' @export
-write.design <- function(design, group_by = NULL, order_by = NULL, randomize = F, run.files = paste0("run",ifelse(length(group_by)>0L,paste0("_",group_by,"-%",seq_along(group_by),"$s",collapse=""),"")), code.files = "codes_%s", output.dir = getwd(), output.handler, file.extension = NULL, ...) {
+write.design <- function(design, group_by = NULL, order_by = NULL, randomize = FALSE, run.files = paste0("run",ifelse(length(group_by)>0L,paste0("_",group_by,"-%",seq_along(group_by),"$s",collapse=""),"")), code.files = "codes_%s", output.dir = getwd(), output.handler, file.extension = NULL, ...) {
   clean.file.path <- function(paths) gsub("[^a-zA-Z0-9_.,]", "-", paths)
   output <- output.design(design=design, group_by=group_by, order_by=order_by, randomize=randomize)
   file_names <- file.path(output.dir, clean.file.path(paste0(do.call(sprintf, c(list(run.files), unname(as.list(output$groups)))), file.extension)))
@@ -83,7 +83,7 @@ write.design <- function(design, group_by = NULL, order_by = NULL, randomize = F
 #' @param interactions Should fixed effects be additive or interactive?
 #' @return A named list of `formula` objects, each name corresponding to the type of model it is suited for.
 #' @export
-design.formula <- function(design, contrasts = NULL, expand.contrasts = !is.null(contrasts), interactions=T, intercepts=T, response = "dv", env = parent.frame()) {
+design.formula <- function(design, contrasts = NULL, expand.contrasts = !is.null(contrasts), interactions=TRUE, intercepts=TRUE, response = "dv", env = parent.frame()) {
   add_them <- function(l, op) {
     if(length(l) < 1) return(NULL)
     ret <- l[[1L]]
@@ -94,14 +94,14 @@ design.formula <- function(design, contrasts = NULL, expand.contrasts = !is.null
     return(ret)
   }
   if(expand.contrasts) {
-    fixed <- contrast.names(design, ranfac = NULL, contrasts = contrasts, interactions = interactions, intercept = F, as.symbols = T)
-    random <- lapply(random.factors(design, include.interactions = F), function(fac) {
-      c(list(add_them(lapply(fac@name, as.symbol), ':')), contrast.names(design, ranfac = fac@name, contrasts = contrasts, interactions = interactions, intercept = F, as.symbols = T))
+    fixed <- contrast.names(design, ranfac = NULL, contrasts = contrasts, interactions = interactions, intercept = FALSE, as.symbols = TRUE)
+    random <- lapply(random.factors(design, include.interactions = FALSE), function(fac) {
+      c(list(add_them(lapply(fac@name, as.symbol), ':')), contrast.names(design, ranfac = fac@name, contrasts = contrasts, interactions = interactions, intercept = FALSE, as.symbols = TRUE))
     })
   }
   else {
     fixed <- lapply(names(fixed.factors(design)), as.symbol)
-    random <- lapply(random.factors(design, include.interactions = F), function(fac) {
+    random <- lapply(random.factors(design, include.interactions = FALSE), function(fac) {
       c(list(add_them(lapply(fac@name, as.symbol), ':')), lapply(setdiff(fixed, colnames(fac@levels)), as.symbol))
     })
   }
@@ -141,21 +141,21 @@ setMethod("formula", signature = "factorDesign", function(x, ...) design.formula
 #'
 #' @export
 
-output.design <- function(design, group_by = NULL, order_by = NULL, randomize = F) {
+output.design <- function(design, group_by = NULL, order_by = NULL, randomize = FALSE) {
   if(is.null(order_by)) order_by <- character(0)
   if(is.null(group_by)) group_by <- character(0)
   if(!is.factorDesign(design)) stop("`design` must be a factor design!")
   if(any(!group_by %in% colnames(design@design))) stop("Not all of the grouping variables are part of the design!")
   if(any(!order_by %in% colnames(design@design))) stop("Not all of the ordering variables are part of the design!")
   if(!is.logical(randomize)) stop("`randomize` must be logical (TRUE or FALSE)!")
-  file_groups <- unique(design@design[,group_by,drop=F])
-  if(randomize) data <- design@design[sample(nrow(design@design)),,drop=F]
+  file_groups <- unique(design@design[,group_by,drop=FALSE])
+  if(randomize) data <- design@design[sample(nrow(design@design)),,drop=FALSE]
   else data <- design@design
-  if(length(order_by)>0L) data <- data[do.call(order, unname(as.list(data[, order_by, drop=F]))), , drop=F]
+  if(length(order_by)>0L) data <- data[do.call(order, unname(as.list(data[, order_by, drop=FALSE]))), , drop=FALSE]
   rownames(data) <- NULL
   list(
     codes = if(length(group_by)>0L) lapply(seq_len(nrow(file_groups)), function(i) {
-      df <- join(file_groups[i, , drop=F], data)
+      df <- join(file_groups[i, , drop=FALSE], data)
       rownames(df) <- NULL
       return(tibble::as.tibble(df))
     }) else tibble::as.tibble(data),
@@ -163,11 +163,11 @@ output.design <- function(design, group_by = NULL, order_by = NULL, randomize = 
     ordered = if(length(order_by)>0L) order_by else NULL,
     randomized = randomize,
     units = sapply(random.factors(design), function(f) {
-      df <- unique(data[,colnames(f@levels),drop=F])
-      df <- df[do.call(order, as.list(df)), , drop=F]
+      df <- unique(data[,colnames(f@levels),drop=FALSE])
+      df <- df[do.call(order, as.list(df)), , drop=FALSE]
       rownames(df) <- NULL
       return(df)
-    }, simplify = F, USE.NAMES = T),
+    }, simplify = FALSE, USE.NAMES = TRUE),
     formulas = design.formula(design)
   )
 }
@@ -238,7 +238,7 @@ show.factorContainer <- function(object) {
       else if(nrow(add.to.design) > 0L) e1@design <- merge(e1@design, add.to.design)
       # some factors produce *fac columns. Those are to replace other columns (*fac replaces fac)
       replacement.columns <- which(substr(colnames(e1@design), 1, 1) == '*')
-      e1@design[,substr(colnames(e1@design)[replacement.columns], 2, nchar(colnames(e1@design)[replacement.columns]))] <- e1@design[, replacement.columns, drop=F]
+      e1@design[,substr(colnames(e1@design)[replacement.columns], 2, nchar(colnames(e1@design)[replacement.columns]))] <- e1@design[, replacement.columns, drop=FALSE]
       e1@design[,replacement.columns] <- NULL
       return(e1)
     }else{
@@ -272,7 +272,7 @@ is.designFactor <- function(fac) is(fac, "designFactor")
 
 #' @describeIn fixed.factors Return fixed factors
 #' @export
-random.factors <- function(design, include.interactions = T) {
+random.factors <- function(design, include.interactions = TRUE) {
   if(!is.factorDesign(design)&&!is.list(design)) stop("`design` must be a design factor or list!")
   return(design[vapply(design, if(include.interactions) is.randomFactor else function(f) is.randomFactor(f) && length(f@name) == 1L, logical(1))])
 }
@@ -316,11 +316,11 @@ fixed.factors <- function(design) {
     y <- as(x, "list")
     names(y) <- names(x)
     if(is.null(i)) {
-      i <- T
+      i <- TRUE
     }
     return(y[i])
   }
-  else return(x@design[i, j, drop=F])
+  else return(x@design[i, j, drop=FALSE])
 }
 
 #' Design matrix dimensions

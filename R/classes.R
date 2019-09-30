@@ -47,7 +47,7 @@ random.factor <- function(name, groups = character(0), ..., instances = 1L) {
   if(any(vapply(name, function(n) substr(n,1,1) == '*', logical(1)))) stop("Factor names must not start with an asterisk!")
   if(!is.numeric(instances) || length(instances) != 1L || instances < 1L) stop("`replications` must be an integer (integer vector of length 1, minimum value 1)!")
   if(!is.character(groups)) stop("Groups must be groups (names of grouping factors)")
-  levels <- do.call(data.frame, sapply(name, function(n) NA_integer_, USE.NAMES = T, simplify = F))
+  levels <- do.call(data.frame, sapply(name, function(n) NA_integer_, USE.NAMES = TRUE, simplify = FALSE))
   new("randomFactor", name = name, levels=levels, groups=groups, replications = as.integer(instances), extra = list(...))
 }
 
@@ -70,11 +70,8 @@ random.factor <- function(name, groups = character(0), ..., instances = 1L) {
 #'
 #' @examples
 #' fixed.factor("correct", levels=c(TRUE, FALSE))
-#' ~correct[TRUE, FALSE]
 #' fixed.factor("age", levels=c("child", "youth", "adult"))
-#' ~age[child, youth, adult]
 #' fixed.factor("order", levels=c("task1", "task2", "task3"), assign="latin.square")
-#' ~order[task1, task2, task3, blocked = T]
 #'
 #' @seealso [random.factor()]
 #' @export
@@ -105,13 +102,13 @@ fixed.factor <- function(name, levels, blocked = FALSE, character.as.factor = TR
       mat <- rotation.function(length(levels))
       lvmat <- do.call(data.frame, lapply(seq_len(n.max.levels), function(i) {
         if(i>ncol(mat)) return(NA)
-        vals <- levels[mat[,i,drop=T]]
+        vals <- levels[mat[,i,drop=TRUE]]
         if(!is.character(vals) && coerce.character) vals <- as.character(vals)
         if(is.character(vals) && character.as.factor) factor(vals, levels=unique(levels), ordered = is.ordered)
         else vals
       }))
       if(!is.null(block.name)) colnames(lvmat) <- sprintf(block.name, name, seq_len(n.max.levels))
-      lvmat[,name] <- factor(apply(lvmat[,seq_along(levels),drop=F], 1, paste, collapse="-"))
+      lvmat[,name] <- factor(apply(lvmat[,seq_along(levels),drop=FALSE], 1, paste, collapse="-"))
       if(is.null(block.name)) lvmat[,-ncol(lvmat)] <- NULL
       levels <- lvmat
     }else {
@@ -122,7 +119,7 @@ fixed.factor <- function(name, levels, blocked = FALSE, character.as.factor = TR
       colnames(levels) <- name
     }
     return(levels)
-  }, simplify = F)
+  }, simplify = FALSE)
   
   if(!is.null(names(glevels))) for(i in seq_along(glevels)) {
     glevels[[i]][,'*'] <- factor(names(glevels)[i], levels=names(glevels))
