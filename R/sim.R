@@ -332,7 +332,7 @@ simulate.lmer <- function(design, formula = NULL, fixefs = default.fixed.means(d
   df <- design.contrasts(design, contrasts = contrasts, expand = TRUE, intercept=TRUE, interactions = FALSE, include.random.levels = TRUE)
   df$dv <- simulate.response(design, contrasts = contrasts, means = fixefs, varcov = varcov, residual.sd = residual.sd, empirical = empirical)
   dat <- cbind(design@design, dv = df$dv)
-  model <- do.call(lme4::lmer, list(formula=formula, data=quote(dat), contrasts=quote(contrasts)))
+  model <- do.call(lme4::lmer, list(formula=formula, data=quote(dat), contrasts=quote(contrasts), REML = FALSE))
   attr(model, "trueVals") <- lapply(match.call(), eval.parent)
   return(model)
 }
