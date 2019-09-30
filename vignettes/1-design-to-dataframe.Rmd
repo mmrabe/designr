@@ -21,7 +21,6 @@ vignette: >
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-install.packages("https://maxrabe.com/software/designr_latest.tar.gz", repos = NULL)
 
 library(tidyverse)
 library(designr)
