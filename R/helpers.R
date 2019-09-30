@@ -148,7 +148,6 @@ parse.factor.language <- function(lang, ...) {
         fac1 <- as.integer(lang[[2]])
         fac2 <- parse.factor.language(lang[[3]])
         fac2@replications <- fac2@replications * fac1
-        show(fac2)
         return(fac2)
       } else if(lang[[1]] == ":") {
         fac1 <- lang[[2]]

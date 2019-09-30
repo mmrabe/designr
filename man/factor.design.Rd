@@ -26,11 +26,11 @@ design <- factor.design(fixed.factor("type",levels=c("pic","word")), fixed.facto
 design <- fixed.factor("type",levels=c("pic","word")) + fixed.factor("status",levels=c("old","new")) + random.factor("subject", groups="type") + random.factor("item", groups="type") + random.factor(c("subject","item"), groups="status")
 
 # Or:
-design <- factor.design(~type[pic,word]+status[old,new]+subject(type)+item(type)+subject:item(status))
+design <- factor.design(~type(pic,word)+status(old,new)+subject[type]+item[type]+subject:item[status])
 
 # You can also create a new design by adding more factors to an existing one:
 
-design1 <- factor.design(~type[pic,word]+status[old,new]+subject(type)+item(type))
+design1 <- factor.design(~type(pic,word)+status(old,new)+subject[type]+item[type])
 design2 <- design1 + random.factor(c("subject","item"), groups="status")
 
 }
