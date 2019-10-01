@@ -4,10 +4,21 @@
 #' @importFrom stats contrasts
 NULL
 
+#' Design matrix S4 functions
+#' 
+#' @param object A factor design object.
+#' 
+#' @export
 setClass("factorContainer")
 setClass("designFactor", slots=c(name="character", levels="data.frame", extra="list", replications="integer", groups="character"), contains="factorContainer")
 setClass("randomFactor", contains="designFactor")
 setClass("fixedFactor", slots=c(blocked="logical"), contains="designFactor")
+
+#' S4 Methods for designFactor
+#' 
+#' @param x a factorDesign
+#' 
+#' @export
 setClass("factorDesign", slots=c(design="data.frame"), contains=c("list", "factorContainer"))
 
 
@@ -65,6 +76,8 @@ random.factor <- function(name, groups = character(0), ..., instances = 1L) {
 #' @param character.as.factor If this is `TRUE`, character vectors passed in `levels` are automatically converted to a factor type.
 #' @param block.name If `blocked`, by default, there is not only a design matrix column created that contains the complete sequence of block levels but also a column for each position of the sequence with its assigned level. You may specify a different naming pattern using [sprintf()] naming conventions. The first argument passed is the factor name and the second argument is the sequence position (starting at 1). The default column names will be `factor.1`, `factor.2`, ect. If `NULL`, no additional block columns are created.
 #' @param groups Names of fixed factors in which to nest this fixed factor (see *Nesting fixed factors*).
+#' @param is.ordered Is this an ordered factor?
+#' @param ... more data to save as attributes
 #' @return An instance of `fixedFactor`.
 #'
 #' @section Nesting Fixed Factors:
@@ -145,14 +158,27 @@ fixed.factor <- function(name, levels, blocked = FALSE, character.as.factor = TR
 #' # To create an empty design:
 #' design <- factor.design()
 #'
-#' # To create a design for a recognition memory experiment in which each participant only sees either picture or words:
-#' design <- factor.design(fixed.factor("type",levels=c("pic","word")), fixed.factor("status",levels=c("old","new")), random.factor("subject", groups="type"), random.factor("item", groups="type"), random.factor(c("subject","item"), groups="status"))
+#' # To create a design for a recognition memory experiment in
+#' # which each participant only sees either picture or words:
+#' design <- factor.design(
+#'     fixed.factor("type",levels=c("pic","word")), 
+#'     fixed.factor("status",levels=c("old","new")), 
+#'     random.factor("subject", groups="type"), 
+#'     random.factor("item", groups="type"), 
+#'     random.factor(c("subject","item"), groups="status")
+#' )
 #'
 #' # This is identical to:
-#' design <- fixed.factor("type",levels=c("pic","word")) + fixed.factor("status",levels=c("old","new")) + random.factor("subject", groups="type") + random.factor("item", groups="type") + random.factor(c("subject","item"), groups="status")
+#' design <- fixed.factor("type",levels=c("pic","word")) + 
+#'           fixed.factor("status",levels=c("old","new")) + 
+#'           random.factor("subject", groups="type") + 
+#'           random.factor("item", groups="type") + 
+#'           random.factor(c("subject","item"), groups="status")
 #'
 #' # Or:
-#' design <- factor.design(~type(pic,word)+status(old,new)+subject[type]+item[type]+subject:item[status])
+#' design <- factor.design(
+#'    ~type(pic,word)+status(old,new)+subject[type]+item[type]+subject:item[status]
+#' )
 #'
 #' # You can also create a new design by adding more factors to an existing one:
 #'

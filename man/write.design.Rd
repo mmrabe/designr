@@ -6,18 +6,22 @@
 \alias{write.design}
 \title{Write Design Files}
 \usage{
-write.design.csv(..., quote = F, row.names = F)
+write.design.csv(..., quote = FALSE, row.names = FALSE)
 
 write.design.json(..., dataframe = "columns")
 
-write.design(design, group_by = NULL, order_by = NULL, randomize = F,
-  run.files = paste0("run", ifelse(length(group_by) > 0L, paste0("_",
-  group_by, "-\%", seq_along(group_by), "$s", collapse = ""), "")),
-  code.files = "codes_\%s", output.dir = getwd(), output.handler,
-  file.extension = NULL, ...)
+write.design(design, group_by = NULL, order_by = NULL,
+  randomize = FALSE, run.files = paste0("run", ifelse(length(group_by)
+  > 0L, paste0("_", group_by, "-\%", seq_along(group_by), "$s", collapse =
+  ""), "")), code.files = "codes_\%s", output.dir = getwd(),
+  output.handler, file.extension = NULL, ...)
 }
 \arguments{
 \item{...}{Other parameters to be passed on to `write.design` and the underlying output handler.}
+
+\item{quote, row.names}{see utils::write.csv()}
+
+\item{dataframe}{see jsonlite::write_json()}
 
 \item{design}{The `factorDesign` to be written into files.}
 

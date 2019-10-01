@@ -6,10 +6,11 @@
 \title{Retrieve contrast codes for a design}
 \usage{
 design.contrasts(design, factors = names(fixed.factors(design)),
-  contrasts = NULL, expand = T, rename.contrasts = "\%1$s\%2$s",
-  intercept = F, interactions = F, include.random.levels = F)
+  contrasts = NULL, expand = TRUE, rename.contrasts = "\%1$s\%2$s",
+  intercept = FALSE, interactions = FALSE,
+  include.random.levels = FALSE)
 
-contrast.names(design, ranfac = NULL, as.symbols = F, ...)
+contrast.names(design, ranfac = NULL, as.symbols = FALSE, ...)
 }
 \arguments{
 \item{design}{A design object}
@@ -31,6 +32,8 @@ contrast.names(design, ranfac = NULL, as.symbols = F, ...)
 \item{ranfac}{Return random-effects contrast names for a given random factor. If NULL, return fixed-effects contrast names.}
 
 \item{as.symbols}{Return contrast names as symbols rather than strings (character vectors).}
+
+\item{...}{Arguments to pass on to design.contrasts()}
 }
 \value{
 A design matrix (if expand==TRUE, default) or a list of factor levels (if expand==FALSE) for design.contrasts or contrast names for contrast.names.

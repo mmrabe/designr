@@ -5,7 +5,9 @@
 \title{Summary of Factor Designs}
 \usage{
 output.design(design, group_by = NULL, order_by = NULL,
-  randomize = F)
+  randomize = FALSE, random = function(id, fac)
+  factor(sprintf("\%s\%d", fac, id), sprintf("\%s\%d", fac,
+  sort(unique(id)))))
 }
 \arguments{
 \item{design}{The `factorDesign` object to summarize.}
@@ -15,6 +17,8 @@ output.design(design, group_by = NULL, order_by = NULL,
 \item{order_by}{If not `NULL`, output within each output group is ordered by these columns.}
 
 \item{randomize}{After ordering, remaining rows in the same order rank are randomly shuffled.}
+
+\item{random}{A function used for naming random factor levels. Should be vectorized and accept the ID (integer) as a first argument and the name (single character value) of the random factor. Functions such as as.double() or as.integer() *are* possible because they ignore the second argument and only convert the ID.}
 }
 \value{
 A list containing the output summary, including the following named entities:

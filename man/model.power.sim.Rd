@@ -16,8 +16,6 @@ model.power.sim(model, tests, nsim = 1000L, cl = NULL, alpha = NULL)
 \item{cl}{A cluster object to parallelize the simulations}
 
 \item{alpha}{The alpha level (Type-I error) to use for binary H0/H1 decisions}
-
-\item{fixefs}{A named vector of fixed effect sizes}
 }
 \value{
 A matrix with the results of all simulations

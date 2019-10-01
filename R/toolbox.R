@@ -73,7 +73,7 @@ na_join <- function(.data, b) {
 join <- function(...) {
   dfs <- list(...)
   if(!all(vapply(dfs, is.data.frame, FALSE))) stop("All arguments to `join` must be data frames!")
-  if(length(dfs) == 0) return(tibble())
+  if(length(dfs) == 0) return(tibble::tibble())
   ret <- dfs[[1]]
   for(el in dfs[-1]) {
     ret <- na_join(ret, el)

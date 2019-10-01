@@ -18,6 +18,8 @@ fixed.factor(name, levels, blocked = FALSE, character.as.factor = TRUE,
 
 \item{character.as.factor}{If this is `TRUE`, character vectors passed in `levels` are automatically converted to a factor type.}
 
+\item{is.ordered}{Is this an ordered factor?}
+
 \item{block.name}{If `blocked`, by default, there is not only a design matrix column created that contains the complete sequence of block levels but also a column for each position of the sequence with its assigned level. You may specify a different naming pattern using [sprintf()] naming conventions. The first argument passed is the factor name and the second argument is the sequence position (starting at 1). The default column names will be `factor.1`, `factor.2`, ect. If `NULL`, no additional block columns are created.}
 
 \item{groups}{Names of fixed factors in which to nest this fixed factor (see *Nesting fixed factors*).}
@@ -25,6 +27,8 @@ fixed.factor(name, levels, blocked = FALSE, character.as.factor = TRUE,
 \item{assign}{If `blocked = TRUE`, you may specify a different method of rotating levels. The default if 'latin.square' but 'permutations', 'williams', and 'random.order' are also available.}
 
 \item{replications}{Either a single integer or an integer vector of the same length as `levels` that is used to determine how many times each factor level should be repeated.}
+
+\item{...}{more data to save as attributes}
 }
 \value{
 An instance of `fixedFactor`.
@@ -39,11 +43,8 @@ If `groups` is used, the function will attempt to nest levels of the newly creat
 
 \examples{
 fixed.factor("correct", levels=c(TRUE, FALSE))
-~correct[TRUE, FALSE]
 fixed.factor("age", levels=c("child", "youth", "adult"))
-~age[child, youth, adult]
 fixed.factor("order", levels=c("task1", "task2", "task3"), assign="latin.square")
-~order[task1, task2, task3, blocked = T]
 
 }
 \seealso{

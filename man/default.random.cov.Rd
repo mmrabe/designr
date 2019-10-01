@@ -6,16 +6,18 @@
 \title{Specifying effect sizes for simulations}
 \usage{
 default.random.cov(design, include = NULL, include.factors = NULL,
-  random.intercepts = T, random.slope.interactions = T, sd = 1,
+  random.intercepts = TRUE, random.slope.interactions = TRUE, sd = 1,
   contrasts = NULL)
 
-default.fixed.means(design, mean = 0, interactions = T,
-  intercept = T, contrasts = NULL)
+default.fixed.means(design, mean = 0, interactions = TRUE,
+  intercept = TRUE, contrasts = NULL)
 }
 \arguments{
 \item{design}{A design object.}
 
 \item{include}{A character vector of fixed effect to include as random slopes. If NULL, all possible slopes are considered.}
+
+\item{include.factors}{Which factors to include, NULL for all}
 
 \item{random.intercepts}{If TRUE, the variance matrices contain random intercepts.}
 

@@ -2,31 +2,13 @@
 # methods
 
 #' @describeIn write.design Using default settings for writing CSV files
+#' @param quote,row.names see utils::write.csv()
 #' @export
 write.design.csv <- function(..., quote=FALSE, row.names=FALSE) write.design(..., file.extension = ".csv", output.handler=utils::write.csv, quote=quote, row.names=row.names)
 #' @describeIn write.design Using default settings for writing JSON files
+#' @param dataframe see jsonlite::write_json()
 #' @export
 write.design.json <- function(..., dataframe="columns") write.design(..., file.extension = ".json", output.handler=jsonlite::write_json, dataframe=dataframe)
-
-#' Subset factor designs
-#'
-#' @param x The factor design to subset
-#' @param subset Criteria along which to filter in planned observations / design matrix rows.
-#' @param select Names of columns to keep in the design matrix
-#' @param ... (ignored)
-#'
-#' @return A factor design with updated design matrix.
-#'
-#' @export
-subset.factorDesign <- function(x, subset, select = names(x), ...) {
-  if(as.character(sys.calls()[[1]][[1]]) != "subset.factorDesign") fun.call <- match.call(call=sys.call(-1L))
-  else fun.call <- match.call()
-  if(any(!select %in% names(x))) stop("Undefined factor names in `select`!")
-  x[setdiff(names(x), select)] <- NULL
-  keep.columns <- unique(unname(unlist(lapply(x, function(f) colnames(f@levels)))))
-  x@design <- subset(x@design, eval(fun.call$subset, x@design), keep.columns)
-  return(x)
-}
 
 #' Write Design Files
 #'
@@ -281,6 +263,7 @@ is.factorDesign <- function(fac) is(fac, "factorDesign")
 is.designFactor <- function(fac) is(fac, "designFactor")
 
 #' @describeIn fixed.factors Return fixed factors
+#' @param include.interactions Should random factor interactions be included?
 #' @export
 random.factors <- function(design, include.interactions = TRUE) {
   if(!is.factorDesign(design)&&!is.list(design)) stop("`design` must be a design factor or list!")
@@ -301,59 +284,52 @@ fixed.factors <- function(design) {
   return(design[vapply(design, is.fixedFactor, logical(1))])
 }
 
-#' Retrieve factors or design matrix from an factor design object
-#' @usage
-#' design[i, col]
-#' design[i, NULL]
-#' design[, col]
-#' design[, NULL]
-#' design[[fac]]
-#' design[facs]
+#' Retrieve the number of observations
 #' 
-#' @param i The row number (number of the planned observation) to retrieve from the design matrix. Leave empty (but don't leave the comma out!) to select all rows.
-#' @param col The column[s] (factor name[s]) to select from the matrix. Leave empty (but don't leave the comma out!) to select all columns.
-#' @param fac,facs The factor name(s) to select from the factor list.
+#' @param object A designFactor object
 #' 
-#' The design[i, col] syntax can be used to retrieve the design matrix (instead of the design object itself). You may leave names/indices for rows out in order to select all rows. You ALWAYS have to specify columns by names, indices or select all by using NULL or a single TRUE value.
-#' 
-#' If you use design[facs], you are selecting factor objects as a list from the design object, specified by names or indices in facs.
-#' 
-#' If you use design[[fac]], you are selecting a single factor object, specified by a name or index.
+#' @return The number of observations
 #' 
 #' @export
-`[.factorDesign` <- function(x, i, j) {
-  if(missing(j)) {
-    y <- as(x, "list")
-    names(y) <- names(x)
-    if(is.null(i)) {
-      i <- TRUE
-    }
-    return(y[i])
-  }
-  else return(x@design[i, j, drop=FALSE])
-}
-
-#' Design matrix dimensions
-#' @usage
-#' nrow(design)
-#' ncol(design)
-#' dim(design)
-#' nobs(design)
-#' 
-#' @param design A factor design object.
-#' 
-#' You can use nrow(design) or nobs(design) to retrieve the number of rows (planned observations) and ncol(design) to retrieve the number of columns of the design. dim(design) retrieves both as a 2-length integer vector.
-#' 
-#' @export
-dim.factorDesign <- function(x) dim(x@design)
-
-setMethod("[", c(x="factorDesign"), `[.factorDesign`)
-setMethod("dim", "factorDesign", dim.factorDesign)
 setMethod("nobs", "factorDesign", function(object) nrow(object))
 
+#' Concatenate design factors and designs
+#'
+#' By adding factors and designs by "+", a new design is created that contains all of the components.
+#' 
+#' @param e1,e2 factor containers, such as factors or designs
+#' @return A factorDesign object
+#'
+#' @export
+#'
 setMethod("+", signature(e1="factorContainer", e2="factorContainer"), `+.factorContainer`)
 
+#' @describeIn factorContainer Display a factor container
+#' @export
 setMethod("show", "factorContainer", `show.factorContainer`)
 
-setMethod("subset", signature(x="factorDesign"), `subset.factorDesign`)
+
+subset.factorDesign <- function(x, subset, select = names(x), ...) {
+  if(as.character(sys.calls()[[1]][[1]]) != "subset.factorDesign") fun.call <- match.call(call=sys.call(-1L))
+  else fun.call <- match.call()
+  if(!is.null(fun.call$select)) {
+    if(any(!fun.call$select %in% names(x))) stop("Undefined factor names in `select`!")
+    x[setdiff(names(x), fun.call$select)] <- NULL
+  }
+  keep.columns <- unique(unname(unlist(lapply(x, function(f) colnames(f@levels)))))
+  x@design <- subset(x@design, eval(fun.call$subset, x@design), keep.columns)
+  return(x)
+}
+
+#' Subset factor designs
+#' 
+#' @usage
+#' subset(x, ...)
+#' 
+#' @aliases subset
+#' @param x A factorDesign object
+#' @param ... *subset*: Criteria along which to filter in planned observations / design matrix rows., *select*: Names of columns to keep in the design matrix
+#' @export
+setMethod("subset", c("factorDesign"), `subset.factorDesign`)
+
 

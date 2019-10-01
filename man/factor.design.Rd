@@ -19,14 +19,27 @@ The main function of this package is to create factorial designs with this funct
 # To create an empty design:
 design <- factor.design()
 
-# To create a design for a recognition memory experiment in which each participant only sees either picture or words:
-design <- factor.design(fixed.factor("type",levels=c("pic","word")), fixed.factor("status",levels=c("old","new")), random.factor("subject", groups="type"), random.factor("item", groups="type"), random.factor(c("subject","item"), groups="status"))
+# To create a design for a recognition memory experiment in
+# which each participant only sees either picture or words:
+design <- factor.design(
+    fixed.factor("type",levels=c("pic","word")), 
+    fixed.factor("status",levels=c("old","new")), 
+    random.factor("subject", groups="type"), 
+    random.factor("item", groups="type"), 
+    random.factor(c("subject","item"), groups="status")
+)
 
 # This is identical to:
-design <- fixed.factor("type",levels=c("pic","word")) + fixed.factor("status",levels=c("old","new")) + random.factor("subject", groups="type") + random.factor("item", groups="type") + random.factor(c("subject","item"), groups="status")
+design <- fixed.factor("type",levels=c("pic","word")) + 
+          fixed.factor("status",levels=c("old","new")) + 
+          random.factor("subject", groups="type") + 
+          random.factor("item", groups="type") + 
+          random.factor(c("subject","item"), groups="status")
 
 # Or:
-design <- factor.design(~type(pic,word)+status(old,new)+subject[type]+item[type]+subject:item[status])
+design <- factor.design(
+   ~type(pic,word)+status(old,new)+subject[type]+item[type]+subject:item[status]
+)
 
 # You can also create a new design by adding more factors to an existing one:
 

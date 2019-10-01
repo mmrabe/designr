@@ -5,8 +5,8 @@
 \title{Preparing Designs for Model Analysis}
 \usage{
 design.formula(design, contrasts = NULL,
-  expand.contrasts = !is.null(contrasts), interactions = T,
-  intercepts = T, response = "dv", env = parent.frame())
+  expand.contrasts = !is.null(contrasts), interactions = TRUE,
+  intercepts = TRUE, response = "dv", env = parent.frame())
 }
 \arguments{
 \item{design}{The `factorDesign` to be used.}

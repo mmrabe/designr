@@ -28,8 +28,6 @@ design.power.sim(design, formula = NULL, tests, modelClass = "lmer",
 \item{residual.sd}{The standard deviation of the residual term}
 
 \item{...}{More arguments to pass to model.power.sim, such as alpha, cl, or nsim}
-
-\item{fixefs}{A named vector of fixed effect sizes}
 }
 \value{
 A matrix with the results of all simulations
@@ -38,5 +36,5 @@ A matrix with the results of all simulations
 Run a power simulation for a factorial design.
 }
 \seealso{
-[model.power.sim()], [design.power.sim()], [tests()], [lme4::lmer()], [stats::lm()]
+[model.power.sim()], [tests()], [lme4::lmer()], [stats::lm()]
 }
