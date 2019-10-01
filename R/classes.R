@@ -1,5 +1,7 @@
 # class definitions
 
+#' @importFrom methods as new is show
+#' @importFrom stats contrasts
 NULL
 
 setClass("factorContainer")

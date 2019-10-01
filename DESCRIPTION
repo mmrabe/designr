@@ -19,8 +19,11 @@ Imports:
     crossdes,
     methods,
     jsonlite,
-    lmerTest
+    lmerTest,
+    dplyr,
+    rlang
 Suggests: 
     knitr,
-    rmarkdown
+    rmarkdown,
+    tidyverse
 VignetteBuilder: knitr

@@ -1,5 +1,9 @@
 # simulation stuff
 
+#' @importFrom stats contrasts contrasts<- as.formula qbeta
+#' @importFrom ggplot2 aes
+NULL
+
 #' Retrieve contrast codes for a design
 #' 
 #' This function can be used to retrieve contrast codes based on experimental codes / planned observations.
