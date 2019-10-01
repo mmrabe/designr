@@ -123,6 +123,7 @@ setMethod("formula", signature = "factorDesign", function(x, ...) design.formula
 #' @param group_by If not `NULL`, the design matrix is grouped by these factors. Factors must be valid columns of the design matrix. If used, `$codes` will be a list matched to the entries in `$groups`.
 #' @param order_by If not `NULL`, output within each output group is ordered by these columns.
 #' @param randomize After ordering, remaining rows in the same order rank are randomly shuffled.
+#' @param random A function used for naming random factor levels. Should be vectorized and accept the ID (integer) as a first argument and the name (single character value) of the random factor. Functions such as as.double() or as.integer() *are* possible because they ignore the second argument and only convert the ID.
 #' @return A list containing the output summary, including the following named entities:
 #'
 #'    *$table*: Either a tibble with all experimental codes or a list of tibbles of experimental codes. The list entries are matched to the rows of `$groups`.
@@ -141,7 +142,7 @@ setMethod("formula", signature = "factorDesign", function(x, ...) design.formula
 #'
 #' @export
 
-output.design <- function(design, group_by = NULL, order_by = NULL, randomize = FALSE) {
+output.design <- function(design, group_by = NULL, order_by = NULL, randomize = FALSE, random = function(id, fac) factor(sprintf("%s%d", fac, id), sprintf("%s%d", fac, sort(unique(id))))) {
   if(is.null(order_by)) order_by <- character(0)
   if(is.null(group_by)) group_by <- character(0)
   if(!is.factorDesign(design)) stop("`design` must be a factor design!")
@@ -153,12 +154,21 @@ output.design <- function(design, group_by = NULL, order_by = NULL, randomize = 
   else data <- design@design
   if(length(order_by)>0L) data <- data[do.call(order, unname(as.list(data[, order_by, drop=FALSE]))), , drop=FALSE]
   rownames(data) <- NULL
+  for(ranfac in names(random.factors(design, include.interactions = FALSE))) {
+    if(is.function(random)) {
+      data[,ranfac] <- random(data[,ranfac], ranfac)
+    } else if(is.null(random)) {
+      data[,ranfac] <- as.integer(data[,ranfac])
+    } else {
+      stop(sprintf("Random factor conversion must be a function or NULL."))
+    }
+  }
   list(
     codes = if(length(group_by)>0L) lapply(seq_len(nrow(file_groups)), function(i) {
       df <- join(file_groups[i, , drop=FALSE], data)
       rownames(df) <- NULL
-      return(tibble::as.tibble(df))
-    }) else tibble::as.tibble(data),
+      return(tibble::as_tibble(df))
+    }) else tibble::as_tibble(data),
     groups = if(length(group_by)>0L) file_groups else NULL,
     ordered = if(length(order_by)>0L) order_by else NULL,
     randomized = randomize,
