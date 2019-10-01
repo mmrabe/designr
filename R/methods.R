@@ -195,12 +195,6 @@ show.factorContainer <- function(object) {
   }
 }
 
-#' Concatenate design factors and designs
-#'
-#' By adding factors and designs by "+", a new design is created that contains all of the components.
-#'
-#' @export
-#'
 `+.factorContainer` <- function(e1, e2) {
   if(is(e1, "factorDesign")) {
     if(is(e2, "factorDesign")) {
