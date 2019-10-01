@@ -1,7 +1,7 @@
 Package: designr
 Type: Package
 Title: Balanced Designs in R
-Version: 0.1.5
+Version: 0.1.6
 Date: 2019-09-27
 URL: https://maxrabe.com/designr
 Authors@R: c(person("Maximilian", "Rabe", email = "maximilian.rabe@uni-potsdam.de", role = c("aut", "cre")), person("Reinhold", "Kliegl", email = "kliegl@uni-potsdam.de", role = c("aut")), person("Schad", "Daniel", email = "schad@uni-potsdam.de", role = c("aut")))
