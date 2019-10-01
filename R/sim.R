@@ -141,13 +141,37 @@ contrast.names <- function(design, ranfac = NULL, as.symbols = FALSE, ...) {
   return(cnames)
 }
 
-covmat <- function(sds, cormat = diag(length(sds)), set.names = names(sds)) {
+#' Conversions between covariance and correlation matrices
+#' 
+#' This function converts a correlation matrix into a covariance matrix, given a vector of standard deviations, and the reverse.
+#' 
+#' @param sds A vector of SDs
+#' @param cormat A correlation matrix
+#' @param covmat A covariance matrix
+#' @param set.names Override dimension names
+#' 
+#' @return A (named) covariance/correlation matrix
+#' 
+#' @export
+cor2cov <- function(sds, cormat = diag(length(sds)), set.names = names(sds)) {
   if(!is.numeric(sds)) stop("`sds` must be a numeric vector")
   if(!is.matrix(cormat) || !is.numeric(cormat)) stop("`cormat` must be a numeric matrix")
   if(any(diag(cormat) != 1.0) || !isSymmetric(cormat) || any(cormat < -1 | cormat > 1)) stop("`cormat` is not a correlation matrix (diagonal must be 1.0)")
   ret <- tcrossprod(sds, sds) * cormat
   dimnames(ret) <- list(set.names, set.names)
   return(ret)
+}
+
+#' @describeIn cor2cov Retrieving a correlation matrix
+#' @export
+cov2cor <- function(covmat, set.names = rownames(covmat)) {
+  if(!is.matrix(covmat) || !is.numeric(covmat)) stop("`covmat` must be a numeric matrix")
+  if(any(!isSymmetric(covmat))) stop("`covmat` is not a covariance matrix (must be symmetric)")
+  sds <- sqrt(diag(covmat))
+  ret <- covmat / tcrossprod(sds, sds)
+  dimnames(ret) <- list(set.names, set.names)
+  attr(ret, "sds") <- sds
+  ret
 }
 
 #' Specifying effect sizes for simulations
@@ -176,7 +200,7 @@ default.random.cov <- function(design, include = NULL, include.factors = NULL, r
   lapply(facs, function(fac) {
     cnames <- contrast.names(design, fac@name, interactions = random.slope.interactions, intercept = random.intercepts, contrasts = contrasts)
     if(!is.null(include)) cnames <- intersect(cnames, include)
-    covmat(sds = rep(sd, length(cnames)), set.names = cnames)
+    cor2cov(sds = rep(sd, length(cnames)), set.names = cnames)
   })
 }
 
