@@ -6,8 +6,7 @@
 \usage{
 output.design(design, group_by = NULL, order_by = NULL,
   randomize = FALSE, random = function(id, fac)
-  factor(sprintf("\%s\%d", fac, id), sprintf("\%s\%d", fac,
-  sort(unique(id)))))
+  factor(sprintf("\%s\%0*d", fac, nchar(as.character(max(id))), id)))
 }
 \arguments{
 \item{design}{The `factorDesign` object to summarize.}

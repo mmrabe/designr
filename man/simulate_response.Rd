@@ -7,8 +7,9 @@
 simulate_response(design, contrasts = NULL,
   means = default.fixed.means(design, contrasts = contrasts),
   varcov = default.random.cov(design, contrasts = contrasts, include =
-  names(means), sd = 0), residual.sd = 1, collapse.contrasts = TRUE,
-  empirical = FALSE)
+  names(means), sd = 0), residual.sd = 1,
+  residual.df = length(contrast.names(design, interactions = T, intercept
+  = T)), collapse.contrasts = TRUE, empirical = FALSE)
 }
 \arguments{
 \item{design}{The factor design to use}
@@ -20,6 +21,8 @@ simulate_response(design, contrasts = NULL,
 \item{varcov}{Variance-covariance matrices for each level. This should be a named list of named symmetric matrices. Names of list entries should match the names of the random factors and row/column names of the listed matrices should match the names of the effects (ideally the same as in `means`).}
 
 \item{residual.sd}{The residual error standard deviation in each cell of the design}
+
+\item{residual.df}{Residual degrees of freedom}
 
 \item{collapse.contrasts}{Should contrasts be collapsed?}
 
