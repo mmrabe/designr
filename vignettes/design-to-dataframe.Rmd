@@ -265,7 +265,7 @@ The function also allows the specifations of fixed effects, variance and correla
 
 ## Acknowledgement
 
-The development of this package was supported by SFB 1287 _Limits of variability in language_ at the University of Potsdam and the Cooperation Group _Statistical models for psychological and linguistic data_ at the Center for Interdisciplinary Research (ZiF), Bielefeld, Germany.
+The development of this package was supported by German Research Foundation (DFG)/SFB 1287 _Limits of variability in language_ and Center for Interdisciplinary Research, Bielefeld (ZiF)/Cooperation Group _Statistical models for psychological and linguistic data_.
 
 ## Packages
 
