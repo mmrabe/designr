@@ -124,17 +124,34 @@ setMethod("formula", signature = "factorDesign", function(x, ...) design.formula
 #'
 #' @export
 
-output.design <- function(design, group_by = NULL, order_by = NULL, randomize = FALSE, random = function(id, fac) factor(sprintf("%s%d", fac, id), sprintf("%s%d", fac, sort(unique(id))))) {
-  if(is.null(order_by)) order_by <- character(0)
-  if(is.null(group_by)) group_by <- character(0)
-  if(!is.factorDesign(design)) stop("`design` must be a factor design!")
-  if(any(!group_by %in% colnames(design@design))) stop("Not all of the grouping variables are part of the design!")
-  if(any(!order_by %in% colnames(design@design))) stop("Not all of the ordering variables are part of the design!")
-  if(!is.logical(randomize)) stop("`randomize` must be logical (TRUE or FALSE)!")
+output.design <- function(design, group_by = NULL, order_by = NULL, randomize = FALSE, random = function(id, fac) factor(sprintf("%s%0*d", fac, nchar(as.character(max(id))), id))) {
+  if(is.null(order_by)) {
+    order_by <- character(0)
+  }
+  if(is.null(group_by)) {
+    group_by <- character(0)
+  }
+  if(!is.factorDesign(design)) {
+    stop("`design` must be a factor design!")
+  }
+  if(any(!group_by %in% colnames(design@design))) {
+    stop("Not all of the grouping variables are part of the design!")
+  }
+  if(any(!order_by %in% colnames(design@design))) {
+    stop("Not all of the ordering variables are part of the design!")
+  }
+  if(!is.logical(randomize)) {
+    stop("`randomize` must be logical (TRUE or FALSE)!")
+  }
   file_groups <- unique(design@design[,group_by,drop=FALSE])
-  if(randomize) data <- design@design[sample(nrow(design@design)),,drop=FALSE]
-  else data <- design@design
-  if(length(order_by)>0L) data <- data[do.call(order, unname(as.list(data[, order_by, drop=FALSE]))), , drop=FALSE]
+  if(randomize) {
+    data <- design@design[sample(nrow(design@design)),,drop=FALSE]
+  } else {
+    data <- design@design
+  }
+  if(length(order_by)>0L) {
+    data <- data[do.call(order, unname(as.list(data[, order_by, drop=FALSE]))), , drop=FALSE]
+  }
   rownames(data) <- NULL
   for(ranfac in names(random.factors(design, include.interactions = FALSE))) {
     if(is.function(random)) {
