@@ -222,67 +222,108 @@ default.fixed.means <- function(design, mean = 0.0, interactions = TRUE, interce
 #' @param varcov Variance-covariance matrices for each level. This should be a named list of named symmetric matrices. Names of list entries should match the names of the random factors and row/column names of the listed matrices should match the names of the effects (ideally the same as in `means`).
 #' @param include Only use these factors (instead of the factors listed in `means`)
 #' @param residual.sd The residual error standard deviation in each cell of the design
+#' @param residual.df Residual degrees of freedom
 #' @param empirical Are the means and (co-)variances empirical or population values? If true, analyzing the simulated response should yield the recovered parameters. If false, a sufficiently large sample of analyses should be representative of those values (appropriate for power simulations). 
 #' @param collapse.contrasts Should contrasts be collapsed?
 #'
 #' @export
-simulate_response <- function(design, contrasts = NULL, means = default.fixed.means(design, contrasts = contrasts), varcov = default.random.cov(design, contrasts = contrasts, include = names(means), sd = 0), residual.sd = 1.0, collapse.contrasts = TRUE, empirical = FALSE) {
+simulate_response <- function(design, contrasts = NULL, means = default.fixed.means(design, contrasts = contrasts), varcov = default.random.cov(design, contrasts = contrasts, include = names(means), sd = 0), residual.sd = 1.0, residual.df = length(contrast.names(design, interactions = T, intercept = T)), collapse.contrasts = TRUE, empirical = FALSE) {
+  
+  covariates <- list()
   
   # argument checks
   if(!inherits(means, c("double","numeric")) || length(means) > 0 && is.null(names(means))) stop("`means` must be a numeric vector, named after the contrasts in the design.")
   if(!is.list(varcov) || length(varcov) > 0 && is.null(names(varcov))) stop("`varcov` must be named list of covariance matrices, named after the random factors of the design.")
   
-  dmat <- design.contrasts(design, contrasts = contrasts, expand = TRUE, interactions = TRUE, intercept = TRUE)
+  dmat <- design.contrasts(design, contrasts = contrasts, expand = T, interactions = T, intercept = T)
+  
+  if(any(names(covariates) %in% colnames(dmat))) stop("Covariates cannot have the same name as any contrasts of the design matrix!")
+  
+  covariate_sds <- double(length(covariates))
+  names(covariate_sds) <- names(covariates)
+  
+  for(covar_name in names(covariates)) {
+    args <- covariates[[covar_name]]
+    args$design <- design
+    args$empirical <- empirical
+    args$residual.sd <- 0
+    prev.names <- colnames(dmat)[-1]
+    dmat[, covar_name] <- do.call(simulate_response, args)
+    dmat[, paste0(prev.names, ":", covar_name)] <- dmat[, covar_name] * dmat[, prev.names]
+    covariate_sds[covar_name] <- if(is.null(covariates[[covar_name]]$residual.sd)) 1 else covariates[[covar_name]]$residual.sd
+  }
   
   all.cnames <- colnames(dmat)
   
-  response <- matrix(double(1), ncol = ncol(dmat)+1, nrow = nrow(dmat))
+  response <- matrix(0, ncol = ncol(dmat)+1, nrow = nrow(dmat))
   colnames(response) <- c(colnames(dmat), "Residual")
   
-  if(!all(names(means) %in% all.cnames)) stop("Not all contrasts in `means` are valid contrasts of the design")
+  if(!all(names(means) %in% all.cnames)) stop(sprintf("Not all contrasts in `means` are valid contrasts of the design. Valid contrasts are: %s", paste(all.cnames, collapse = ", ")))
   
-  response[,names(means)] <- response[,names(means),drop=FALSE] + matrix(means, byrow=TRUE, ncol=length(means), nrow=nrow(response))
+  response[,names(means)] <- response[,names(means),drop=F] + matrix(means, byrow=T, ncol=length(means), nrow=nrow(response))
+  
+  
+  
+  # Determine residuals in each cell of the design
+  
+  rows_by_cell <- split(seq_len(nrow(design@design)), design@design[,names(fixed.factors(design)),])
+  
+  all.resids <- matrix(0, ncol = 1+length(covariates), nrow = nrow(dmat))
+  
+  resid.correction <- (nrow(dmat) - residual.df) / (nrow(dmat) - length(rows_by_cell))
+  
+  for(rows in rows_by_cell) {
+    if(length(rows) < 2 && empirical) stop("Too many fixed effects: Cannot simulate with empirical=TRUE because at least one design cell contains only a single observation.")
+    resids <- MASS::mvrnorm(length(rows), mu=rep(0, 1+length(covariates)), Sigma=c(residual.sd, covariate_sds)^2*diag(1+length(covariates))*resid.correction, empirical = empirical)
+    response[rows,"Residual"] <- resids[,1]
+    all.resids[rows,] <- resids
+    if(length(covariates) > 0) {
+      dmat[rows,names(covariates)] <- dmat[rows,names(covariates),drop=F] + resids[,-1,drop=F]
+    }
+  }
+  
   
   # add random effects
   
   blups <- list()
   
-  for(ranfac in random.factors(design, include.interactions = FALSE)) {
-    if(is.null(varcov[[ranfac@name]])) warning(sprintf("There is no covariance matrix specified for `%s`! Assuming zero (co-)variance at that level.", ranfac@name))
+  for(ranfac in random.factors(design, include.interactions = F)) {
+    if(is.null(varcov[[ranfac@name]])) next
     else if(!is.matrix(varcov[[ranfac@name]])) stop(sprintf("`varcov` entry for `%s` is not a matrix!", ranfac@name))
     else if(!isSymmetric(varcov[[ranfac@name]])) stop(sprintf("Random effects matrix for `%s` is not symmetrical!", ranfac@name))
     else if(is.null(colnames(varcov[[ranfac@name]]))) stop(sprintf("Random effects matrix for `%s` must be named after constrast names!", ranfac@name))
     else if(any(!setdiff(colnames(varcov[[ranfac@name]]),c("","Intercept","(Intercept)","1")) %in% colnames(dmat))) stop(sprintf("Random effects matrix for `%s` contains unknown contrast names!", ranfac@name))
     else {
-      ranlevels <- unique(design@design[,ranfac@name,drop=TRUE])
-      rmat <- MASS::mvrnorm(length(ranlevels), mu = rep(0, ncol(varcov[[ranfac@name]])), Sigma = varcov[[ranfac@name]], empirical = empirical) # columns is effects, rows is random factor levels
-      if(!is.matrix(rmat)) rmat <- matrix(rmat, nrow = 1)
-      colnames(rmat) <- colnames(varcov[[ranfac@name]])
-      blups[[ranfac@name]] <- rmat
-      response[,colnames(rmat)] <- response[,colnames(rmat),drop=FALSE] + rmat[design@design[,ranfac@name,drop=TRUE],,drop=FALSE]
-      
+      ranlevels_with_groups <- unique(design@design[,c(ranfac@name,ranfac@groups),drop=F])
+      ranlevels_by_group <- split(ranlevels_with_groups[,ranfac@name,drop=T], if(length(ranfac@groups) > 0) ranlevels_with_groups[,ranfac@groups,drop=F] else 1)
+      for(unique_ranlevels in ranlevels_by_group) {
+        if(length(unique_ranlevels) < 2 && empirical) stop(sprintf("Too many random effects: Cannot simulate with empirical=TRUE with fewer than 2 observations per cell. This error occured because in at least one %1$s group, there is only one %1$s. You may suppress this error by not providing a covariance matrix for that random factor or increasing the number of replications in the design.", ranfac@name))
+        rmat <- MASS::mvrnorm(length(unique_ranlevels), mu = rep(0, ncol(varcov[[ranfac@name]])), Sigma = varcov[[ranfac@name]], empirical = empirical) # columns is effects, rows is random factor levels
+        if(!is.matrix(rmat)) rmat <- matrix(rmat, nrow = 1)
+        colnames(rmat) <- colnames(varcov[[ranfac@name]])
+        blups[[ranfac@name]] <- rmat
+        response_matrix_indices <- design@design[,ranfac@name] %in% unique_ranlevels
+        rmat_indices <- match(design@design[response_matrix_indices,ranfac@name], unique_ranlevels)
+        response[response_matrix_indices,colnames(rmat)] <- response[response_matrix_indices,colnames(rmat),drop=F] + rmat[rmat_indices,,drop=F]
+      }
     }
   }
   
-  # Add residuals in each cell of the design
+  response[,colnames(dmat)] <- response[,colnames(dmat),drop=F] * as.matrix(dmat)
   
-  cells <- unique(design@design[,names(fixed.factors(design)),])
   
-  for(i in seq_len(nrow(cells))) {
-    w <- rep(TRUE, nrow(design@design))
-    for(j in colnames(cells)) {
-      w <- w & design@design[, j] == cells[i, j]
+  if(collapse.contrasts) {
+    if(length(covariates) > 0) {
+      response <- cbind(dv=unname(rowSums(response)), dmat[,names(covariates), drop=F])
+    } else {
+      response <- unname(rowSums(response))
     }
-    response[w,"Residual"] <- MASS::mvrnorm(sum(w), mu=0, Sigma=residual.sd**2, empirical = empirical)
   }
-  
-  response[,colnames(dmat)] <- response[,colnames(dmat),drop=FALSE] * as.matrix(dmat)
-  
-  if(collapse.contrasts)
-    response <- unname(rowSums(response))
   
   attr(response, "ranefs") <- blups
   attr(response, "fixefs") <- means
+  attr(response, "covariates") <- dmat[,names(covariates), drop=F]
+  attr(response, "residuals") <- all.resids
   
   return(response)
 }
