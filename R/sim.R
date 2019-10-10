@@ -1,0 +1,592 @@
+# simulation stuff
+
+#' @importFrom stats contrasts contrasts<- as.formula qbeta
+#' @importFrom ggplot2 aes
+NULL
+
+#' Conversions between covariance and correlation matrices
+#' 
+#' This function converts a correlation matrix into a covariance matrix, given a vector of standard deviations, and the reverse.
+#' 
+#' @param sds A vector of SDs
+#' @param cormat A correlation matrix
+#' @param covmat A covariance matrix
+#' @param set.names Override dimension names
+#' 
+#' @return A (named) covariance/correlation matrix
+#' 
+#' @export
+cor2cov <- function(sds, cormat = diag(length(sds)), set.names = names(sds)) {
+  check_argument(sds, "numeric")
+  check_argument(cormat, "matrix", "numeric", expression(nrow(x) == length(sds)), expression(ncol(x) == length(sds)), expression(isSymmetric(x)), expression(x >= -1 && x <= 1), expression(diag(x) == 1))
+  check_argument(set.names, c("NULL", "character"), expression(is.null(set.names) || length(set.names) == length(sds)))
+  ret <- tcrossprod(sds, sds) * cormat
+  dimnames(ret) <- list(set.names, set.names)
+  return(ret)
+}
+
+#' @describeIn cor2cov Retrieving a correlation matrix
+#' @export
+cov2cor <- function(covmat, set.names = rownames(covmat)) {
+  check_argument(covmat, "matrix", "numeric", expression(isSymmetric(x)))
+  check_argument(set.names, c("NULL", "character"), expression(length(x) == nrow(covmat)))
+  sds <- sqrt(diag(covmat))
+  ret <- covmat / tcrossprod(sds, sds)
+  dimnames(ret) <- list(set.names, set.names)
+  attr(ret, "sds") <- sds
+  ret
+}
+
+#' Specifying effect sizes for simulations
+#' 
+#' For power simulations, you need to specify effect sizes for the contrasts in the design. These functions help you set up those effects in a format that is expected by the power simulation routines.
+#' 
+#' @param design A design object.
+#' @param include A character vector of fixed effect to include as random slopes. If NULL, all possible slopes are considered.
+#' @param intercept If TRUE, a fixed intercept is included.
+#' @param interactions If TRUE, a fixed slope for each contrast is included.
+#' @param include.factors Which factors to include, NULL for all
+#' @param random.intercepts If TRUE, the variance matrices contain random intercepts.
+#' @param random.slope.interactions If TRUE, variance matrices contain random slope interactions.
+#' @param sd Default standard deviation to use for all random variances.
+#' @param mean Default means to use for all fixed effects.
+#' @param contrasts Contrasts to use in the fixed/random effects. This should match the contrasts passed to the model.
+#' @return A list of variance matrices (for default.random.cov) or a named numeric vector (for default.fixed.means).
+#' @export
+default.random.cov <- function(design, include = NULL, include.factors = NULL, random.intercepts = TRUE, random.slope.interactions = TRUE, sd = 1.0, contrasts = NULL) {
+  check_argument(design, "factorDesign")
+  facs <- random.factors(design, include.interactions = FALSE)
+  if(!is.null(include.factors)) {
+    if(!is.character(include.factors)) stop("`include.factors` must be a character vector of random factors to include!")
+    if(length(setdiff(include.factors, names(facs)))>0) stop("`include.factors` contains names that are not random factors of the design!")
+    facs <- facs[include.factors]
+  }
+  lapply(facs, function(fac) {
+    cnames <- contrast.names(design, fac@name, interactions = random.slope.interactions, intercept = random.intercepts, contrasts = contrasts)
+    if(!is.null(include)) cnames <- intersect(cnames, include)
+    cor2cov(sds = rep(sd, length(cnames)), set.names = cnames)
+  })
+}
+
+#' @describeIn default.random.cov Specify default fixed means
+#' @export
+default.fixed.means <- function(design, mean = 0.0, interactions = TRUE, intercept = TRUE, contrasts = NULL) {
+  vapply(contrast.names(design, interactions = interactions, intercept = intercept, contrasts = contrasts), function(fac) mean, double(1))
+}
+
+
+
+#' Simulate a response variable
+#' 
+#' Given a factor design, cell means (fixed effects) and random-level covariance matrices (random effects), simulate a normally distributed response variable.
+#' 
+#' @param design The factor design to use
+#' @param contrasts Contrast codes to be used
+#' @param means A named numeric vector with each mean (fixed effect)
+#' @param varcov Variance-covariance matrices for each level. This should be a named list of named symmetric matrices. Names of list entries should match the names of the random factors and row/column names of the listed matrices should match the names of the effects (ideally the same as in `means`).
+#' @param include Only use these factors (instead of the factors listed in `means`)
+#' @param residual.sd The residual error standard deviation in each cell of the design
+#' @param residual.df Residual degrees of freedom
+#' @param empirical Are the means and (co-)variances empirical or population values? If true, analyzing the simulated response should yield the recovered parameters. If false, a sufficiently large sample of analyses should be representative of those values (appropriate for power simulations). 
+#' @param collapse.contrasts Should contrasts be collapsed?
+#'
+#' @export
+simulate_response <- function(design, contrasts = NULL, means = default.fixed.means(design, contrasts = contrasts), varcov = default.random.cov(design, contrasts = contrasts, include = names(means), sd = 0), residual.sd = 1.0, residual.df = length(contrast.names(design, interactions = T, intercept = T)), collapse.contrasts = TRUE, empirical = FALSE) {
+  
+  covariates <- list()
+  
+  # argument checks
+  if(!inherits(means, c("double","numeric")) || length(means) > 0 && is.null(names(means))) stop("`means` must be a numeric vector, named after the contrasts in the design.")
+  if(!is.list(varcov) || length(varcov) > 0 && is.null(names(varcov))) stop("`varcov` must be named list of covariance matrices, named after the random factors of the design.")
+  
+  dmat <- design.contrasts(design, contrasts = contrasts, expand = T, interactions = T, intercept = T)
+  
+  if(any(names(covariates) %in% colnames(dmat))) stop("Covariates cannot have the same name as any contrasts of the design matrix!")
+  
+  covariate_sds <- double(length(covariates))
+  names(covariate_sds) <- names(covariates)
+  
+  for(covar_name in names(covariates)) {
+    args <- covariates[[covar_name]]
+    args$design <- design
+    args$empirical <- empirical
+    args$residual.sd <- 0
+    prev.names <- colnames(dmat)[-1]
+    dmat[, covar_name] <- do.call(simulate_response, args)
+    dmat[, paste0(prev.names, ":", covar_name)] <- dmat[, covar_name] * dmat[, prev.names]
+    covariate_sds[covar_name] <- if(is.null(covariates[[covar_name]]$residual.sd)) 1 else covariates[[covar_name]]$residual.sd
+  }
+  
+  all.cnames <- colnames(dmat)
+  
+  response <- matrix(0, ncol = ncol(dmat)+1, nrow = nrow(dmat))
+  colnames(response) <- c(colnames(dmat), "Residual")
+  
+  if(!all(names(means) %in% all.cnames)) stop(sprintf("Not all contrasts in `means` are valid contrasts of the design. Valid contrasts are: %s", paste(all.cnames, collapse = ", ")))
+  
+  response[,names(means)] <- response[,names(means),drop=F] + matrix(means, byrow=T, ncol=length(means), nrow=nrow(response))
+  
+  
+  
+  # Determine residuals in each cell of the design
+  
+  rows_by_cell <- split(seq_len(nrow(design@design)), design@design[,names(fixed.factors(design)),])
+  
+  all.resids <- matrix(0, ncol = 1+length(covariates), nrow = nrow(dmat))
+  
+  resid.correction <- (nrow(dmat) - residual.df) / (nrow(dmat) - length(rows_by_cell))
+  
+  for(rows in rows_by_cell) {
+    if(length(rows) < 2 && empirical) stop("Too many fixed effects: Cannot simulate with empirical=TRUE because at least one design cell contains only a single observation.")
+    resids <- MASS::mvrnorm(length(rows), mu=rep(0, 1+length(covariates)), Sigma=c(residual.sd, covariate_sds)^2*diag(1+length(covariates))*resid.correction, empirical = empirical)
+    response[rows,"Residual"] <- resids[,1]
+    all.resids[rows,] <- resids
+    if(length(covariates) > 0) {
+      dmat[rows,names(covariates)] <- dmat[rows,names(covariates),drop=F] + resids[,-1,drop=F]
+    }
+  }
+  
+  
+  # add random effects
+  
+  blups <- list()
+  
+  for(ranfac in random.factors(design, include.interactions = F)) {
+    if(is.null(varcov[[ranfac@name]])) next
+    else if(!is.matrix(varcov[[ranfac@name]])) stop(sprintf("`varcov` entry for `%s` is not a matrix!", ranfac@name))
+    else if(!isSymmetric(varcov[[ranfac@name]])) stop(sprintf("Random effects matrix for `%s` is not symmetrical!", ranfac@name))
+    else if(is.null(colnames(varcov[[ranfac@name]]))) stop(sprintf("Random effects matrix for `%s` must be named after constrast names!", ranfac@name))
+    else if(any(!setdiff(colnames(varcov[[ranfac@name]]),c("","Intercept","(Intercept)","1")) %in% colnames(dmat))) stop(sprintf("Random effects matrix for `%s` contains unknown contrast names!", ranfac@name))
+    else {
+      ranlevels_with_groups <- unique(design@design[,c(ranfac@name,ranfac@groups),drop=F])
+      ranlevels_by_group <- split(ranlevels_with_groups[,ranfac@name,drop=T], if(length(ranfac@groups) > 0) ranlevels_with_groups[,ranfac@groups,drop=F] else 1)
+      for(unique_ranlevels in ranlevels_by_group) {
+        if(length(unique_ranlevels) < 2 && empirical) stop(sprintf("Too many random effects: Cannot simulate with empirical=TRUE with fewer than 2 observations per cell. This error occured because in at least one %1$s group, there is only one %1$s. You may suppress this error by not providing a covariance matrix for that random factor or increasing the number of replications in the design.", ranfac@name))
+        rmat <- MASS::mvrnorm(length(unique_ranlevels), mu = rep(0, ncol(varcov[[ranfac@name]])), Sigma = varcov[[ranfac@name]], empirical = empirical) # columns is effects, rows is random factor levels
+        if(!is.matrix(rmat)) rmat <- matrix(rmat, nrow = 1)
+        colnames(rmat) <- colnames(varcov[[ranfac@name]])
+        blups[[ranfac@name]] <- rmat
+        response_matrix_indices <- design@design[,ranfac@name] %in% unique_ranlevels
+        rmat_indices <- match(design@design[response_matrix_indices,ranfac@name], unique_ranlevels)
+        response[response_matrix_indices,colnames(rmat)] <- response[response_matrix_indices,colnames(rmat),drop=F] + rmat[rmat_indices,,drop=F]
+      }
+    }
+  }
+  
+  response[,colnames(dmat)] <- response[,colnames(dmat),drop=F] * as.matrix(dmat)
+  
+  
+  if(collapse.contrasts) {
+    if(length(covariates) > 0) {
+      response <- cbind(dv=unname(rowSums(response)), dmat[,names(covariates), drop=F])
+    } else {
+      response <- unname(rowSums(response))
+    }
+  }
+  
+  attr(response, "ranefs") <- blups
+  attr(response, "fixefs") <- means
+  attr(response, "covariates") <- dmat[,names(covariates), drop=F]
+  attr(response, "residuals") <- all.resids
+  
+  return(response)
+}
+
+
+#setMethod("simulate", c(object="factorDesign"), function(object, nsim=1, seed=NULL, ...) {
+#  if(!is.null(seed)) {
+#    set.seed(seed)
+#  }
+#  if(nsim < 1) stop("`nsim` must be greater than or equal to 1!")
+#  else if(nsim > 1) return(lapply(seq_len(nsim), function(i) simulate_response(design = object, ...)))
+#  else return(simulate_response(design = object, ...))
+#})
+
+# Extend an existing design matrix
+# 
+# Extend the experimental design by replicating the codes along a given fixed or random factor.
+# 
+# @param design A design object
+# @param df A design matrix (as a data frame)
+# @param factor The name of the factor along which to extend the design
+# @param n The number of complete replications
+# @return An extended design matrix, n-times a long as the original matrix.
+# @export
+extend.design.matrix <- function(df, factor, n) {
+  if(!is.character(factor)||length(factor)!=1L) stop("Factor must be single character string")
+  if(!factor %in% colnames(df)) stop("Factor must be in design")
+  levels <- unique(df[,factor,drop=FALSE])
+  rownames(levels) <- NULL
+  do.call(rbind, lapply(seq_len(nrow(levels)), function(i) {
+    x <- levels[i,,drop=FALSE]
+    ndf <- merge(x, df)
+    rownames(ndf) <- NULL
+    do.call(rbind, lapply(seq_len(n)-1L, function(j) {
+      y <- ndf
+      for(col in seq_len(ncol(levels))) {
+        y[,col] <- y[,col]+j*nrow(levels)
+      }
+      return(y)
+    }))
+  }))
+}
+
+# Extending an existing design
+# 
+# @describeIn extend.design.matrix Extend a design object
+# @export
+extend.design <- function(design, factor, n) {
+  design@design <- extend.design.matrix(design@design, factor, n)
+  design
+}
+
+
+collapse.design.matrix <- function(dmat, collapse, var.name, method = mean) {
+  if(!is.character(collapse)||length(collapse)<1L) stop("`collapse` must be character vector with at least one element.")
+  if(!all(collapse %in% colnames(dmat))) stop("Not all factors named in `collapse` are actual factors/columns in `dmat`!")
+  ret <- unique(dmat[,!colnames(dmat) %in% c(collapse, var.name),drop=FALSE])
+  ret[,var.name] <- vapply(seq_len(nrow(ret)), function(i) method(merge(ret[i,,drop=FALSE], dmat)[,var.name]), double(1))
+  return(ret)
+}
+
+
+# Mixed model simulation
+# 
+# Simulate and fit a linear mixed model based on the given design and effects.
+# 
+# @param design A design object
+# @param formula The model formula to be fitted (using lme4::lmer)
+# @param fixefs A named vector of fixed effect sizes
+# @param varcov A list of covariance matrices, one per random factor. Names of list entries should match random factor names.
+# @param residual.sd The standard deviation of the residual term
+# @param contrasts Named list of contrast matrices to override.
+# @param empirical Are the means and (co-)variances empirical or population values?
+# @return A fitted lmerMod object
+# @seealso [lme4::lmer()]
+# @export
+simulate_lmer <- function(design, formula = NULL, fixefs = default.fixed.means(design), varcov = default.random.cov(design, sd = 1), residual.sd = 1.0, contrasts = NULL, empirical = FALSE) {
+  if(is.null(formula)) formula <- as.formula(design.formula(design, contrasts = contrasts, expand.contrasts = FALSE)$lmer)
+  df <- design.contrasts(design, contrasts = contrasts, expand = TRUE, intercept=TRUE, interactions = FALSE, include.random.levels = TRUE)
+  df$dv <- simulate_response(design, contrasts = contrasts, means = fixefs, varcov = varcov, residual.sd = residual.sd, empirical = empirical)
+  dat <- cbind(design@design, dv = df$dv)
+  model <- do.call(lme4::lmer, list(formula=formula, data=quote(dat), contrasts=quote(contrasts), REML = FALSE))
+  attr(model, "trueVals") <- lapply(match.call(), eval.parent)
+  return(model)
+}
+
+# Linear regression simulation
+# 
+# Simulate and fit a linear model based on the given design and effects.
+# 
+# @param design A design object
+# @param formula The model formula to be fitted (using stats::lm)
+# @param fixefs A named vector of fixed effect sizes
+# @param varcov A list of covariance matrices, one per random factor. Names of list entries should match random factor names.
+# @param residual.sd The standard deviation of the residual term
+# @param contrasts Named list of contrast matrices to override.
+# @param collapse Random factors to collapse (by default, all but the first)
+# @param collapse.method Method to use to collapse observations (default: mean)
+# @param empirical Are the means and (co-)variances empirical or population values?
+# @return A fitted lm object
+# @seealso [lm()]
+# @export
+simulate_lm <- function(design, formula = NULL, fixefs = default.fixed.means(design), varcov = default.random.cov(design, sd = 0), residual.sd = 1.0, collapse=names(random.factors(design))[-1], collapse.method = mean, contrasts = NULL, empirical = FALSE) {
+  if(missing(collapse) && length(collapse) != 0L) warning(sprintf("There are at least two random factors in the design and `%s` was automatically determined to be collapsed across. Please explicitly specify the factor!", paste0(collapse, collapse = ":")))
+  if(is.null(formula)) formula <- as.formula(design.formula(design, contrasts = contrasts, response = "dv")$lm)
+  df <- design.contrasts(design, contrasts = contrasts, expand = TRUE, intercept=TRUE, interactions = FALSE, include.random.levels = TRUE)
+  df$dv <- simulate_response(design, contrasts = contrasts, means = fixefs, varcov = varcov, residual.sd = residual.sd, empirical = empirical)
+  dat <- cbind(design@design, dv = df$dv)
+  if(length(collapse)>0L) dat <- collapse.design.matrix(dat, collapse, "dv", collapse.method)
+  model <- do.call("lm", list(formula=formula, data=quote(dat), contrasts=quote(contrasts)))
+  attr(model, "trueVals") <- lapply(match.call(), eval.parent)
+  return(model)
+}
+
+# Run a power simulation for a fitted linear (mixed) model or factorial design.
+# 
+# @param model A fitted model object
+# @param tests A list of tests to run for each simulation
+# @param nsim Number of iterations
+# @param cl A cluster object to parallelize the simulations
+# @param alpha The alpha level (Type-I error) to use for binary H0/H1 decisions
+# @return A matrix with the results of all simulations
+# @seealso [design.power.sim()], [tests()]
+# @export
+simulate_model_power <- function(model, tests, nsim = 1000L, cl = NULL, alpha = NULL) {
+  if(length(tests)==0L) stop("Please specify at least one test")
+  if(!missing(alpha)) if(!is.double(alpha)||alpha<=0||alpha>=1) stop("`alpha` must be 0<...<1 !")
+  f <- function(i, model, tests) {
+    if(is.data.frame(model))
+      df <- model
+    else
+      df <- stats::model.frame(model)
+    args <- attr(model, "trueVals")
+    newFit <- do.call(args[[1]], args[-1]) # call the same function for simulation again
+    if(any(vapply(tests, function(test) getTestParam(test$name,"lmerTest",FALSE), logical(1))) && inherits(newFit, "lmerMod")) {
+      # newFit is a lmerMod and at least one test requires lmerMods to be converted to lmerModLmerTests!
+      newFit <- lmerTest::as_lmerModLmerTest(newFit)
+    }
+    vapply(tests, function(test) tryCatch({
+      do.call(.simtests[[test$name]]$do, c(list(model=newFit), test$args))
+    }, warning=function(e) NA_real_, error = function(e) NA_real_), double(1))
+  }
+  if(is.null(cl))
+    ret <- vapply(seq_len(nsim), f, double(length(tests)), model = model, tests = tests)
+  else
+    ret <- do.call(cbind, parallel::parLapply(cl, seq_len(nsim), f, model = model, tests = tests))
+  if(length(tests)==1L) ret <- matrix(ret, ncol=1)
+  else ret <- t(ret)
+  if(!is.null(alpha)) {
+    ret <- vapply(seq_len(ncol(ret)), function(itest, alpha, qs) {
+      c(sum(ret[,itest]<alpha, na.rm=TRUE), sum(ret[,itest]>=alpha, na.rm=TRUE), nrow(ret))
+    }, integer(3), alpha = alpha)
+    rownames(ret) <- c("H1","H0","nsim")
+  }
+  return(ret)
+}
+
+#' Run a power simulation for a factorial design.
+#' 
+#' @param design A design object
+#' @param formula The model formula to be fitted (using lme4::lmer or stats::lm)
+#' @param tests A list of tests to run for each simulation
+#' @param modelClass The model class to use (either "lm" or "lmer")
+#' @param contrasts Named list of contrast matrices to override.
+#' @param fixefs A named vector of fixed effect sizes
+#' @param varcov A list of covariance matrices, one per random factor. Names of list entries should match random factor names.
+#' @param residual.sd The standard deviation of the residual term
+#' @param ... More arguments to pass to model.power.sim, such as alpha, cl, or nsim
+#' @return A matrix with the results of all simulations
+#' @seealso [model.power.sim()], [tests()], [lme4::lmer()], [stats::lm()]
+#' @export
+simulate_power <- function(design, formula = NULL, tests, modelClass="lmer", contrasts = NULL, fixefs = default.fixed.means(design, contrasts = contrasts), varcov = default.random.cov(design, contrasts = contrasts, sd = if(modelClass == "lm" || identical(modelClass, stats::lm)) 0 else 1), residual.sd = 1, ...) {
+  model <- design.contrasts(design, contrasts = contrasts, expand = TRUE, intercept=TRUE, interactions = FALSE, include.random.levels = TRUE)
+  if(modelClass == "lm" || identical(modelClass, stats::lm))
+    attr(model, "trueVals") <- list(simulate_lm, design = design, formula = formula, fixefs = fixefs, varcov = varcov, residual.sd = residual.sd, collapse=names(random.factors(design))[-1], collapse.method = mean, contrasts = contrasts)
+  else if(modelClass == "lmer" || identical(modelClass, lme4::lmer))
+    attr(model, "trueVals") <- list(simulate_lmer , design = design, formula = formula, fixefs = fixefs, varcov = varcov, residual.sd = residual.sd, contrasts = contrasts)
+  else stop(sprintf("Model class %s not supported", as.character(modelClass)))
+  simulate_model_power(model, tests=tests, ...)
+}
+
+#' Run an array of mixed-effects power simulations for a factorial design with different sample sizes
+#' 
+#' @param design A design object
+#' @param formula The model formula to be fitted (using lme4::lmer or stats::lm)
+#' @param tests A list of tests to run for each simulation
+#' @param contrasts Named list of contrast matrices to override.
+#' @param alpha The alpha level (Type-I error) to use for the simulations
+#' @param ci The confidence interval for beta (Type-II error)
+#' @param along The name of the random factor along which to extend the matrix and simulate power.
+#' @param ns The replication factors (integer values, such as 1:4) to use to extend the design. Power is simulated for each replication separately.
+#' @param ... More arguments to pass to design.power.sim, such as cl, nsim, fixefs ect.
+#' @return A matrix with the aggregated results of all power simulations
+#' @seealso [model.power.sim()], [design.power.sim()], [tests()], [lme4::lmer()], [stats::lm()]
+#' @export
+simulate_power_curve <- function(design, formula = NULL, contrasts = NULL, along, ns, tests, alpha = .05, ci=NULL, ...) {
+  
+  if(!inherits(tests, "testList")) stop("`tests` must be a test list generated by tests(...)!")
+  
+  testNames <- vapply(tests, function(c1) {
+    do.call(.simtests[[c1$name]]$name, c1$args)
+  }, character(1))
+  
+  pwr <- do.call(rbind, lapply(ns, function(n) {
+    extdesign <- extend.design(design, along, n)
+    nlvs <- length(unique(extdesign@design[,along]))
+    message(sprintf("Simulating power for N%s=%d, Nobs=%d...", along, nlvs, nrow(extdesign@design)))
+    pwr <- simulate_power(extdesign, formula = formula, contrasts = contrasts, tests=tests, alpha = alpha, ...)
+    if(!is.null(ci)) {
+      pwr <- rbind(pwr, apply(pwr, 2, function(f, q) stats::qbeta(q, f["H1"], f["H0"]), q = c((1-ci)/2,.5,1-(1-ci)/2)))
+      rownames(pwr) <- c(rownames(pwr)[1:3],"ci_l","p","ci_u")
+    }else{
+      pwr <- rbind(pwr, p=pwr["H1",]/(pwr["H1",]+pwr["H0",]))
+    }
+    
+    pwr <- as.data.frame(t(pwr))
+    pwr$test <- seq_along(tests)
+    pwr$nobs <- nrow(extdesign@design)
+    pwr$n <- nlvs
+    return(pwr)
+  }))
+  attr(pwr, "tests") <- testNames
+  attr(pwr, "ci_width") <- ci
+  attr(pwr, "alpha_level") <- alpha
+  attr(pwr, "unit") <- along
+  attr(pwr, "replications") <- ns
+  attr(pwr, "nlevels") <- ns*length(unique(design@design[,along]))
+  rownames(pwr) <- NULL
+  return(as(pwr, "designr.power.curve"))
+}
+
+
+plot.designrPowerCurve <- function(x, ci=.95, ignore.failed.models = TRUE, add_p_breaks = c(attr(sim.out,"alpha_level"),.80), ncol=3, plot.mean = "p", plot.error="e", ...) {
+  if(!inherits(x, c("designr.power.curve", "data.frame"))) {
+    stop("Parameter `x` must be a data frame or designr.power.curve object (output from design.power.curve(...))!")
+  }
+  sim.out <- x
+  if(!is.null(ci)) {
+    if(!is.numeric(ci) || length(ci) < 1L) stop("`ci` must be a numeric vector or scalar!")
+    if(any(ci <= 0 | ci >= 1)) stop("`ci` values must be within (0, 1)!")
+  }
+  n <- ci_l <- ci_u <- ci_level <- p <- test <- NULL # fix for CRAN check
+  if(!is.numeric(add_p_breaks) || any(add_p_breaks < 0 | add_p_breaks > 1)) stop("`add_p_breaks` values must be numeric and within [0, 1]!")
+  ret <- ggplot2::ggplot(sim.out) + 
+    ggplot2::theme_bw() + ggplot2::theme(legend.position = if(length(ci)>1L) "bottom" else "none", panel.grid.minor = ggplot2::element_blank(), panel.grid.major = ggplot2::element_blank()) + 
+    ggplot2::scale_fill_grey(start=max(.7,1-.1*length(ci)),end=.9) +
+    ggplot2::scale_color_grey(start=.5,end=.9) +
+    ggplot2::facet_wrap(~test, labeller = function(x) data.frame(label = attr(sim.out, "tests")[x$test], stringsAsFactors = FALSE), ncol=ncol) + 
+    ggplot2::scale_x_continuous(breaks = attr(sim.out, "nlevels"), minor_breaks = NULL, labels = sprintf("%dN\n(%d)", attr(sim.out, "replications"), attr(sim.out, "nlevels"))) +
+    ggplot2::scale_y_continuous(limits = c(0,1), labels = function(x) sprintf("%d%%", x*100)) +
+    ggplot2::labs(x=substitute(N[unit], list(unit=attr(sim.out,"unit"))), y=substitute(P(p<alev), list(alev=attr(sim.out,"alpha"))), fill="Coverage", color="Coverage")
+  if(is.null(ci) && !is.null(attr(sim.out, "ci_width"))) ci <- attr(sim.out,"ci_width")
+  if(!is.null(ci)) {
+    ci <- sort(ci, TRUE)
+    sim.out2 <- sim.out[,setdiff(colnames(sim.out), c("ci_l","ci_u")),drop=FALSE]
+    sim.out2 <- do.call(rbind, lapply(seq_along(ci), function(cil) {
+      x <- t(vapply(seq_len(nrow(sim.out2)), function(i) {
+        qs <- c((1-ci[cil])/2,1-(1-ci[cil])/2) # quantiles to determine (lower and upper bound of CI)
+        # Note: We are adding +1 to each shape parameter in order to add a weakly informed uniform "prior" probability
+        # If there were no observations/simulations, all probabilities would we equally likely (=beta(1,1)==uniform(0,1))
+        # With each simulation, we are incrementing the respective shape parameter
+        if(ignore.failed.models) {
+          ps <- qbeta(qs, sim.out2$H1[i]+1, sim.out2$H0[i]+1) # CI range for p(H1)
+        } else {
+          ps <- qbeta(qs, sim.out2$H1[i]+1, sim.out2$nsim[i]-sim.out2$H1[i]+1) # CI range for p(H1), counting failed simulations (non-convergence etc.) as p >= alpha
+        }
+        return(ps)
+      }, double(2)))
+      colnames(x) <- c("ci_l", "ci_u")
+      cbind(sim.out2, x, ci_level=cil)
+    }))
+    sim.out2$ci_level <- factor(sim.out2$ci_level, levels = seq_along(ci), labels = sprintf("%.1f%%", ci*100))
+    for(cil in seq_along(ci)) {
+      if(plot.error %in% c("line","lines","linerange","l"))
+        ret <- ret + ggplot2::geom_linerange(aes(x=n,ymin=ci_l,ymax=ci_u,color=ci_level,group=paste(ci_level,test)), data = sim.out2[as.numeric(sim.out2$ci_level)==cil,,drop=FALSE])
+      else if(plot.error %in% c("errorbar","errorbars","errbar","errbars","e"))
+        ret <- ret + ggplot2::geom_errorbar(aes(x=n,ymin=ci_l,ymax=ci_u,color=ci_level,group=paste(ci_level,test)), data = sim.out2[as.numeric(sim.out2$ci_level)==cil,,drop=FALSE], width=.25)
+      else if(plot.error %in% c("ribbon","ribbons","r"))
+        ret <- ret + ggplot2::geom_ribbon(aes(x=n,ymin=ci_l,ymax=ci_u,fill=ci_level,group=paste(ci_level,test)), data = sim.out2[as.numeric(sim.out2$ci_level)==cil,,drop=FALSE])
+      else if(plot.error %in% c("point","points","p"))
+        ret <- ret + ggplot2::geom_pointrange(aes(x=n,ymin=ci_l,ymax=ci_u,color=ci_level,group=paste(ci_level,test)), data = sim.out2[as.numeric(sim.out2$ci_level)==cil,,drop=FALSE])
+      else
+        stop("`plot.error` must be one of 'linerange', 'line', 'l', 'errorbar', 'errbar', 'e', 'ribbon', or 'r'!")
+    }
+  }
+  if(!is.null(add_p_breaks)) {
+    ret <- ret + ggplot2::geom_hline(aes(yintercept = p), linetype="dashed", color="grey", data = data.frame(p=add_p_breaks))
+  }
+  if(plot.mean %in% c("line","l"))
+    ret <- ret + ggplot2::geom_line(aes(x=n,y=p,group=test))
+  else if(plot.mean %in% c("point","p"))
+    ret <- ret + ggplot2::geom_point(aes(x=n,y=p,group=test))
+  else
+    stop("`plot.mean` must be one of 'line', 'l', 'point', or 'p'!")
+  return(ret)
+}
+
+setClass("designrPowerCurve", contains="data.frame")
+#' Run a power simulation for a factorial design.
+#' 
+#' @param x A power curve object (from design.power.curve(...))
+#' @param ci The width of the confidence interval to plot
+#' @param ignore.failed.models Should failed model fits be ignored (TRUE) or counted as failure to reject the null hypothesis (FALSE)
+#' @param add_p_breaks Add horizontal dashed lines at those p-values (e.g., alpha from the power curve object and beta=.8)
+#' @param ncol Number of plot facets in each horizontal line. Each facet is a different test.
+#' @param plot.mean How should the mean power (beta) be plotted? Valid values are: line, l, point, p
+#' @param plot.error How should the confidence interval be plotted? Valid values are: line, l, errorbar, e, ribbon, r, point, p
+#' @param ... (ignored)
+#' @return A ggplot plot
+#' @seealso [design.power.sim()], [design.power.curve()], [ggplot2::ggplot()]
+#' @export
+setMethod("plot", signature("designrPowerCurve"), plot.designrPowerCurve)
+
+.simrcache <- list()
+
+.simtests <- list(
+  t. = list(
+    do = function(model, coef = 1L, ...) {
+      if(inherits(model, "lmerMod"))
+        cf <- summary(model)$coef
+      else if(inherits(model, "lmerModLmerTest")) {
+        warning("Computing t-test with Satterthwaite dfs for model fitted with lmerTest!")
+        return(.simtests$t$do(model, coef, ...))
+      } else
+        stop("t-test with unknown df cannot be performed on this model class")
+      if(is.null(cf[coef,])) stop(sprintf("Effect %s not found in model coefficients", coef))
+      (1-pnorm(abs(cf[coef, "t value"])))*2 # Note: t distribution approximates normal distribution for df = Inf
+    },
+    name = function(coef = "Intercept", ...) sprintf("p(>|t(%s)|)", coef)
+  ),
+  t = list(
+    do = function(model, coef = 1L, ...) {
+      if(inherits(model, "lmerMod"))
+        cf <- summary(lmerTest::as_lmerModLmerTest(model))$coef
+      else if(inherits(model, "lmerModLmerTest"))
+        cf <- summary(model)$coef
+      else if(inherits(model, "lm"))
+        cf <- summary(model)$coef
+      else
+        stop("t-test cannot be performed on this model class")
+      if(is.null(cf[coef,])) stop(sprintf("Effect %s not found in model coefficients", coef))
+      cf[coef, "Pr(>|t|)"]
+    },
+    name = function(coef = "Intercept", ...) sprintf("p(>|t(%s)|)", coef),
+    params = list(lmerTest=TRUE)
+  ),
+  simr = list(
+    do = function(model, testClass, ...) {
+      fun.sig <- paste(c(testClass, ...), collapse=":")
+      if(!is.null(.simrcache[[fun.sig]]))
+        fun <- .simrcache[[fun.sig]]
+      else {
+        fun <- `::`("simr", testClass)(...)
+        .simrcache[[fun.sig]] <- fun
+      }
+      fun(model)
+    },
+    name = function(testClass, ...) sprintf("%s(%s)", testClass, paste(..., sep=", ", collapse=", "))
+  )
+)
+
+getTestParam <- function(testName, param, default = NULL) {
+  if(is.null(.simtests[[testName]]) || is.null(.simtests[[testName]]$params) || is.null(.simtests[[testName]]$params[[param]])) return(default)
+  else return(.simtests[[testName]]$params[[param]])
+}
+
+#' Specify the list of tests to perform on each power simulation. Implemented tests are:
+#' 
+#' t(x) : Use lmerTest to calculate the p-value for the factor x
+#' 
+#' t.(x) : Calculate p-value from t-values by approximating df=Inf
+#' 
+#' simr(type, x, y) : Use the simr package to perform test type("x", "y")
+#' 
+#' @param ... A list of tests
+#' @return A ggplot plot
+#' @seealso [design.power.sim()], [design.power.curve()], [model.power.sim()], [simr], [lmerTest]
+#' @examples
+#' 
+#' # These are three different ways to specify a t-test on the same factor condition1
+#' # Each of them is performed for each simulation
+#' tests(
+#'    t(condition1),
+#'    t.(condition1),
+#'    simr(fixed, condition1, t)
+#' )
+#' 
+#' @export
+tests <- function(...) {
+  my.call <- as.list(sys.call())[-1]
+  if(!all(vapply(my.call, is.call, logical(1)))) stop("Tests must be testname(args, ...)!")
+  if(any(vapply(my.call, function(x) is.null(.simtests[[as.character(x[[1]])]]), logical(1)))) stop("At least one test is unknown!")
+  for(i in seq_along(my.call)) {
+    my.call[[i]] <- list(
+      name = as.character(my.call[[i]][[1]]),
+      args = lapply(as.list(my.call[[i]])[-1], function(x) if(is.symbol(x)) as.character(x) else x)
+    )
+  }
+  class(my.call) <- "testList"
+  return(my.call)
+}
+
