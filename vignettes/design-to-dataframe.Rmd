@@ -55,7 +55,7 @@ design1 <-
   random.factor("Item", instances=6)    
 
 
-codes1 <- arrange(output.design(design1)$codes, Subj, Item)[c(3, 4, 2, 1)]
+codes1 <- arrange(design.codes(design1), Subj, Item)[c(3, 4, 2, 1)]
 codes1
 tail(codes1, 10)
 
@@ -65,7 +65,7 @@ xtabs(~ Subj + Load + Speed, codes1)
 xtabs(~ Item + Load + Speed, codes1)
 ```
 
-The first command generates the list `design1`. The function `output.design()` extracts the generated variable coding as a dataframe in the tibble format. After resorting and rearranging the variables, the code is converted to the long format (i.e, N=216). Obviously, having subjects read each text six times may lead to practice effects that would need to be taken into account by counterbalancing the order in which texts are presented across subjects. 
+The first command generates the list `design1`. The function `design.codes()` extracts the generated variable coding as a dataframe in the tibble format. After resorting and rearranging the variables, the code is converted to the long format (i.e, N=216). Obviously, having subjects read each text six times may lead to practice effects that would need to be taken into account by counterbalancing the order in which texts are presented across subjects. 
 
 ## _Speed_ within-subject/within-item, _Text_ within-subject/between-item; no counterbalancing
 
@@ -87,7 +87,7 @@ design2 <- fixed.factor("Speed", levels=c("slow", "medium", "fast")) +
   random.factor("Subj", instances=6) +   
   random.factor("Item", groups="Type", instances=3)
 
-codes2 <- arrange(output.design(design2)$codes, Subj, Item)[c(3, 4, 1, 2)]
+codes2 <- arrange(design.codes(design2), Subj, Item)[c(3, 4, 1, 2)]
 codes2
 
 xtabs(~ Item + Type, codes2)
@@ -130,7 +130,7 @@ design3 <-
   random.factor("Item", instances=6) +
   random.factor("Subj", groups="Age", instances=3) 
 
-codes3 <- arrange(output.design(design3)$codes, Subj, Item)[c(4, 3, 2, 1)]
+codes3 <- arrange(design.codes(design3), Subj, Item)[c(4, 3, 2, 1)]
 codes3
 
 xtabs(~ Subj + Age, codes3)
@@ -169,7 +169,7 @@ design4 <-
   random.factor("Subj", groups=c("Age", "Speed"), instances=10) +
   random.factor("Item", instances=6)   
 
-codes4 <- arrange(output.design(design4)$codes, Subj, Item)[c(3, 4, 2, 1)]
+codes4 <- arrange(design.codes(design4), Subj, Item)[c(3, 4, 2, 1)]
 codes4
 
 xtabs( ~ Subj + Age, codes4)
@@ -207,7 +207,7 @@ design5 <-
   random.factor(c("Subj", "Item"), groups=c("Speed", "Load"))
 
 
-codes5 <- arrange(output.design(design5)$codes, Subj, Item)[c(3, 4, 1, 2)]
+codes5 <- arrange(design.codes(design5), Subj, Item)[c(3, 4, 1, 2)]
 codes5
 
 xtabs(~ Subj + Speed + Load, codes5)
@@ -236,7 +236,7 @@ design6 <-
   random.factor(c("Subj", "Item"), groups=c("Speed", "Load"))
 
 
-codes6 <- arrange(output.design(design6)$codes, Subj, Item)[c(3, 4, 1, 2)]
+codes6 <- arrange(design.codes(design6), Subj, Item)[c(3, 4, 1, 2)]
 codes6
 length(unique(codes6$Subj))
 length(unique(codes6$Item))
