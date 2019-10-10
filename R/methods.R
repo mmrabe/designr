@@ -58,20 +58,63 @@ write.design <- function(design, group_by = NULL, order_by = NULL, randomize = F
   }
 }
 
-#' Preparing Designs for Model Analysis
+
+#' Summary of Factor Designs
 #'
-#' Based on a given design, this function creates a model formula that can be used to analyze data with functions such as lm or lmer.
+#' These functions return useful summaries of a factor design, including the design matrix itself as well as other parameters and a list of random factors as experimental units.
+#' 
+#' The function \code{design.units} returns the experimental units of the design. Those are defined by random factors and their levels. See \code{units} return value below.
+#' 
+#' \code{design.codes} returns a dataframe or \code{tibble} of all planned observations including each observation's experimental codes, i.e. fixed and random factor levels. If you group the output, a list is returned. See \code{codes} return value below.
+#' 
+#' \code{design.formula} returns a list of formulas suitable for regression analysis. Currently, formulas for \code{lm} and \code{lme4} are returned. See \code{formulas} entry,
+#' 
+#' @rdname output.design
+#' @param design The \code{factorDesign} object to summarize.
+#' @param group_by If not \code{NULL}, the design matrix is grouped by these factors. Factors must be valid columns of the design matrix. If used, \code{$codes} will be a list matched to the entries in \code{$groups}.
+#' @param order_by If not \code{NULL}, output within each output group is ordered by these columns.
+#' @param randomize After ordering, remaining rows in the same order rank are randomly shuffled.
+#' @param rename_random Should random factor levels be renamed? If \code{TRUE}, levels are renamed as strings composed of the factor name and factor level (e.g., Subj01, Subj02, ...). \code{FALSE} disables renaming of random factor levels. Alternatively, you may provide a function which should accept the vectorized ID (integer) as a first argument and the name (single character value) of the random factor as second argument or ignore it. Functions such as \code{as.double} or \code{as.integer} *are* possible because they ignore the second argument and only convert the ID.
+#' @return
+#' \code{output.design} returns a list containing all output summaries, including the following named entities:
+#' \describe{
+#'   \item{\code{codes}}{Either a \code{tibble} with all experimental codes or a list of \code{tibble}s of experimental codes. The list entries are matched to the rows of \code{$groups}.}
+#'   \item{\code{groups}}{If grouped, contains a tibble in which each row represents an output group, matched to the entries in $codes. If not grouped, this is \code{NULL}.}
+#'   \item{\code{ordered}}{If ordered, contains a vector of order criteria. If not ordered, this is \code{NULL}.}
+#'   \item{\code{randomized}}{Value of \code{randomized}.}
+#'   \item{\code{units}}{A list of random factors and their levels for this design as tibbles. Empty list if no random factors in the design.}
+#'   \item{\code{formulas}}{A list of possible model formulas for use with functions such as \code{lm()} and \code{lmer()}.}
+#' }
+#' 
+#' The functions \code{design.codes}, \code{design.formula} and \code{design.units} only return the values of the fields \code{codes} (a \code{tibble} or list or \code{tibble}s of experimental codes), \code{formulas} (a list of model formulas), and \code{units} (a list of random factors and their levels), respectively.
+#' 
 #'
-#' @param design The `factorDesign` to be used.
-#' @param contrasts The contrasts to override (NULL if none to override)
-#' @param expand.contrasts If TRUE, factors with more than one contrast are replaced by so many contrasts, i.e. the result contains the names of the individual contrasts, not of the factors.
+#' @seealso \code{\link[designr]{design.formula}} for more options generating model formulae other than the suggested default ones in the summary.
+#'
+#' @export
+output.design <- function(design, group_by = NULL, order_by = NULL, randomize = FALSE, rename_random = TRUE) {
+  check_argument(design, "factorDesign")
+  list(
+    codes = design.codes(design, group_by, order_by, randomize, rename_random),
+    groups = if(missing(group_by) || is.null(group_by)) NULL else unique(design@design[,group_by,drop=FALSE]),
+    ordered = if(!missing(order_by) && length(order_by)>0L) order_by else NULL,
+    randomized = !missing(randomize) && isTRUE(randomize),
+    units = design.units(design),
+    formulas = design.formula(design)
+  )
+}
+
+#' @describeIn output.design Retrieve only the model formulas suitable for the design
+#' 
+#' @param contrasts The contrasts to override (\code{NULL} if none to override)
+#' @param expand.contrasts If \code{TRUE}, factors with more than one contrast are replaced by so many contrasts, i.e. the result contains the names of the individual contrasts, not of the factors.
 #' @param response The left-hand side of the equation. Typically, this is just the response/dependent variable.
 #' @param intercepts Should an intercept be included?
 #' @param env The environment in which to embed the formula
 #' @param interactions Should fixed effects be additive or interactive?
-#' @return A named list of `formula` objects, each name corresponding to the type of model it is suited for.
+#' 
 #' @export
-design.formula <- function(design, contrasts = NULL, expand.contrasts = !is.null(contrasts), interactions=TRUE, intercepts=TRUE, response = "dv", env = parent.frame()) {
+design.formula <- function(design, contrasts = NULL, expand.contrasts = !missing(contrasts), interactions=TRUE, intercepts=TRUE, response = "dv", env = parent.frame()) {
   add_them <- function(l, op) {
     if(length(l) < 1) return(NULL)
     ret <- l[[1L]]
@@ -101,44 +144,43 @@ design.formula <- function(design, contrasts = NULL, expand.contrasts = !is.null
     aov = call('~',as.symbol(response),add_them(c(if(intercepts) list(1) else list(), list(add_them(fixed, if(interactions&&!expand.contrasts) '*' else '+')), random_aov), '+'))
   )
 }
-setMethod("formula", signature = "factorDesign", function(x, ...) design.formula(design=x, ...)$lmer )
 
-#' Summary of Factor Designs
-#'
-#' This function creates a useful summary of a factor design, including the design matrix itself as well as other parameters and a list of random factors as experimental units.
-#'
-#' @param design The `factorDesign` object to summarize.
-#' @param group_by If not `NULL`, the design matrix is grouped by these factors. Factors must be valid columns of the design matrix. If used, `$codes` will be a list matched to the entries in `$groups`.
-#' @param order_by If not `NULL`, output within each output group is ordered by these columns.
-#' @param randomize After ordering, remaining rows in the same order rank are randomly shuffled.
-#' @param random A function used for naming random factor levels. Should be vectorized and accept the ID (integer) as a first argument and the name (single character value) of the random factor. Functions such as as.double() or as.integer() *are* possible because they ignore the second argument and only convert the ID.
-#' @return A list containing the output summary, including the following named entities:
-#'
-#'    *$table*: Either a tibble with all experimental codes or a list of tibbles of experimental codes. The list entries are matched to the rows of `$groups`.
-#'
-#'    *$groups*: If grouped, contains a tibble in which each row represents an output group, matched to the entries in $codes. If not grouped, this is `NULL`.
-#'
-#'    *$ordered*: If ordered, contains a vector of order criteria. If not ordered, this is `NULL`.
-#'
-#'    *$randomized*: Value of `randomized`.
-#'
-#'    *$units*: A list of random factors and their levels for this design as tibbles. Empty list if no random factors in the design.
-#'
-#'    *$formulas*: Example model formulae for use with functions such as lm() and lmer().
-#'
-#' @seealso [design.formula()] for more options generating model formulae other than the suggested default ones in the summary.
-#'
+rename_random_default <- function(id, fac) factor(sprintf("%s%0*d", fac, nchar(as.character(max(id))), id))
+
+#' @describeIn output.design Retrieve only the experimental units of a design
 #' @export
+design.units <- function(design, rename_random = TRUE) {
+  check_argument(design, "factorDesign")
+  check_argument(rename_random, c("logical", "function"), 1)
+  sapply(random.factors(design), function(f) {
+    df <- unique(design@design[,colnames(f@levels),drop=FALSE])
+    df <- df[do.call(order, as.list(df)), , drop=FALSE]
+    rownames(df) <- NULL
+    if(length(f@name) == 1) {
+      if(isTRUE(rename_random)) {
+        df[,f@name] <- rename_random_default(df[,f@name], f@name)
+      } else if(is.function(rename_random)) {
+        df[,f@name] <- rename_random(df[,f@name], f@name)
+      } else {
+        df[,f@name] <- as.integer(df[,f@name])
+      }
+    }
+    return(df)
+  }, simplify = FALSE, USE.NAMES = TRUE)
+}
 
-output.design <- function(design, group_by = NULL, order_by = NULL, randomize = FALSE, random = function(id, fac) factor(sprintf("%s%0*d", fac, nchar(as.character(max(id))), id))) {
+#' @describeIn output.design Retrieve only the codes of planned observations of an experimental design
+#' @export
+design.codes <- function(design, group_by = NULL, order_by = NULL, randomize = FALSE, rename_random = TRUE) {
+  check_argument(group_by, c("NULL", "character"))
+  check_argument(order_by, c("NULL", "character"))
+  check_argument(randomize, "logical", 1)
+  check_argument(rename_random, c("logical","function"))
   if(is.null(order_by)) {
     order_by <- character(0)
   }
   if(is.null(group_by)) {
     group_by <- character(0)
-  }
-  if(!is.factorDesign(design)) {
-    stop("`design` must be a factor design!")
   }
   if(any(!group_by %in% colnames(design@design))) {
     stop("Not all of the grouping variables are part of the design!")
@@ -160,31 +202,19 @@ output.design <- function(design, group_by = NULL, order_by = NULL, randomize = 
   }
   rownames(data) <- NULL
   for(ranfac in names(random.factors(design, include.interactions = FALSE))) {
-    if(is.function(random)) {
-      data[,ranfac] <- random(data[,ranfac], ranfac)
-    } else if(is.null(random)) {
-      data[,ranfac] <- as.integer(data[,ranfac])
+    if(isTRUE(rename_random)) {
+      data[,ranfac] <- rename_random_default(data[,ranfac], ranfac)
+    } else if(is.function(rename_random)) {
+      data[,ranfac] <- rename_random(data[,ranfac], ranfac)
     } else {
-      stop(sprintf("Random factor conversion must be a function or NULL."))
+      data[,ranfac] <- as.integer(data[,ranfac])
     }
   }
-  list(
-    codes = if(length(group_by)>0L) lapply(seq_len(nrow(file_groups)), function(i) {
-      df <- join(file_groups[i, , drop=FALSE], data)
-      rownames(df) <- NULL
-      return(tibble::as_tibble(df))
-    }) else tibble::as_tibble(data),
-    groups = if(length(group_by)>0L) file_groups else NULL,
-    ordered = if(length(order_by)>0L) order_by else NULL,
-    randomized = randomize,
-    units = sapply(random.factors(design), function(f) {
-      df <- unique(data[,colnames(f@levels),drop=FALSE])
-      df <- df[do.call(order, as.list(df)), , drop=FALSE]
-      rownames(df) <- NULL
-      return(df)
-    }, simplify = FALSE, USE.NAMES = TRUE),
-    formulas = design.formula(design)
-  )
+  if(length(group_by)>0L) lapply(seq_len(nrow(file_groups)), function(i) {
+    df <- join(file_groups[i, , drop=FALSE], data)
+    rownames(df) <- NULL
+    return(tibble::as_tibble(df))
+  }) else tibble::as_tibble(data)
 }
 
 #' Output a design factor summary
