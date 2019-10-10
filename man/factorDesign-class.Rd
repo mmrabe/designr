@@ -5,7 +5,7 @@
 \alias{factorDesign-class}
 \title{S4 Methods for designFactor}
 \arguments{
-\item{x}{a factorDesign}
+\item{x}{a \code{factorDesign}}
 }
 \description{
 S4 Methods for designFactor

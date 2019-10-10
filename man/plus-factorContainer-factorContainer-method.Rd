@@ -14,5 +14,5 @@
 A factorDesign object
 }
 \description{
-By adding factors and designs by "+", a new design is created that contains all of the components.
+By adding factors and designs by \code{+}, a new design is created that contains all of the components.
 }

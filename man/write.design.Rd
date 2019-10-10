@@ -17,27 +17,27 @@ write.design(design, group_by = NULL, order_by = NULL,
   output.handler, file.extension = NULL, ...)
 }
 \arguments{
-\item{...}{Other parameters to be passed on to `write.design` and the underlying output handler.}
+\item{...}{Other parameters to be passed on to \code{write.design} and the underlying output handler.}
 
-\item{quote, row.names}{see utils::write.csv()}
+\item{quote, row.names}{see \code{\link[utils:write.csv]{utils::write.csv()}}}
 
-\item{dataframe}{see jsonlite::write_json()}
+\item{dataframe}{see \code{\link[jsonlite:write_json]{jsonlite::write_json()}}}
 
-\item{design}{The `factorDesign` to be written into files.}
+\item{design}{The \code{factorDesign} to be written into files.}
 
-\item{group_by}{Experimental codes are to be grouped by these factors. If `NULL`, all codes are written into one file. Also see [output.design()] for grouping design output.}
+\item{group_by}{Experimental codes are to be grouped by these factors. If \code{NULL}, all codes are written into one file. Also see \code{\link[designr]{output.design}} for grouping design output.}
 
-\item{order_by}{The experimental codes are to be ordered by these columns.  Also see [output.design()] for ordering design output.}
+\item{order_by}{The experimental codes are to be ordered by these columns. Also see \code{\link[designr]{output.design}} for ordering design output.}
 
-\item{randomize}{After ordering, lines in the same order rank are to be shuffled randomly if set to `TRUE`.}
+\item{randomize}{After ordering, lines in the same order rank are to be shuffled randomly if set to \code{TRUE}.}
 
-\item{run.files}{The pattern to be used for the file names of the run files (i.e., files containing the experimental codes). By default, file names are "run_Group1_Othergroup4.ext" ect.}
+\item{run.files}{The pattern to be used for the file names of the run files (i.e., files containing the experimental codes). By default, file names are \code{"run_Group1_Othergroup4.ext"} ect.}
 
 \item{code.files}{Code files (files containing conditions for levels of random factors) are named after this pattern.}
 
 \item{output.dir}{All files are written into this directory.}
 
-\item{output.handler}{This is the function that is called to write the data frames. If using `write.design.csv`, this is utils::write.csv and if using `write.design.json`, this is `jsonlite::write_json`.}
+\item{output.handler}{This is the function that is called to write the data frames. If using \code{write.design.csv}, this is \code{utils::write.csv} and if using \code{write.design.json}, this is \code{jsonlite::write_json}.}
 
 \item{file.extension}{This is the file extension to be added after each file name. Use '' if no file extension is to be added. If `NULL`, the file extension is guessed from the output handler used.}
 }
@@ -52,5 +52,5 @@ This function writes a design into a set of files. For each random factor, a uni
 }}
 
 \seealso{
-[output.design()] for use of `order_by` and `group_by`.
+\code{\link[designr]{output.design}} for use of \code{order_by} and \code{group_by}.
 }

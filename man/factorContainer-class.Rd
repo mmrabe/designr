@@ -9,7 +9,7 @@
 \S4method{show}{factorContainer}(object)
 }
 \arguments{
-\item{object}{A factor design object.}
+\item{object}{A \code{factorDesign} object.}
 }
 \description{
 Design matrix S4 functions

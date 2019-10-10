@@ -10,7 +10,7 @@ factor.design(...)
 \item{...}{Factors to add to the design.}
 }
 \value{
-An instance of `factorDesign` with the complete factorial design and all fixed and random factors.
+An instance of \code{factorDesign} with the complete factorial design and all fixed and random factors.
 }
 \description{
 The main function of this package is to create factorial designs with this function.
@@ -48,5 +48,5 @@ design2 <- design1 + random.factor(c("subject","item"), groups="status")
 
 }
 \seealso{
-[fixed.factor()] and [random.factor()] for creating factors to add to the design. [output.design()] and [write.design()] for creating a useful summary and writing it into output files.
+\code{\link[designr]{random.factor}} and \code{\link[designr]{fixed.factor}} for creating factors to add to the design. \code{\link[designr]{output.design}} and \code{\link[designr]{write.design}} for creating a useful summary and writing it into output files.
 }

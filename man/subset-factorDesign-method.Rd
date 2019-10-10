@@ -13,6 +13,9 @@ subset(x, ...)
 
 \item{...}{*subset*: Criteria along which to filter in planned observations / design matrix rows., *select*: Names of columns to keep in the design matrix}
 }
+\value{
+Returns a \code{factorDesign} object with a subsetted design matrix
+}
 \description{
 Subset factor designs
 }

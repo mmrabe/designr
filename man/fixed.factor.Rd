@@ -6,39 +6,39 @@
 \usage{
 fixed.factor(name, levels, blocked = FALSE, character.as.factor = TRUE,
   is.ordered = FALSE, block.name = "\%1$s.\%2$d",
-  groups = character(0), assign = "latin.square", replications = 1L,
+  groups = character(0), replications = 1L, assign = "latin.square",
   ...)
 }
 \arguments{
 \item{name}{Name of the fixed factor.}
 
-\item{levels}{If not grouped, a vector of factor levels. Any atomic data type (character, logical, numeric, integer) can be used. If grouped, this should be a named list with each entry being a vector (as described before) and its name being a value of the grouping factor(s). If grouped within several factors, i.e. an interaction, the values constituting the names should be concatenated by colons (:), e.g. list(`f1l1:f2l1`=1:2, `f1l2:f2l1`=3:4, ...). If for any group there are no levels specified, a warning will be issued and NA will be assigned as the value for this factor. If this is intended and the warning should be suppressed, please explicitly assign NA as the value for that group, e.g. list(`f1l1:f2l1`=1:2, `f1l2:f2l1`=NA, ...).}
+\item{levels}{If not grouped, a vector of factor levels. Any atomic data type (character, logical, numeric, integer) can be used. If grouped, this should be a named list with each entry being a vector (as described before) and its name being a value of the grouping factor(s). If grouped within several factors, i.e. an interaction, the values constituting the names should be concatenated by colons (:), e.g. \code{list(`f1l1:f2l1`=1:2, `f1l2:f2l1`=3:4, ...)}. If for any group there are no levels specified, a warning will be issued and \code{NA} will be assigned as the value for this factor. If this is intended and the warning should be suppressed, please explicitly assign \code{NA} as the value for that group, e.g. \code{list(`f1l1:f2l1`=1:2, `f1l2:f2l1`=NA, ...)}.}
 
-\item{blocked}{Set this to TRUE if the levels of this factor are blocked. In that case, a factor is created whose factor levels are different sequences of the levels specified in the function call.}
+\item{blocked}{Set this to \code{TRUE} if the levels of this factor are blocked. In that case, a factor is created whose factor levels are different sequences of the levels specified in the function call.}
 
-\item{character.as.factor}{If this is `TRUE`, character vectors passed in `levels` are automatically converted to a factor type.}
+\item{character.as.factor}{If this is \code{TRUE}, character vectors passed in \code{levels} are automatically converted to a factor type.}
 
 \item{is.ordered}{Is this an ordered factor?}
 
-\item{block.name}{If `blocked`, by default, there is not only a design matrix column created that contains the complete sequence of block levels but also a column for each position of the sequence with its assigned level. You may specify a different naming pattern using [sprintf()] naming conventions. The first argument passed is the factor name and the second argument is the sequence position (starting at 1). The default column names will be `factor.1`, `factor.2`, ect. If `NULL`, no additional block columns are created.}
+\item{block.name}{If \code{blocked = TRUE}, by default, there is not only a design matrix column created that contains the complete sequence of block levels but also a column for each position of the sequence with its assigned level. You may specify a different naming pattern using \code{\link[base]{sprintf}} naming conventions. The first argument passed is the factor name and the second argument is the sequence position (starting at 1). The default column names will be \code{factor.1}, \code{factor.2}, etc. If \code{NULL}, no additional block columns are created.}
 
 \item{groups}{Names of fixed factors in which to nest this fixed factor (see *Nesting fixed factors*).}
 
-\item{assign}{If `blocked = TRUE`, you may specify a different method of rotating levels. The default if 'latin.square' but 'permutations', 'williams', and 'random.order' are also available.}
+\item{replications}{Either a single integer or an integer vector of the same length as \code{levels} that is used to determine how many times each factor level should be repeated.}
 
-\item{replications}{Either a single integer or an integer vector of the same length as `levels` that is used to determine how many times each factor level should be repeated.}
+\item{assign}{If \code{blocked = TRUE}, you may specify a different method of rotating levels. The default if \code{'latin.square'} but \code{'permutations'}, \code{'williams'}, and \code{'random.order'} are also available.}
 
 \item{...}{more data to save as attributes}
 }
 \value{
-An instance of `fixedFactor`.
+An instance of \code{fixedFactor}.
 }
 \description{
-This function creates an instance of fixed.factor to be used in a `factor.design`. Fixed factors typically relate to (quasi-)experimental factors such as experimental conditions/manipulations, subject/item characteristics ect.
+This function creates an instance of \code{fixedFactor} to be used in a \code{factorDesign}. Fixed factors typically relate to (quasi-)experimental factors such as experimental conditions/manipulations, subject/item characteristics ect.
 }
 \section{Nesting Fixed Factors}{
 
-If `groups` is used, the function will attempt to nest levels of the newly created factor within levels/interactions of the specified grouping factors. Note that nesting of fixed effects is only allowed within other fixed effects combinations but not within random effects. For each combination of the grouping factors, e.g. each group, you should specify an individual vector of levels (see above). If you fail to supply levels for any group, NAs will be assigned. This could result in unpredicted behavior when more factors are added. If you know what you are doing and would like to suppress the warning, please explicitly specify NA as the (only) value to assign to that group. At any rate, it is highly recommended to run sanity checks on the balancedness of the design if you are nesting fixed factors!
+If \code{groups} is used, the function will attempt to nest levels of the newly created factor within levels/interactions of the specified grouping factors. Note that nesting of fixed effects is only allowed within other fixed effects combinations but not within random effects. For each combination of the grouping factors, e.g. each group, you should specify an individual vector of levels (see above). If you fail to supply levels for any group, \code{NA}s will be assigned. This could result in unpredicted behavior when more factors are added. If you know what you are doing and would like to suppress the warning, please explicitly specify \code{NA} as the (only) value to assign to that group. At any rate, it is highly recommended to run sanity checks on the balancedness of the design if you are nesting fixed factors!
 }
 
 \examples{
@@ -48,5 +48,5 @@ fixed.factor("order", levels=c("task1", "task2", "task3"), assign="latin.square"
 
 }
 \seealso{
-[random.factor()]
+\code{\link[designr]{random.factor}}
 }

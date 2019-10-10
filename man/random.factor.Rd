@@ -4,22 +4,22 @@
 \alias{random.factor}
 \title{Random factors}
 \usage{
-random.factor(name, groups = character(0), ..., instances = 1L)
+random.factor(name, groups = character(0), instances = 1L, ...)
 }
 \arguments{
 \item{name}{Name of the random factor as a character vector. Typically, this should be a length-1 vector (i.e., a single string) but you may pass multiple names of random factors whose interaction is to be nested in groups (see *Assignment Constraints*).}
 
 \item{groups}{Names of fixed and random factors that are to be used as grouping (nesting/between) levels.}
 
-\item{...}{Additional arguments to be stored as *extra* values.}
-
 \item{instances}{Number of times (as a single integer value) each level (instantiation) is to be replicated.}
+
+\item{...}{Additional arguments to be stored as \code{extra} values.}
 }
 \value{
-An instance of the class `randomFactor`.
+An instance of the class \code{randomFactor}.
 }
 \description{
-This function creates an instance of random.factor to be used in a factor.design. A random factor is typically related to an experimental unit such as Subject, Item, Experimenter, ect. and does not have preset levels.
+This function creates an instance of \code{randomFactor} to be used in a \code{factorDesign}. A random factor is typically related to an experimental unit such as Subject, Item, Experimenter, ect. and does not have preset levels.
 }
 \section{Nesting Random Factors}{
 
@@ -31,17 +31,21 @@ Note that a random factor may be nested within fixed and/or other random factors
 \section{Assignment Constraints}{
 
 A random interaction (a random factor instantiated with more than one name) governs the assignment of the co-occurence of the listed random factors.
-That means that, for example, `random.factor(c("Subject","Item"), groups="correct")` ensures that the assignment of a Subject and Item to one another occurs in only *one* of the conditions of `correct`.
-You may use `assign = '...'` to provide the method to counterbalance the assignment. By default, 'latin.square' is used but you may also use 'random.order'  or 'permutations'. Note that, depending on the assignment method you use, the constituting random factors (in this case `Subject` and `Item`) will be replicated n-times (`n` being the number of conditions of the nesting factors) for 'latin.square' and 'random.order' and n!-times for 'permutations'.
+That means that, for example, \code{random.factor(c("Subject","Item"), groups="correct")} ensures that the assignment of a Subject and Item to one another occurs in only *one* of the conditions of \code{correct}.
+You may use \code{assign = '...'} to provide the method to counterbalance the assignment. By default, \code{'latin.square'} is used but you may also use \code{'random.order'} or \code{'permutations'}. Note that, depending on the assignment method you use, the constituting random factors (in this case \code{Subject} and \code{Item}) will be replicated n-times (\code{n} being the number of conditions of the nesting factors) for \code{'latin.square'} and \code{'random.order'} and n!-times for \code{'permutations'}.
 }
 
 \examples{
+# A random factor Subject that nests factors blockOrder and gender,
+# i.e. blockOrder and gender are "between-subject"
+
 random.factor("Subject", groups=c("blockOrder", "gender"))
-~Subject(blockOrder, gender)
+
+# A random factor Item without any grouping
 random.factor("Item")
-~Item
+
 
 }
 \seealso{
-[fixed.factor()]
+\code{\link[designr]{fixed.factor}}
 }

@@ -2,41 +2,78 @@
 % Please edit documentation in R/methods.R
 \name{output.design}
 \alias{output.design}
+\alias{design.formula}
+\alias{design.units}
+\alias{design.codes}
 \title{Summary of Factor Designs}
 \usage{
 output.design(design, group_by = NULL, order_by = NULL,
-  randomize = FALSE, random = function(id, fac)
-  factor(sprintf("\%s\%0*d", fac, nchar(as.character(max(id))), id)))
+  randomize = FALSE, rename_random = TRUE)
+
+design.formula(design, contrasts = NULL,
+  expand.contrasts = !missing(contrasts), interactions = TRUE,
+  intercepts = TRUE, response = "dv", env = parent.frame())
+
+design.units(design, rename_random = TRUE)
+
+design.codes(design, group_by = NULL, order_by = NULL,
+  randomize = FALSE, rename_random = TRUE)
 }
 \arguments{
-\item{design}{The `factorDesign` object to summarize.}
+\item{design}{The \code{factorDesign} object to summarize.}
 
-\item{group_by}{If not `NULL`, the design matrix is grouped by these factors. Factors must be valid columns of the design matrix. If used, `$codes` will be a list matched to the entries in `$groups`.}
+\item{group_by}{If not \code{NULL}, the design matrix is grouped by these factors. Factors must be valid columns of the design matrix. If used, \code{$codes} will be a list matched to the entries in \code{$groups}.}
 
-\item{order_by}{If not `NULL`, output within each output group is ordered by these columns.}
+\item{order_by}{If not \code{NULL}, output within each output group is ordered by these columns.}
 
 \item{randomize}{After ordering, remaining rows in the same order rank are randomly shuffled.}
 
-\item{random}{A function used for naming random factor levels. Should be vectorized and accept the ID (integer) as a first argument and the name (single character value) of the random factor. Functions such as as.double() or as.integer() *are* possible because they ignore the second argument and only convert the ID.}
+\item{rename_random}{Should random factor levels be renamed? If \code{TRUE}, levels are renamed as strings composed of the factor name and factor level (e.g., Subj01, Subj02, ...). \code{FALSE} disables renaming of random factor levels. Alternatively, you may provide a function which should accept the vectorized ID (integer) as a first argument and the name (single character value) of the random factor as second argument or ignore it. Functions such as \code{as.double} or \code{as.integer} *are* possible because they ignore the second argument and only convert the ID.}
+
+\item{contrasts}{The contrasts to override (\code{NULL} if none to override)}
+
+\item{expand.contrasts}{If \code{TRUE}, factors with more than one contrast are replaced by so many contrasts, i.e. the result contains the names of the individual contrasts, not of the factors.}
+
+\item{interactions}{Should fixed effects be additive or interactive?}
+
+\item{intercepts}{Should an intercept be included?}
+
+\item{response}{The left-hand side of the equation. Typically, this is just the response/dependent variable.}
+
+\item{env}{The environment in which to embed the formula}
 }
 \value{
-A list containing the output summary, including the following named entities:
+\code{output.design} returns a list containing all output summaries, including the following named entities:
+\describe{
+  \item{\code{codes}}{Either a \code{tibble} with all experimental codes or a list of \code{tibble}s of experimental codes. The list entries are matched to the rows of \code{$groups}.}
+  \item{\code{groups}}{If grouped, contains a tibble in which each row represents an output group, matched to the entries in $codes. If not grouped, this is \code{NULL}.}
+  \item{\code{ordered}}{If ordered, contains a vector of order criteria. If not ordered, this is \code{NULL}.}
+  \item{\code{randomized}}{Value of \code{randomized}.}
+  \item{\code{units}}{A list of random factors and their levels for this design as tibbles. Empty list if no random factors in the design.}
+  \item{\code{formulas}}{A list of possible model formulas for use with functions such as \code{lm()} and \code{lmer()}.}
+}
 
-   *$table*: Either a tibble with all experimental codes or a list of tibbles of experimental codes. The list entries are matched to the rows of `$groups`.
-
-   *$groups*: If grouped, contains a tibble in which each row represents an output group, matched to the entries in $codes. If not grouped, this is `NULL`.
-
-   *$ordered*: If ordered, contains a vector of order criteria. If not ordered, this is `NULL`.
-
-   *$randomized*: Value of `randomized`.
-
-   *$units*: A list of random factors and their levels for this design as tibbles. Empty list if no random factors in the design.
-
-   *$formulas*: Example model formulae for use with functions such as lm() and lmer().
+The functions \code{design.codes}, \code{design.formula} and \code{design.units} only return the values of the fields \code{codes} (a \code{tibble} or list or \code{tibble}s of experimental codes), \code{formulas} (a list of model formulas), and \code{units} (a list of random factors and their levels), respectively.
 }
 \description{
-This function creates a useful summary of a factor design, including the design matrix itself as well as other parameters and a list of random factors as experimental units.
+These functions return useful summaries of a factor design, including the design matrix itself as well as other parameters and a list of random factors as experimental units.
 }
+\details{
+The function \code{design.units} returns the experimental units of the design. Those are defined by random factors and their levels. See \code{units} return value below.
+
+\code{design.codes} returns a dataframe or \code{tibble} of all planned observations including each observation's experimental codes, i.e. fixed and random factor levels. If you group the output, a list is returned. See \code{codes} return value below.
+
+\code{design.formula} returns a list of formulas suitable for regression analysis. Currently, formulas for \code{lm} and \code{lme4} are returned. See \code{formulas} entry,
+}
+\section{Functions}{
+\itemize{
+\item \code{design.formula}: Retrieve only the model formulas suitable for the design
+
+\item \code{design.units}: Retrieve only the experimental units of a design
+
+\item \code{design.codes}: Retrieve only the codes of planned observations of an experimental design
+}}
+
 \seealso{
-[design.formula()] for more options generating model formulae other than the suggested default ones in the summary.
+\code{\link[designr]{design.formula}} for more options generating model formulae other than the suggested default ones in the summary.
 }

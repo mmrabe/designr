@@ -19,7 +19,7 @@ is.designFactor(fac)
 \item{fac}{Object to check.}
 }
 \value{
-`TRUE` or `FALSE`
+\code{TRUE} or \code{FALSE}
 }
 \description{
 Check if argument is a design factor (either random or fixed factor), specifically a random factor, a fixed factor or a factor design.
