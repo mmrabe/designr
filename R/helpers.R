@@ -39,7 +39,8 @@ replicate.factor <- function(fac, context=factor.design()) {
   }else if(is.randomFactor(fac) && length(fac@name) > 1L){
     id.factors <- unique(unlist(lapply(context[fac@name], function(f) colnames(f@levels)), use.names = FALSE)) # these are the factors that define one level of this interaction
     ids <- unique(context@design[, id.factors]) # these are all the realizations of this interaction
-
+    ids <- ids[rep(seq_len(nrow(ids)), fac@replications),,drop=FALSE]
+    
     between.conditions <- setdiff(intersect(names(context), colnames(ids)), fac@name) # group factor levels by main factor groups
     if(length(between.conditions) > 0L) {
       id.groups <- split(ids[, fac@name, drop=FALSE], lapply(between.conditions, function(cond) ids[, cond]))
