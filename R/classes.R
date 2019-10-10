@@ -6,7 +6,7 @@ NULL
 
 #' Design matrix S4 functions
 #' 
-#' @param object A factor design object.
+#' @param object A \code{factorDesign} object.
 #' 
 #' @export
 setClass("factorContainer")
@@ -16,7 +16,7 @@ setClass("fixedFactor", slots=c(blocked="logical"), contains="designFactor")
 
 #' S4 Methods for designFactor
 #' 
-#' @param x a factorDesign
+#' @param x a \code{factorDesign}
 #' 
 #' @export
 setClass("factorDesign", slots=c(design="data.frame"), contains=c("list", "factorContainer"))
@@ -28,13 +28,13 @@ setClass("factorDesign", slots=c(design="data.frame"), contains=c("list", "facto
 
 #' Random factors
 #'
-#' This function creates an instance of random.factor to be used in a factor.design. A random factor is typically related to an experimental unit such as Subject, Item, Experimenter, ect. and does not have preset levels.
+#' This function creates an instance of \code{randomFactor} to be used in a \code{factorDesign}. A random factor is typically related to an experimental unit such as Subject, Item, Experimenter, ect. and does not have preset levels.
 #'
 #' @param name Name of the random factor as a character vector. Typically, this should be a length-1 vector (i.e., a single string) but you may pass multiple names of random factors whose interaction is to be nested in groups (see *Assignment Constraints*).
 #' @param instances Number of times (as a single integer value) each level (instantiation) is to be replicated.
 #' @param groups Names of fixed and random factors that are to be used as grouping (nesting/between) levels.
-#' @param ... Additional arguments to be stored as *extra* values.
-#' @return An instance of the class `randomFactor`.
+#' @param ... Additional arguments to be stored as \code{extra} values.
+#' @return An instance of the class \code{randomFactor}.
 #'
 #' @section Nesting Random Factors:
 #' A typical case of nesting in a psychological experiment is to vary a factor between subjects. That means that each subject would only be assigned to one condition of the nesting fixed factor (such as type of instruction). All other fixed factors that are not listed under `groups` are considered to vary within the random factor. Note that nesting increases the number of replications of the random factor.
@@ -43,68 +43,69 @@ setClass("factorDesign", slots=c(design="data.frame"), contains=c("list", "facto
 #'
 #' @section Assignment Constraints:
 #' A random interaction (a random factor instantiated with more than one name) governs the assignment of the co-occurence of the listed random factors.
-#' That means that, for example, `random.factor(c("Subject","Item"), groups="correct")` ensures that the assignment of a Subject and Item to one another occurs in only *one* of the conditions of `correct`.
-#' You may use `assign = '...'` to provide the method to counterbalance the assignment. By default, 'latin.square' is used but you may also use 'random.order'  or 'permutations'. Note that, depending on the assignment method you use, the constituting random factors (in this case `Subject` and `Item`) will be replicated n-times (`n` being the number of conditions of the nesting factors) for 'latin.square' and 'random.order' and n!-times for 'permutations'.
+#' That means that, for example, \code{random.factor(c("Subject","Item"), groups="correct")} ensures that the assignment of a Subject and Item to one another occurs in only *one* of the conditions of \code{correct}.
+#' You may use \code{assign = '...'} to provide the method to counterbalance the assignment. By default, \code{'latin.square'} is used but you may also use \code{'random.order'} or \code{'permutations'}. Note that, depending on the assignment method you use, the constituting random factors (in this case \code{Subject} and \code{Item}) will be replicated n-times (\code{n} being the number of conditions of the nesting factors) for \code{'latin.square'} and \code{'random.order'} and n!-times for \code{'permutations'}.
 #'
 #'
 #' @examples
+#' # A random factor Subject that nests factors blockOrder and gender,
+#' # i.e. blockOrder and gender are "between-subject"
+#' 
 #' random.factor("Subject", groups=c("blockOrder", "gender"))
-#' ~Subject(blockOrder, gender)
+#' 
+#' # A random factor Item without any grouping
 #' random.factor("Item")
-#' ~Item
+#' 
 #'
-#' @seealso [fixed.factor()]
+#' @seealso \code{\link[designr]{fixed.factor}}
 #' @export
-random.factor <- function(name, groups = character(0), ..., instances = 1L) {
-  if(!is.character(name)) stop("Factor name must be a string (character vector of length 1).")
+random.factor <- function(name, groups = character(0), instances = 1L, ...) {
+  check_argument(name, "character")
   if(any(vapply(name, function(n) substr(n,1,1) == '*', logical(1)))) stop("Factor names must not start with an asterisk!")
-  if(!is.numeric(instances) || length(instances) != 1L || instances < 1L) stop("`replications` must be an integer (integer vector of length 1, minimum value 1)!")
-  if(!is.character(groups)) stop("Groups must be groups (names of grouping factors)")
+  check_argument(instances, "numeric", function(x) !x%%1, 1, expression(x >= 1))
+  check_argument(groups, "character")
   levels <- do.call(data.frame, sapply(name, function(n) NA_integer_, USE.NAMES = TRUE, simplify = FALSE))
   new("randomFactor", name = name, levels=levels, groups=groups, replications = as.integer(instances), extra = list(...))
 }
 
 #' Fixed factors
 #'
-#' This function creates an instance of fixed.factor to be used in a `factor.design`. Fixed factors typically relate to (quasi-)experimental factors such as experimental conditions/manipulations, subject/item characteristics ect.
+#' This function creates an instance of \code{fixedFactor} to be used in a \code{factorDesign}. Fixed factors typically relate to (quasi-)experimental factors such as experimental conditions/manipulations, subject/item characteristics ect.
 #'
 #' @param name Name of the fixed factor.
-#' @param levels If not grouped, a vector of factor levels. Any atomic data type (character, logical, numeric, integer) can be used. If grouped, this should be a named list with each entry being a vector (as described before) and its name being a value of the grouping factor(s). If grouped within several factors, i.e. an interaction, the values constituting the names should be concatenated by colons (:), e.g. list(`f1l1:f2l1`=1:2, `f1l2:f2l1`=3:4, ...). If for any group there are no levels specified, a warning will be issued and NA will be assigned as the value for this factor. If this is intended and the warning should be suppressed, please explicitly assign NA as the value for that group, e.g. list(`f1l1:f2l1`=1:2, `f1l2:f2l1`=NA, ...).
-#' @param replications Either a single integer or an integer vector of the same length as `levels` that is used to determine how many times each factor level should be repeated.
-#' @param blocked Set this to TRUE if the levels of this factor are blocked. In that case, a factor is created whose factor levels are different sequences of the levels specified in the function call.
-#' @param assign If `blocked = TRUE`, you may specify a different method of rotating levels. The default if 'latin.square' but 'permutations', 'williams', and 'random.order' are also available.
-#' @param character.as.factor If this is `TRUE`, character vectors passed in `levels` are automatically converted to a factor type.
-#' @param block.name If `blocked`, by default, there is not only a design matrix column created that contains the complete sequence of block levels but also a column for each position of the sequence with its assigned level. You may specify a different naming pattern using [sprintf()] naming conventions. The first argument passed is the factor name and the second argument is the sequence position (starting at 1). The default column names will be `factor.1`, `factor.2`, ect. If `NULL`, no additional block columns are created.
+#' @param levels If not grouped, a vector of factor levels. Any atomic data type (character, logical, numeric, integer) can be used. If grouped, this should be a named list with each entry being a vector (as described before) and its name being a value of the grouping factor(s). If grouped within several factors, i.e. an interaction, the values constituting the names should be concatenated by colons (:), e.g. \code{list(`f1l1:f2l1`=1:2, `f1l2:f2l1`=3:4, ...)}. If for any group there are no levels specified, a warning will be issued and \code{NA} will be assigned as the value for this factor. If this is intended and the warning should be suppressed, please explicitly assign \code{NA} as the value for that group, e.g. \code{list(`f1l1:f2l1`=1:2, `f1l2:f2l1`=NA, ...)}.
+#' @param replications Either a single integer or an integer vector of the same length as \code{levels} that is used to determine how many times each factor level should be repeated.
+#' @param blocked Set this to \code{TRUE} if the levels of this factor are blocked. In that case, a factor is created whose factor levels are different sequences of the levels specified in the function call.
+#' @param assign If \code{blocked = TRUE}, you may specify a different method of rotating levels. The default if \code{'latin.square'} but \code{'permutations'}, \code{'williams'}, and \code{'random.order'} are also available.
+#' @param character.as.factor If this is \code{TRUE}, character vectors passed in \code{levels} are automatically converted to a factor type.
+#' @param block.name If \code{blocked = TRUE}, by default, there is not only a design matrix column created that contains the complete sequence of block levels but also a column for each position of the sequence with its assigned level. You may specify a different naming pattern using \code{\link[base]{sprintf}} naming conventions. The first argument passed is the factor name and the second argument is the sequence position (starting at 1). The default column names will be \code{factor.1}, \code{factor.2}, etc. If \code{NULL}, no additional block columns are created.
 #' @param groups Names of fixed factors in which to nest this fixed factor (see *Nesting fixed factors*).
 #' @param is.ordered Is this an ordered factor?
 #' @param ... more data to save as attributes
-#' @return An instance of `fixedFactor`.
+#' @return An instance of \code{fixedFactor}.
 #'
 #' @section Nesting Fixed Factors:
-#' If `groups` is used, the function will attempt to nest levels of the newly created factor within levels/interactions of the specified grouping factors. Note that nesting of fixed effects is only allowed within other fixed effects combinations but not within random effects. For each combination of the grouping factors, e.g. each group, you should specify an individual vector of levels (see above). If you fail to supply levels for any group, NAs will be assigned. This could result in unpredicted behavior when more factors are added. If you know what you are doing and would like to suppress the warning, please explicitly specify NA as the (only) value to assign to that group. At any rate, it is highly recommended to run sanity checks on the balancedness of the design if you are nesting fixed factors!
+#' If \code{groups} is used, the function will attempt to nest levels of the newly created factor within levels/interactions of the specified grouping factors. Note that nesting of fixed effects is only allowed within other fixed effects combinations but not within random effects. For each combination of the grouping factors, e.g. each group, you should specify an individual vector of levels (see above). If you fail to supply levels for any group, \code{NA}s will be assigned. This could result in unpredicted behavior when more factors are added. If you know what you are doing and would like to suppress the warning, please explicitly specify \code{NA} as the (only) value to assign to that group. At any rate, it is highly recommended to run sanity checks on the balancedness of the design if you are nesting fixed factors!
 #'
 #' @examples
 #' fixed.factor("correct", levels=c(TRUE, FALSE))
 #' fixed.factor("age", levels=c("child", "youth", "adult"))
 #' fixed.factor("order", levels=c("task1", "task2", "task3"), assign="latin.square")
 #'
-#' @seealso [random.factor()]
+#' @seealso \code{\link[designr]{random.factor}}
 #' @export
-fixed.factor <- function(name, levels, blocked = FALSE, character.as.factor = TRUE, is.ordered = FALSE, block.name = "%1$s.%2$d", groups = character(0), assign = "latin.square", replications = 1L, ...) {
-  if(!is.character(groups)) stop("Groups must be strings (names of grouping factors)!")
+fixed.factor <- function(name, levels, blocked = FALSE, character.as.factor = TRUE, is.ordered = FALSE, block.name = "%1$s.%2$d", groups = character(0), replications = 1L, assign = "latin.square", ...) {
+  check_argument(groups, "character")
   is.grouped <- length(groups) > 0L
-  if(!is.character(name) || length(name) != 1L) stop("Factor name must be a string (character vector of length 1).")
+  check_argument(name, "character", 1)
   if(substr(name,1,1) == '*') stop("Factor names must not start with an asterisk!")
-  if(length(groups) == 0L && (!is.vector(levels) || length(levels) < 1L)) stop("`levels` must be a vector with a minimum length of 1!")
-  if(length(groups) > 0L && (!is.list(levels) || !all(vapply(levels, function(glevels) is.vector(glevels) && length(glevels) >= 1L, logical(1))))) stop("If `groups` are given (i.e., factor is nested), `levels` must be a list of vectors, each with a minimum length of 1!")
-  if(!is.numeric(replications) || (length(replications) != length(levels) && length(replications) != 1L)) stop("`replications` must be an integer or integer vector of same length as levels or of length 1!")
-  if(any(replications < 1L)) stop("All values of `replications` must be greater than or equal to 1!")
-  if(!is.logical(blocked) || length(blocked) != 1L) stop("`blocked` must be a logical (TRUE or FALSE) of length 1!")
-  if(!is.logical(character.as.factor) || length(character.as.factor) != 1L) stop("`character.as.factor` must be a logical (TRUE or FALSE) of length 1!")
-  if(!is.logical(is.ordered) || length(is.ordered) != 1L) stop("`is.ordered` must be a logical (TRUE or FALSE) of length 1!")
-  
+  if(length(groups) == 0) check_argument(levels, c("character","numeric","logical"), expression(length(x) >= 1))
+  else if(length(groups) > 0L && (!is.list(levels) || !all(vapply(levels, function(glevels) is.vector(glevels) && length(glevels) >= 1L, logical(1))))) stop("If `groups` are given (i.e., factor is nested), `levels` must be a list of vectors, each with a minimum length of 1!")
+  check_argument(replications, "numeric", function(x) !x%%1, expression(x >= 1), expression(length(x) == length(levels) || length(x) == 1))
+  check_argument(blocked, "logical", 1)
+  check_argument(character.as.factor, "logical", 1)
+  check_argument(is.ordered, "logical", 1)
   if(!is.list(levels) && is.vector(levels)) levels <- list(levels)
-  
   if(length(unique(names(levels))) != length(names(levels))) stop("Names of levels list must be unique!")
   
   n.max.levels <- as.integer(max((vapply(levels, length, integer(1L)))))
@@ -152,8 +153,8 @@ fixed.factor <- function(name, levels, blocked = FALSE, character.as.factor = TR
 #' The main function of this package is to create factorial designs with this function.
 #'
 #' @param ... Factors to add to the design.
-#' @return An instance of `factorDesign` with the complete factorial design and all fixed and random factors.
-#' @seealso [fixed.factor()] and [random.factor()] for creating factors to add to the design. [output.design()] and [write.design()] for creating a useful summary and writing it into output files.
+#' @return An instance of \code{factorDesign} with the complete factorial design and all fixed and random factors.
+#' @seealso \code{\link[designr]{random.factor}} and \code{\link[designr]{fixed.factor}} for creating factors to add to the design. \code{\link[designr]{output.design}} and \code{\link[designr]{write.design}} for creating a useful summary and writing it into output files.
 #' @examples
 #' # To create an empty design:
 #' design <- factor.design()
@@ -198,7 +199,7 @@ factor.design <- function(...) {
       element <- parse.factor.language(element)
       ret <- `+.factorContainer`(ret, element)
     }else{
-      stop("All arguments must be design factors (random or fixed), factor lists or factor formulae!")
+      stop("All arguments must be design factors (random or fixed), factor lists or factor formulas!")
     }
   }
   ret

@@ -2,11 +2,11 @@
 # methods
 
 #' @describeIn write.design Using default settings for writing CSV files
-#' @param quote,row.names see utils::write.csv()
+#' @param quote,row.names see \code{\link[utils:write.csv]{utils::write.csv()}}
 #' @export
 write.design.csv <- function(..., quote=FALSE, row.names=FALSE) write.design(..., file.extension = ".csv", output.handler=utils::write.csv, quote=quote, row.names=row.names)
 #' @describeIn write.design Using default settings for writing JSON files
-#' @param dataframe see jsonlite::write_json()
+#' @param dataframe see \code{\link[jsonlite:write_json]{jsonlite::write_json()}}
 #' @export
 write.design.json <- function(..., dataframe="columns") write.design(..., file.extension = ".json", output.handler=jsonlite::write_json, dataframe=dataframe)
 
@@ -14,19 +14,25 @@ write.design.json <- function(..., dataframe="columns") write.design(..., file.e
 #'
 #' This function writes a design into a set of files. For each random factor, a unit list is created that contains a list of all levels (instances) of the random factor and the factor levels to which that level is assigned. Moreover, code files are created that contain a complete set of experimental codes.
 #'
-#' @param design The `factorDesign` to be written into files.
-#' @param group_by Experimental codes are to be grouped by these factors. If `NULL`, all codes are written into one file. Also see [output.design()] for grouping design output.
-#' @param run.files The pattern to be used for the file names of the run files (i.e., files containing the experimental codes). By default, file names are "run_Group1_Othergroup4.ext" ect.
-#' @param order_by The experimental codes are to be ordered by these columns.  Also see [output.design()] for ordering design output.
-#' @param randomize After ordering, lines in the same order rank are to be shuffled randomly if set to `TRUE`.
+#' @param design The \code{factorDesign} to be written into files.
+#' @param group_by Experimental codes are to be grouped by these factors. If \code{NULL}, all codes are written into one file. Also see \code{\link[designr]{output.design}} for grouping design output.
+#' @param run.files The pattern to be used for the file names of the run files (i.e., files containing the experimental codes). By default, file names are \code{"run_Group1_Othergroup4.ext"} ect.
+#' @param order_by The experimental codes are to be ordered by these columns. Also see \code{\link[designr]{output.design}} for ordering design output.
+#' @param randomize After ordering, lines in the same order rank are to be shuffled randomly if set to \code{TRUE}.
 #' @param code.files Code files (files containing conditions for levels of random factors) are named after this pattern.
 #' @param output.dir All files are written into this directory.
-#' @param output.handler This is the function that is called to write the data frames. If using `write.design.csv`, this is utils::write.csv and if using `write.design.json`, this is `jsonlite::write_json`.
+#' @param output.handler This is the function that is called to write the data frames. If using \code{write.design.csv}, this is \code{utils::write.csv} and if using \code{write.design.json}, this is \code{jsonlite::write_json}.
 #' @param file.extension This is the file extension to be added after each file name. Use '' if no file extension is to be added. If `NULL`, the file extension is guessed from the output handler used.
-#' @param ... Other parameters to be passed on to `write.design` and the underlying output handler.
-#' @seealso [output.design()] for use of `order_by` and `group_by`.
+#' @param ... Other parameters to be passed on to \code{write.design} and the underlying output handler.
+#' @seealso \code{\link[designr]{output.design}} for use of \code{order_by} and \code{group_by}.
 #' @export
 write.design <- function(design, group_by = NULL, order_by = NULL, randomize = FALSE, run.files = paste0("run",ifelse(length(group_by)>0L,paste0("_",group_by,"-%",seq_along(group_by),"$s",collapse=""),"")), code.files = "codes_%s", output.dir = getwd(), output.handler, file.extension = NULL, ...) {
+  check_argument(design, "factorDesign")
+  check_argument(run.files, "character", 1)
+  check_argument(code.files, "character", 1)
+  check_argument(output.dir, "character", 1)
+  check_argument(output.handler, c("function", "character"), 1)
+  check_argument(file.extension, c("character","NULL"), 1)
   clean.file.path <- function(paths) gsub("[^a-zA-Z0-9_.,]", "-", paths)
   output <- output.design(design=design, group_by=group_by, order_by=order_by, randomize=randomize)
   file_names <- file.path(output.dir, clean.file.path(paste0(do.call(sprintf, c(list(run.files), unname(as.list(output$groups)))), file.extension)))
@@ -188,6 +194,7 @@ output.design <- function(design, group_by = NULL, order_by = NULL, randomize = 
 #' @export
 #'
 show.factorContainer <- function(object) {
+  check_argument(object, c("factorDesign","randomFactor","fixedFactor"))
   if(is(object, "factorDesign")) {
     cat(sprintf("Factor design with %d factor(s):\n", length(object)))
     print.listof(object)
@@ -213,6 +220,8 @@ show.factorContainer <- function(object) {
 }
 
 `+.factorContainer` <- function(e1, e2) {
+  check_argument(e1, c("factorDesign","designFactor"))
+  check_argument(e2, c("factorDesign","designFactor"))
   if(is(e1, "factorDesign")) {
     if(is(e2, "factorDesign")) {
       if(length(e1) == 0) {
@@ -269,7 +278,7 @@ is.factorDesign <- function(fac) is(fac, "factorDesign")
 #'
 #' @param fac Object to check.
 #'
-#' @return `TRUE` or `FALSE`
+#' @return \code{TRUE} or \code{FALSE}
 #' @export
 is.designFactor <- function(fac) is(fac, "designFactor")
 
@@ -277,6 +286,8 @@ is.designFactor <- function(fac) is(fac, "designFactor")
 #' @param include.interactions Should random factor interactions be included?
 #' @export
 random.factors <- function(design, include.interactions = TRUE) {
+  check_argument(design, "factorDesign")
+  check_argument(include.interactions, "logical", 1)
   if(!is.factorDesign(design)&&!is.list(design)) stop("`design` must be a design factor or list!")
   return(design[vapply(design, if(include.interactions) is.randomFactor else function(f) is.randomFactor(f) && length(f@name) == 1L, logical(1))])
 }
@@ -291,6 +302,7 @@ random.factors <- function(design, include.interactions = TRUE) {
 #'
 #' @export
 fixed.factors <- function(design) {
+  check_argument(design, "factorDesign")
   if(!is.factorDesign(design)&&!is.list(design)) stop("`design` must be a design factor or list!")
   return(design[vapply(design, is.fixedFactor, logical(1))])
 }
@@ -302,11 +314,11 @@ fixed.factors <- function(design) {
 #' @return The number of observations
 #' 
 #' @export
-setMethod("nobs", "factorDesign", function(object) nrow(object))
+setMethod("nobs", "factorDesign", function(object) nrow(object@design))
 
 #' Concatenate design factors and designs
 #'
-#' By adding factors and designs by "+", a new design is created that contains all of the components.
+#' By adding factors and designs by \code{+}, a new design is created that contains all of the components.
 #' 
 #' @param e1,e2 factor containers, such as factors or designs
 #' @return A factorDesign object
@@ -321,6 +333,7 @@ setMethod("show", "factorContainer", `show.factorContainer`)
 
 
 subset.factorDesign <- function(x, subset, select = names(x), ...) {
+  check_argument(x, "factorDesign")
   if(as.character(sys.calls()[[1]][[1]]) != "subset.factorDesign") fun.call <- match.call(call=sys.call(-1L))
   else fun.call <- match.call()
   if(!is.null(fun.call$select)) {
@@ -340,6 +353,8 @@ subset.factorDesign <- function(x, subset, select = names(x), ...) {
 #' @aliases subset
 #' @param x A factorDesign object
 #' @param ... *subset*: Criteria along which to filter in planned observations / design matrix rows., *select*: Names of columns to keep in the design matrix
+#' 
+#' @return Returns a \code{factorDesign} object with a subsetted design matrix
 #' @export
 setMethod("subset", c("factorDesign"), `subset.factorDesign`)
 
