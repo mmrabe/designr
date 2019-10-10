@@ -2,6 +2,58 @@
 
 # general tools
 
+
+check_argument <- function(val, ...) {
+  val <- tryCatch(val, error = function(e) e)
+  if(is(val, "error")) stop(val$message, call. = FALSE)
+  argname <- as.character(as.expression(match.call()$val))
+  if(length(argname) > 1) stop("Must be single character")
+  for(tst in list(...)) {
+    if(is.numeric(tst) && is.vector(val)) {
+      if(length(val) != tst) {
+        stop(sprintf("`%s` has a length of %d but must have a length of %d.", argname, length(val), tst), call. = FALSE)
+      }
+    } else if(is.character(tst)) {
+      classValid <- FALSE
+      for(cls in tst) {
+        if(cls == "numeric" && is.numeric(val)) {
+          classValid <- TRUE
+        } else if(grepl("^list:", cls)) {
+          classValid <- is.list(val) && all(vapply(val, function(x) is(x, substring(cls, 6)), logical(1)))
+        } else {
+          classValid <- is(val, cls)
+        }
+        if(classValid) break
+      }
+      if(!classValid) {
+        stop(sprintf("`%s` must be of type %s but is %s.", argname, paste(tst, collapse=","), paste(class(val), collapse=",")), call. = FALSE)
+      }
+    } else if(is.function(tst)) {
+      if(!all(tst(val))) {
+        stop(sprintf("`%s` has an invalid value.", argname), call. = FALSE)
+      }
+    } else if(is.expression(tst)) {
+      if(!isTRUE(all(eval(tst, list(x = val))))) {
+        test_string <- if(tst[[1]][[1]] == "<" && tst[[1]][[2]] == "x") {
+          sprintf("be smaller than %s", as.character(tst[[1]][[3]]))
+        } else if(tst[[1]][[1]] == "<=" && tst[[1]][[2]] == "x") {
+          sprintf("be smaller than or equal to %s", as.character(tst[[1]][[3]]))
+        } else if(tst[[1]][[1]] == ">" && tst[[1]][[2]] == "x") {
+          sprintf("be greater than %s", as.character(tst[[1]][[3]]))
+        } else if(tst[[1]][[1]] == ">=" && tst[[1]][[2]] == "x") {
+          sprintf("be greater than or equal to %s", as.character(tst[[1]][[3]]))
+        } else if(tst[[1]][[1]] == "==" && tst[[1]][[2]] == "x") {
+          sprintf("be equal to %s", as.character(tst[[1]][[3]]))
+        } else {
+          sprintf("satisfy %s", as.character(tst))
+        }
+        stop(sprintf("`%s` must %s!", argname, test_string), call. = FALSE)
+      }
+    }
+  }
+}
+
+
 latin.square <- function(n) as.matrix(vapply(1:n, function(i) c(i:n, 1:i)[-(n+1)], integer(n)))
 permutations <- function(n, lv = seq_len(n)) {
   if(!is.numeric(n)||length(n)!=1L||n<1L) stop("`n` must be a positive integer of length 1!")
@@ -38,8 +90,6 @@ find.in.list <- function(what, where, all=TRUE) {
 
 and <- function(...) {
   elements <- list(...)
-  #if(!all(vapply(elements, is.logical, logical(1)))) stop("All arguments must be logical!")
-  #if(!all(vapply(elements[-1], function(vec) length(vec), integer(1))==length(elements[[1]]))) stop("All arguments must be same length!")
   if(length(elements) == 0) return(logical(0))
   ret <- ifelse(is.na(elements[[1]]), TRUE, elements[[1]])
   for(element in elements[-1]) ret <- ret & ifelse(is.na(element), TRUE, element)
@@ -80,42 +130,6 @@ join <- function(...) {
   }
   ret
 }
-
-#join_bk <- function(...) {
-#  elements <- list(...)
-#  if(!all(vapply(elements, is.data.frame, logical(1)))) stop("All arguments must be data.frames!")
-#  if(length(elements) == 0L) return(tibble::tibble())
-#  ret <- elements[[1]]
-#  rownames(ret) <- NULL
-#  for(element in elements[-1]) {
-#    if(nrow(element)==0) next
-#    rownames(element) <- NULL
-#    if(nrow(ret)==0) {
-#      ret <- element
-#      next
-#    }
-#    col.matches <- intersect(colnames(element), colnames(ret))
-#    new.col.ids <- setdiff(colnames(element), colnames(ret))
-#    old.col.ids <- setdiff(colnames(ret), colnames(element))
-#    matches.x <- integer(0)
-#    matches.y <- integer(0)
-#    for(row in seq_len(nrow(ret))) {
-#      if(length(col.matches)==0L) new.rows <- seq_len(nrow(element))
-#      else {
-#        new.rows <- seq_len(nrow(element))
-#        for(col in col.matches) {
-#          if(is.na(ret[row, col])) next
-#          new.rows <- new.rows[is.na(element[new.rows,col])|element[new.rows,col]==ret[row, col]]
-#        }
-#      }
-#      matches.x <- c(matches.x, rep(row, length(new.rows)))
-#      matches.y <- c(matches.y, new.rows)
-#    }
-#    ret <- cbind(ret[matches.x, , drop=F], element[matches.y, new.col.ids, drop=F])
-#    rownames(ret) <- NULL
-#  }
-#  tibble::as.tibble(ret)
-#}
 
 sorto <- function(vec, order) {
   vec[order(match(vec, order))]
