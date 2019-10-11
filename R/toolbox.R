@@ -96,6 +96,8 @@ and <- function(...) {
   ret
 }
 
+syms <- function(x) lapply(x, as.symbol)
+
 na_join <- function(.data, b) {
   b <- dplyr::as_tibble(b)
   .data <- dplyr::as_tibble(.data)
@@ -104,7 +106,7 @@ na_join <- function(.data, b) {
     cbind(.data[rep(seq_len(nrow(.data)), each=nrow(b)),,drop=FALSE], b)
   } else {
     where.na <- is.na(b[,colmatches,drop=FALSE])
-    d2 <- do.call(dplyr::group_by, c(list(.data = as.data.frame(where.na)), rlang::syms(colmatches)))
+    d2 <- do.call(dplyr::group_by, c(list(.data = as.data.frame(where.na)), syms(colmatches)))
     indices <- dplyr::group_rows(d2)
     b.uniq.cols <- setdiff(colnames(b), colmatches)
     for(ix in indices) {

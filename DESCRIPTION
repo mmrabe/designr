@@ -21,8 +21,7 @@ Imports:
     methods,
     jsonlite,
     lmerTest,
-    dplyr,
-    rlang
+    dplyr
 Suggests: 
     knitr,
     rmarkdown,
