@@ -19,11 +19,12 @@ Imports:
     tibble,
     crossdes,
     methods,
-    jsonlite,
     lmerTest,
     dplyr
 Suggests: 
     knitr,
     rmarkdown,
-    tidyverse
+    tidyverse,
+    jsonlite,
+    writexl
 VignetteBuilder: knitr

@@ -1,14 +1,6 @@
 
 # methods
 
-#' @describeIn write.design Using default settings for writing CSV files
-#' @param quote,row.names see \code{\link[utils:write.csv]{utils::write.csv()}}
-#' @export
-write.design.csv <- function(..., quote=FALSE, row.names=FALSE) write.design(..., file.extension = ".csv", output.handler=utils::write.csv, quote=quote, row.names=row.names)
-#' @describeIn write.design Using default settings for writing JSON files
-#' @param dataframe see \code{\link[jsonlite:write_json]{jsonlite::write_json()}}
-#' @export
-write.design.json <- function(..., dataframe="columns") write.design(..., file.extension = ".json", output.handler=jsonlite::write_json, dataframe=dataframe)
 
 #' Write Design Files
 #'
@@ -58,6 +50,32 @@ write.design <- function(design, group_by = NULL, order_by = NULL, randomize = F
   }
 }
 
+
+#' @describeIn write.design Using default settings for writing CSV files
+#' @param quote,row.names see \code{\link[utils:write.csv]{utils::write.csv()}}
+#' @export
+write.design.csv <- function(..., quote=FALSE, row.names=FALSE) write.design(..., file.extension = ".csv", output.handler=utils::write.csv, quote=quote, row.names=row.names)
+
+#' @describeIn write.design Using default settings for writing XLSX files (using the \code{writexl} package)
+#' @param format_headers see \code{\link[writexl:write_xlsx]{writexl::write_xlsx()}}, default is \code{FALSE}
+#' @export
+write.design.xlsx <- function(..., format_headers = FALSE) {
+  if(!requireNamespace("writexl")) {
+    stop("write.design.xlsx() requires the writexl package but it could not be loaded.")
+  }
+  write.design(..., file.extension = ".xlsx", output.handler=writexl::write_xlsx, format_headers = format_headers)
+}
+
+
+#' @describeIn write.design Using default settings for writing JSON files (using the \code{jsonlite} package)
+#' @param dataframe see \code{\link[jsonlite:write_json]{jsonlite::write_json()}}
+#' @export
+write.design.json <- function(..., dataframe="columns") {
+  if(!requireNamespace("jsonlite")) {
+    stop("write.design.json() requires the jsonlite package but it could not be loaded.")
+  }
+  write.design(..., file.extension = ".json", output.handler=jsonlite::write_json, dataframe=dataframe)
+}
 
 #' Summary of Factor Designs
 #'
