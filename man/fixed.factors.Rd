@@ -5,14 +5,14 @@
 \alias{fixed.factors}
 \title{Extract factors by type}
 \usage{
-random.factors(design, include.interactions = TRUE)
+random.factors(design, include_interactions = TRUE)
 
 fixed.factors(design)
 }
 \arguments{
 \item{design}{The factor design to check.}
 
-\item{include.interactions}{Should random factor interactions be included?}
+\item{include_interactions}{Should random factor interactions be included?}
 }
 \value{
 A list of factors that are either fixed or random.

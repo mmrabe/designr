@@ -4,8 +4,8 @@
 \alias{fixed.factor}
 \title{Fixed factors}
 \usage{
-fixed.factor(name, levels, blocked = FALSE, character.as.factor = TRUE,
-  is.ordered = FALSE, block.name = "\%1$s.\%2$d",
+fixed.factor(name, levels, blocked = FALSE, character_as_factor = TRUE,
+  is_ordered = FALSE, block_name = "\%1$s.\%2$d",
   groups = character(0), replications = 1L, assign = "latin.square",
   ...)
 }
@@ -16,11 +16,11 @@ fixed.factor(name, levels, blocked = FALSE, character.as.factor = TRUE,
 
 \item{blocked}{Set this to \code{TRUE} if the levels of this factor are blocked. In that case, a factor is created whose factor levels are different sequences of the levels specified in the function call.}
 
-\item{character.as.factor}{If this is \code{TRUE}, character vectors passed in \code{levels} are automatically converted to a factor type.}
+\item{character_as_factor}{If this is \code{TRUE}, character vectors passed in \code{levels} are automatically converted to a factor type.}
 
-\item{is.ordered}{Is this an ordered factor?}
+\item{is_ordered}{Is this an ordered factor?}
 
-\item{block.name}{If \code{blocked = TRUE}, by default, there is not only a design matrix column created that contains the complete sequence of block levels but also a column for each position of the sequence with its assigned level. You may specify a different naming pattern using \code{\link[base]{sprintf}} naming conventions. The first argument passed is the factor name and the second argument is the sequence position (starting at 1). The default column names will be \code{factor.1}, \code{factor.2}, etc. If \code{NULL}, no additional block columns are created.}
+\item{block_name}{If \code{blocked = TRUE}, by default, there is not only a design matrix column created that contains the complete sequence of block levels but also a column for each position of the sequence with its assigned level. You may specify a different naming pattern using \code{\link[base]{sprintf}} naming conventions. The first argument passed is the factor name and the second argument is the sequence position (starting at 1). The default column names will be \code{factor.1}, \code{factor.2}, etc. If \code{NULL}, no additional block columns are created.}
 
 \item{groups}{Names of fixed factors in which to nest this fixed factor (see *Nesting fixed factors*).}
 
@@ -44,7 +44,7 @@ If \code{groups} is used, the function will attempt to nest levels of the newly 
 \examples{
 fixed.factor("correct", levels=c(TRUE, FALSE))
 fixed.factor("age", levels=c("child", "youth", "adult"))
-fixed.factor("order", levels=c("task1", "task2", "task3"), assign="latin.square")
+fixed.factor("order", levels=c("task1", "task2", "task3"), blocked = TRUE, assign="latin.square")
 
 }
 \seealso{
