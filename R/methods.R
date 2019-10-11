@@ -148,11 +148,12 @@ design.formula <- function(design, contrasts = NULL, expand.contrasts = !missing
 rename_random_default <- function(id, fac) factor(sprintf("%s%0*d", fac, nchar(as.character(max(id))), id))
 
 #' @describeIn output.design Retrieve only the experimental units of a design
+#' @param interactions Whether to include random factor interactions (i.e., counterbalancing factors) in the output
 #' @export
-design.units <- function(design, rename_random = TRUE) {
+design.units <- function(design, rename_random = TRUE, interactions = FALSE) {
   check_argument(design, "factorDesign")
   check_argument(rename_random, c("logical", "function"), 1)
-  sapply(random.factors(design), function(f) {
+  sapply(random.factors(design, include.interactions = interactions), function(f) {
     df <- unique(design@design[,colnames(f@levels),drop=FALSE])
     df <- df[do.call(order, as.list(df)), , drop=FALSE]
     rownames(df) <- NULL
