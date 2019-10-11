@@ -12,7 +12,7 @@ output:
 editor_options: 
   chunk_output_type: console
 vignette: >
-  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteIndexEntry{From Design to Dataframe}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
