@@ -13,13 +13,9 @@ LazyData: true
 RoxygenNote: 6.1.1
 Imports:
     MASS,
-    ggplot2,
-    lme4,
-    parallel,
     tibble,
     crossdes,
     methods,
-    lmerTest,
     dplyr
 Suggests: 
     knitr,
