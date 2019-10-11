@@ -14,7 +14,7 @@ design.formula(design, contrasts = NULL,
   expand.contrasts = !missing(contrasts), interactions = TRUE,
   intercepts = TRUE, response = "dv", env = parent.frame())
 
-design.units(design, rename_random = TRUE)
+design.units(design, rename_random = TRUE, interactions = FALSE)
 
 design.codes(design, group_by = NULL, order_by = NULL,
   randomize = FALSE, rename_random = TRUE)
@@ -41,6 +41,8 @@ design.codes(design, group_by = NULL, order_by = NULL,
 \item{response}{The left-hand side of the equation. Typically, this is just the response/dependent variable.}
 
 \item{env}{The environment in which to embed the formula}
+
+\item{interactions}{Whether to include random factor interactions (i.e., counterbalancing factors) in the output}
 }
 \value{
 \code{output.design} returns a list containing all output summaries, including the following named entities:

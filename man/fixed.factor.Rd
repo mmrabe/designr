@@ -44,7 +44,7 @@ If \code{groups} is used, the function will attempt to nest levels of the newly 
 \examples{
 fixed.factor("correct", levels=c(TRUE, FALSE))
 fixed.factor("age", levels=c("child", "youth", "adult"))
-fixed.factor("order", levels=c("task1", "task2", "task3"), assign="latin.square")
+fixed.factor("order", levels=c("task1", "task2", "task3"), blocked = TRUE, assign="latin.square")
 
 }
 \seealso{

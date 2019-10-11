@@ -90,7 +90,7 @@ random.factor <- function(name, groups = character(0), instances = 1L, ...) {
 #' @examples
 #' fixed.factor("correct", levels=c(TRUE, FALSE))
 #' fixed.factor("age", levels=c("child", "youth", "adult"))
-#' fixed.factor("order", levels=c("task1", "task2", "task3"), assign="latin.square")
+#' fixed.factor("order", levels=c("task1", "task2", "task3"), blocked = TRUE, assign="latin.square")
 #'
 #' @seealso \code{\link[designr]{random.factor}}
 #' @export
