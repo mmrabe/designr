@@ -4,49 +4,49 @@
 
 #' Write Design Files
 #'
-#' This function writes a design into a set of files. For each random factor, a unit list is created that contains a list of all levels (instances) of the random factor and the factor levels to which that level is assigned. Moreover, code files are created that contain a complete set of experimental codes.
+#' This function writes a design into a set of files. For each random factor, a unit list is created that contains a list of all levels (instances) of the random factor and the factor levels to which that level is assigned. Moreover, code_files are created that contain a complete set of experimental codes.
 #'
 #' @param design The \code{factorDesign} to be written into files.
 #' @param group_by Experimental codes are to be grouped by these factors. If \code{NULL}, all codes are written into one file. Also see \code{\link[designr]{output.design}} for grouping design output.
-#' @param run.files The pattern to be used for the file names of the run files (i.e., files containing the experimental codes). By default, file names are \code{"run_Group1_Othergroup4.ext"} ect.
+#' @param run_files The pattern to be used for the file names of the run_files (i.e., files containing the experimental codes). By default, file names are \code{"run_Group1_Othergroup4.ext"} ect.
 #' @param order_by The experimental codes are to be ordered by these columns. Also see \code{\link[designr]{output.design}} for ordering design output.
 #' @param randomize After ordering, lines in the same order rank are to be shuffled randomly if set to \code{TRUE}.
-#' @param code.files Code files (files containing conditions for levels of random factors) are named after this pattern.
-#' @param output.dir All files are written into this directory.
-#' @param output.handler This is the function that is called to write the data frames. If using \code{write.design.csv}, this is \code{utils::write.csv} and if using \code{write.design.json}, this is \code{jsonlite::write_json}.
-#' @param file.extension This is the file extension to be added after each file name. Use '' if no file extension is to be added. If `NULL`, the file extension is guessed from the output handler used.
-#' @param ... Other parameters to be passed on to \code{write.design} and the underlying output handler.
+#' @param code_files Code files (files containing conditions for levels of random factors) are named after this pattern.
+#' @param output_dir All files are written into this directory.
+#' @param output_handler This is the function that is called to write the data frames. If using \code{write.design.csv}, this is \code{utils::write.csv} and if using \code{write.design.json}, this is \code{jsonlite::write_json}.
+#' @param file_extension This is the file_extension to be added after each file name. Use '' if no file_extension is to be added. If `NULL`, the file_extension is guessed from the output_handler used.
+#' @param ... Other parameters to be passed on to \code{write.design} and the underlying output_handler.
 #' @seealso \code{\link[designr]{output.design}} for use of \code{order_by} and \code{group_by}.
 #' @export
-write.design <- function(design, group_by = NULL, order_by = NULL, randomize = FALSE, run.files = paste0("run",ifelse(length(group_by)>0L,paste0("_",group_by,"-%",seq_along(group_by),"$s",collapse=""),"")), code.files = "codes_%s", output.dir = getwd(), output.handler, file.extension = NULL, ...) {
+write.design <- function(design, group_by = NULL, order_by = NULL, randomize = FALSE, run_files = paste0("run",ifelse(length(group_by)>0L,paste0("_",group_by,"-%",seq_along(group_by),"$s",collapse=""),"")), code_files = "codes_%s", output_dir = getwd(), output_handler, file_extension = NULL, ...) {
   check_argument(design, "factorDesign")
-  check_argument(run.files, "character", 1)
-  check_argument(code.files, "character", 1)
-  check_argument(output.dir, "character", 1)
-  check_argument(output.handler, c("function", "character"), 1)
-  check_argument(file.extension, c("character","NULL"), 1)
+  check_argument(run_files, "character", 1)
+  check_argument(code_files, "character", 1)
+  check_argument(output_dir, "character", 1)
+  check_argument(output_handler, c("function", "character"), 1)
+  check_argument(file_extension, c("character","NULL"), 1)
   clean.file.path <- function(paths) gsub("[^a-zA-Z0-9_.,]", "-", paths)
   output <- output.design(design=design, group_by=group_by, order_by=order_by, randomize=randomize)
-  file_names <- file.path(output.dir, clean.file.path(paste0(do.call(sprintf, c(list(run.files), unname(as.list(output$groups)))), file.extension)))
-  if(!is.function(output.handler)) stop("`output.handler` must be a function that accepts a data frame and a file path as arguments.")
-  if(is.null(file.extension)) {
-    if(identical(output.handler, utils::write.csv) || identical(output.handler, utils::write.csv2)) file.extension = ".csv"
-    else if(identical(output.handler, base::write.dcf)) file.extension = ".dcf"
-    else if(isNamespaceLoaded("jsonlite") && identical(output.handler, jsonlite::write_json)) file.extension = ".json"
+  file_names <- file.path(output_dir, clean.file.path(paste0(do.call(sprintf, c(list(run_files), unname(as.list(output$groups)))), file_extension)))
+  if(!is.function(output_handler)) stop("`output_handler` must be a function that accepts a data frame and a file path as arguments.")
+  if(is.null(file_extension)) {
+    if(identical(output_handler, utils::write.csv) || identical(output_handler, utils::write.csv2)) file_extension = ".csv"
+    else if(identical(output_handler, base::write.dcf)) file_extension = ".dcf"
+    else if(isNamespaceLoaded("jsonlite") && identical(output_handler, jsonlite::write_json)) file_extension = ".json"
     else {
-      warning("Could not guess file extension from output handler. No file extension is used. To suppress this warning, set `file.extension` to an empty string (file.extension=\"\") or provide a file extension suitable for your output format!")
-      file.extension <- ""
+      warning("Could not guess file_extension from output_handler. No file_extension is used. To suppress this warning, set `file_extension` to an empty string (file_extension=\"\") or provide a file_extension suitable for your output format!")
+      file_extension <- ""
     }
   }
   if(!is.null(output$groups)) {
     for(i in seq_len(nrow(output$groups))) {
-      do.call(output.handler, list(output$codes[[i]], file_names[i], ...))
+      do.call(output_handler, list(output$codes[[i]], file_names[i], ...))
     }
   }else{
-    do.call(output.handler, list(output$codes, file_names[1], ...))
+    do.call(output_handler, list(output$codes, file_names[1], ...))
   }
   for(n in names(output$units)) {
-    do.call(output.handler, list(output$units[[n]], file.path(output.dir, clean.file.path(paste0(sprintf(code.files, n), file.extension))), ...))
+    do.call(output_handler, list(output$units[[n]], file.path(output_dir, clean.file.path(paste0(sprintf(code_files, n), file_extension))), ...))
   }
 }
 
@@ -54,7 +54,7 @@ write.design <- function(design, group_by = NULL, order_by = NULL, randomize = F
 #' @describeIn write.design Using default settings for writing CSV files
 #' @param quote,row.names see \code{\link[utils:write.csv]{utils::write.csv()}}
 #' @export
-write.design.csv <- function(..., quote=FALSE, row.names=FALSE) write.design(..., file.extension = ".csv", output.handler=utils::write.csv, quote=quote, row.names=row.names)
+write.design.csv <- function(..., quote=FALSE, row.names=FALSE) write.design(..., file_extension = ".csv", output_handler=utils::write.csv, quote=quote, row.names=row.names)
 
 #' @describeIn write.design Using default settings for writing XLSX files (using the \code{writexl} package)
 #' @param format_headers see \code{\link[writexl:write_xlsx]{writexl::write_xlsx()}}, default is \code{FALSE}
@@ -63,7 +63,7 @@ write.design.xlsx <- function(..., format_headers = FALSE) {
   if(!requireNamespace("writexl")) {
     stop("write.design.xlsx() requires the writexl package but it could not be loaded.")
   }
-  write.design(..., file.extension = ".xlsx", output.handler=writexl::write_xlsx, format_headers = format_headers)
+  write.design(..., file_extension = ".xlsx", output_handler=writexl::write_xlsx, format_headers = format_headers)
 }
 
 
@@ -74,7 +74,7 @@ write.design.json <- function(..., dataframe="columns") {
   if(!requireNamespace("jsonlite")) {
     stop("write.design.json() requires the jsonlite package but it could not be loaded.")
   }
-  write.design(..., file.extension = ".json", output.handler=jsonlite::write_json, dataframe=dataframe)
+  write.design(..., file_extension = ".json", output_handler=jsonlite::write_json, dataframe=dataframe)
 }
 
 #' Summary of Factor Designs
@@ -125,14 +125,14 @@ output.design <- function(design, group_by = NULL, order_by = NULL, randomize = 
 #' @describeIn output.design Retrieve only the model formulas suitable for the design
 #' 
 #' @param contrasts The contrasts to override (\code{NULL} if none to override)
-#' @param expand.contrasts If \code{TRUE}, factors with more than one contrast are replaced by so many contrasts, i.e. the result contains the names of the individual contrasts, not of the factors.
+#' @param expand_contrasts If \code{TRUE}, factors with more than one contrast are replaced by so many contrasts, i.e. the result contains the names of the individual contrasts, not of the factors.
 #' @param response The left-hand side of the equation. Typically, this is just the response/dependent variable.
 #' @param intercepts Should an intercept be included?
 #' @param env The environment in which to embed the formula
 #' @param interactions Should fixed effects be additive or interactive?
 #' 
 #' @export
-design.formula <- function(design, contrasts = NULL, expand.contrasts = !missing(contrasts), interactions=TRUE, intercepts=TRUE, response = "dv", env = parent.frame()) {
+design.formula <- function(design, contrasts = NULL, expand_contrasts = !missing(contrasts), interactions=TRUE, intercepts=TRUE, response = "dv", env = parent.frame()) {
   add_them <- function(l, op) {
     if(length(l) < 1) return(NULL)
     ret <- l[[1L]]
@@ -142,36 +142,36 @@ design.formula <- function(design, contrasts = NULL, expand.contrasts = !missing
     }
     return(ret)
   }
-  if(expand.contrasts) {
-    fixed <- contrast.names(design, ranfac = NULL, contrasts = contrasts, interactions = interactions, intercept = FALSE, as.symbols = TRUE)
-    random <- lapply(random.factors(design, include.interactions = FALSE), function(fac) {
-      c(list(add_them(lapply(fac@name, as.symbol), ':')), contrast.names(design, ranfac = fac@name, contrasts = contrasts, interactions = interactions, intercept = FALSE, as.symbols = TRUE))
+  if(expand_contrasts) {
+    fixed <- contrast.names(design, ranfac = NULL, contrasts = contrasts, interactions = interactions, intercept = FALSE, as_symbols = TRUE)
+    random <- lapply(random.factors(design, include_interactions = FALSE), function(fac) {
+      c(list(add_them(lapply(fac@name, as.symbol), ':')), contrast.names(design, ranfac = fac@name, contrasts = contrasts, interactions = interactions, intercept = FALSE, as_symbols = TRUE))
     })
   }
   else {
     fixed <- lapply(names(fixed.factors(design)), as.symbol)
-    random <- lapply(random.factors(design, include.interactions = FALSE), function(fac) {
+    random <- lapply(random.factors(design, include_interactions = FALSE), function(fac) {
       c(list(add_them(lapply(fac@name, as.symbol), ':')), lapply(setdiff(fixed, colnames(fac@levels)), as.symbol))
     })
   }
-  random_lmer <- lapply(random, function(el) call('(', call('|', add_them(c(if(intercepts) list(1) else list(), list(add_them(el[-1L], if(interactions&&!expand.contrasts) '*' else '+'))), '+'), el[[1L]])))
+  random_lmer <- lapply(random, function(el) call('(', call('|', add_them(c(if(intercepts) list(1) else list(), list(add_them(el[-1L], if(interactions&&!expand_contrasts) '*' else '+'))), '+'), el[[1L]])))
   random_aov <- lapply(random, function(el) call('Error', if(length(el)>1L) call('/', el[[1L]], add_them(el[-1],'*')) else el[[1L]]))
   list(
-    lm = call('~',as.symbol(response),add_them(c(if(intercepts) list(1) else list(), list(add_them(fixed, if(interactions&&!expand.contrasts) '*' else '+'))), '+')),
-    lmer = call('~',as.symbol(response),add_them(c(if(intercepts) list(1) else list(), list(add_them(fixed, if(interactions&&!expand.contrasts) '*' else '+')), random_lmer), '+')),
-    aov = call('~',as.symbol(response),add_them(c(if(intercepts) list(1) else list(), list(add_them(fixed, if(interactions&&!expand.contrasts) '*' else '+')), random_aov), '+'))
+    lm = call('~',as.symbol(response),add_them(c(if(intercepts) list(1) else list(), list(add_them(fixed, if(interactions&&!expand_contrasts) '*' else '+'))), '+')),
+    lmer = call('~',as.symbol(response),add_them(c(if(intercepts) list(1) else list(), list(add_them(fixed, if(interactions&&!expand_contrasts) '*' else '+')), random_lmer), '+')),
+    aov = call('~',as.symbol(response),add_them(c(if(intercepts) list(1) else list(), list(add_them(fixed, if(interactions&&!expand_contrasts) '*' else '+')), random_aov), '+'))
   )
 }
 
 rename_random_default <- function(id, fac) factor(sprintf("%s%0*d", fac, nchar(as.character(max(id))), id))
 
 #' @describeIn output.design Retrieve only the experimental units of a design
-#' @param interactions Whether to include random factor interactions (i.e., counterbalancing factors) in the output
+#' @param include_interactions Whether to include random factor interactions (i.e., counterbalancing factors) in the output
 #' @export
-design.units <- function(design, rename_random = TRUE, interactions = FALSE) {
+design.units <- function(design, rename_random = TRUE, include_interactions = FALSE) {
   check_argument(design, "factorDesign")
   check_argument(rename_random, c("logical", "function"), 1)
-  sapply(random.factors(design, include.interactions = interactions), function(f) {
+  sapply(random.factors(design, include_interactions = include_interactions), function(f) {
     df <- unique(design@design[,colnames(f@levels),drop=FALSE])
     df <- df[do.call(order, as.list(df)), , drop=FALSE]
     rownames(df) <- NULL
@@ -220,7 +220,7 @@ design.codes <- function(design, group_by = NULL, order_by = NULL, randomize = F
     data <- data[do.call(order, unname(as.list(data[, order_by, drop=FALSE]))), , drop=FALSE]
   }
   rownames(data) <- NULL
-  for(ranfac in names(random.factors(design, include.interactions = FALSE))) {
+  for(ranfac in names(random.factors(design, include_interactions = FALSE))) {
     if(isTRUE(rename_random)) {
       data[,ranfac] <- rename_random_default(data[,ranfac], ranfac)
     } else if(is.function(rename_random)) {
@@ -332,13 +332,13 @@ is.factorDesign <- function(fac) is(fac, "factorDesign")
 is.designFactor <- function(fac) is(fac, "designFactor")
 
 #' @describeIn fixed.factors Return fixed factors
-#' @param include.interactions Should random factor interactions be included?
+#' @param include_interactions Should random factor interactions be included?
 #' @export
-random.factors <- function(design, include.interactions = TRUE) {
+random.factors <- function(design, include_interactions = TRUE) {
   check_argument(design, "factorDesign")
-  check_argument(include.interactions, "logical", 1)
+  check_argument(include_interactions, "logical", 1)
   if(!is.factorDesign(design)&&!is.list(design)) stop("`design` must be a design factor or list!")
-  return(design[vapply(design, if(include.interactions) is.randomFactor else function(f) is.randomFactor(f) && length(f@name) == 1L, logical(1))])
+  return(design[vapply(design, if(include_interactions) is.randomFactor else function(f) is.randomFactor(f) && length(f@name) == 1L, logical(1))])
 }
 
 #' Extract factors by type
@@ -416,24 +416,24 @@ setMethod("subset", c("factorDesign"), `subset.factorDesign`)
 #' @param factors Which fixed factors to include in the output
 #' @param contrasts Contrasts to use for each categorical factor. Should be a list named after the fixed effects and containing contrast matrices, such as the ones generated by the standard contrast functions. If NULL or the fixed factor is not found in the list, default contrasts are used (typically, treatment contrasts).
 #' @param expand If TRUE, a design matrix is returned. If FALSE, all factors (and interactions) with their respective levels are returned.
-#' @param rename.contrasts This is the pattern after which columns in the design matrix are named. By default, this is a direct concatenation of factor name and contrast name.
+#' @param rename_contrasts This is the pattern after which columns in the design matrix are named. By default, this is a direct concatenation of factor name and contrast name.
 #' @param intercept If TRUE, an intercept is added to the matrix. Its value is 1 for all observations.
 #' @param interactions If TRUE, interactions of fixed factors are included.
-#' @param include.random.levels If TRUE, levels of random factors are included in the matrix.
+#' @param include_random_levels If TRUE, levels of random factors are included in the matrix.
 #' @param ranfac Return random-effects contrast names for a given random factor. If NULL, return fixed-effects contrast names.
-#' @param as.symbols Return contrast names as symbols rather than strings (character vectors).
+#' @param as_symbols Return contrast names as symbols rather than strings (character vectors).
 #' @param ... Arguments to pass on to design.contrasts()
 #' @return A design matrix (if expand==TRUE, default) or a list of factor levels (if expand==FALSE) for design.contrasts or contrast names for contrast.names.
 #' @export
-design.contrasts <- function(design, factors = names(fixed.factors(design)), contrasts = NULL, expand = TRUE, rename.contrasts = "%1$s%2$s", intercept = FALSE, interactions = FALSE, include.random.levels = FALSE) {
+design.contrasts <- function(design, factors = names(fixed.factors(design)), contrasts = NULL, expand = TRUE, rename_contrasts = "%1$s%2$s", intercept = FALSE, interactions = FALSE, include_random_levels = FALSE) {
   check_argument(design, "factorDesign")
   check_argument(factors, "character")
   check_argument(contrasts, c("NULL","list"))
   check_argument(expand, "logical", 1)
-  check_argument(rename.contrasts, "character", 1)
+  check_argument(rename_contrasts, "character", 1)
   check_argument(intercept, "logical", 1)
   check_argument(interactions, "logical", 1)
-  check_argument(include.random.levels, "logical", 1)
+  check_argument(include_random_levels, "logical", 1)
   if(!is.null(contrasts)&&!is.list(contrasts)) stop("`contrasts` must be NULL or a named list!")
   main.contrasts <- lapply(design[factors], function(fac) {
     if(is.null(fac)||!is.fixedFactor(fac)) stop(sprintf("At least one factor name given does not refer to a fixed factor"))
@@ -453,8 +453,8 @@ design.contrasts <- function(design, factors = names(fixed.factors(design)), con
         retfac <- retfac[design@design[,fac@name],,drop=FALSE]
         rownames(retfac) <- NULL
       }
-      if(!is.null(rename.contrasts))
-        colnames(retfac) <- sprintf(rename.contrasts, fac@name, if(is.null(colnames(retfac))) seq_len(ncol(retfac)) else colnames(retfac))
+      if(!is.null(rename_contrasts))
+        colnames(retfac) <- sprintf(rename_contrasts, fac@name, if(is.null(colnames(retfac))) seq_len(ncol(retfac)) else colnames(retfac))
       return(retfac)
     }else if(inherits(fac@levels[,fac@name], c("numeric", "integer"))) {
       if(expand) {
@@ -462,7 +462,7 @@ design.contrasts <- function(design, factors = names(fixed.factors(design)), con
         rownames(retfac) <- NULL
       } else
         retfac <- fac@levels[,fac@name,drop=FALSE]
-      if(!is.null(rename.contrasts))
+      if(!is.null(rename_contrasts))
         colnames(retfac) <- fac@name
       return(retfac)
     }else{
@@ -488,8 +488,8 @@ design.contrasts <- function(design, factors = names(fixed.factors(design)), con
       ncontrasts <- c(list(data.frame(`1` = 1.0)), ncontrasts)
       names(ncontrasts[[1]])[1] = "(Intercept)"
     }
-    if(include.random.levels) {
-      for(ranfac in random.factors(design, include.interactions = FALSE)){
+    if(include_random_levels) {
+      for(ranfac in random.factors(design, include_interactions = FALSE)){
         if(expand) {
           main.contrasts <- c(main.contrasts, list(design@design[,ranfac@name,drop=FALSE]))
           names(main.contrasts)[length(main.contrasts)] <- ranfac@name
@@ -507,8 +507,8 @@ design.contrasts <- function(design, factors = names(fixed.factors(design)), con
       main.contrasts <- c(list(data.frame(`1` = 1.0)), main.contrasts)
       names(main.contrasts[[1]])[1] = "(Intercept)"
     }
-    if(include.random.levels) {
-      for(ranfac in random.factors(design, include.interactions = FALSE)){
+    if(include_random_levels) {
+      for(ranfac in random.factors(design, include_interactions = FALSE)){
         if(expand) {
           main.contrasts <- c(main.contrasts, list(design@design[,ranfac@name,drop=FALSE]))
           names(main.contrasts)[length(main.contrasts)] <- ranfac@name
@@ -534,17 +534,17 @@ design.contrasts <- function(design, factors = names(fixed.factors(design)), con
 #' 
 #' @describeIn design.contrasts Retrieve contrast names for a design
 #' @export
-contrast.names <- function(design, ranfac = NULL, as.symbols = FALSE, ...) {
+contrast.names <- function(design, ranfac = NULL, as_symbols = FALSE, ...) {
   check_argument(design, "factorDesign")
   check_argument(ranfac, c("NULL","character"))
-  check_argument(as.symbols, "logical", 1)
+  check_argument(as_symbols, "logical", 1)
   facnames <- names(fixed.factors(design))
   if(!is.null(ranfac)) {
     if(is.null(design[[ranfac]])||!is.randomFactor(design[[ranfac]])) stop(sprintf("Random factor `%s` does not exist", ranfac))
     facnames <- setdiff(facnames, design[[ranfac]]@groups)
   }
   cnames <- colnames(design.contrasts(design = design, factors = facnames, ...))
-  if(as.symbols) {
+  if(as_symbols) {
     cnames <- lapply(strsplit(cnames, ':', TRUE), function(nm) {
       ret <- as.symbol(nm[1L])
       for(el in nm[-1L])

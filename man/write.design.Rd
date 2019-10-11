@@ -8,10 +8,10 @@
 \title{Write Design Files}
 \usage{
 write.design(design, group_by = NULL, order_by = NULL,
-  randomize = FALSE, run.files = paste0("run", ifelse(length(group_by)
+  randomize = FALSE, run_files = paste0("run", ifelse(length(group_by)
   > 0L, paste0("_", group_by, "-\%", seq_along(group_by), "$s", collapse =
-  ""), "")), code.files = "codes_\%s", output.dir = getwd(),
-  output.handler, file.extension = NULL, ...)
+  ""), "")), code_files = "codes_\%s", output_dir = getwd(),
+  output_handler, file_extension = NULL, ...)
 
 write.design.csv(..., quote = FALSE, row.names = FALSE)
 
@@ -28,17 +28,17 @@ write.design.json(..., dataframe = "columns")
 
 \item{randomize}{After ordering, lines in the same order rank are to be shuffled randomly if set to \code{TRUE}.}
 
-\item{run.files}{The pattern to be used for the file names of the run files (i.e., files containing the experimental codes). By default, file names are \code{"run_Group1_Othergroup4.ext"} ect.}
+\item{run_files}{The pattern to be used for the file names of the run_files (i.e., files containing the experimental codes). By default, file names are \code{"run_Group1_Othergroup4.ext"} ect.}
 
-\item{code.files}{Code files (files containing conditions for levels of random factors) are named after this pattern.}
+\item{code_files}{Code files (files containing conditions for levels of random factors) are named after this pattern.}
 
-\item{output.dir}{All files are written into this directory.}
+\item{output_dir}{All files are written into this directory.}
 
-\item{output.handler}{This is the function that is called to write the data frames. If using \code{write.design.csv}, this is \code{utils::write.csv} and if using \code{write.design.json}, this is \code{jsonlite::write_json}.}
+\item{output_handler}{This is the function that is called to write the data frames. If using \code{write.design.csv}, this is \code{utils::write.csv} and if using \code{write.design.json}, this is \code{jsonlite::write_json}.}
 
-\item{file.extension}{This is the file extension to be added after each file name. Use '' if no file extension is to be added. If `NULL`, the file extension is guessed from the output handler used.}
+\item{file_extension}{This is the file_extension to be added after each file name. Use '' if no file_extension is to be added. If `NULL`, the file_extension is guessed from the output_handler used.}
 
-\item{...}{Other parameters to be passed on to \code{write.design} and the underlying output handler.}
+\item{...}{Other parameters to be passed on to \code{write.design} and the underlying output_handler.}
 
 \item{quote, row.names}{see \code{\link[utils:write.csv]{utils::write.csv()}}}
 
@@ -47,7 +47,7 @@ write.design.json(..., dataframe = "columns")
 \item{dataframe}{see \code{\link[jsonlite:write_json]{jsonlite::write_json()}}}
 }
 \description{
-This function writes a design into a set of files. For each random factor, a unit list is created that contains a list of all levels (instances) of the random factor and the factor levels to which that level is assigned. Moreover, code files are created that contain a complete set of experimental codes.
+This function writes a design into a set of files. For each random factor, a unit list is created that contains a list of all levels (instances) of the random factor and the factor levels to which that level is assigned. Moreover, code_files are created that contain a complete set of experimental codes.
 }
 \section{Functions}{
 \itemize{

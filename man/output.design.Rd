@@ -11,10 +11,11 @@ output.design(design, group_by = NULL, order_by = NULL,
   randomize = FALSE, rename_random = TRUE)
 
 design.formula(design, contrasts = NULL,
-  expand.contrasts = !missing(contrasts), interactions = TRUE,
+  expand_contrasts = !missing(contrasts), interactions = TRUE,
   intercepts = TRUE, response = "dv", env = parent.frame())
 
-design.units(design, rename_random = TRUE, interactions = FALSE)
+design.units(design, rename_random = TRUE,
+  include_interactions = FALSE)
 
 design.codes(design, group_by = NULL, order_by = NULL,
   randomize = FALSE, rename_random = TRUE)
@@ -32,7 +33,7 @@ design.codes(design, group_by = NULL, order_by = NULL,
 
 \item{contrasts}{The contrasts to override (\code{NULL} if none to override)}
 
-\item{expand.contrasts}{If \code{TRUE}, factors with more than one contrast are replaced by so many contrasts, i.e. the result contains the names of the individual contrasts, not of the factors.}
+\item{expand_contrasts}{If \code{TRUE}, factors with more than one contrast are replaced by so many contrasts, i.e. the result contains the names of the individual contrasts, not of the factors.}
 
 \item{interactions}{Should fixed effects be additive or interactive?}
 
@@ -42,7 +43,7 @@ design.codes(design, group_by = NULL, order_by = NULL,
 
 \item{env}{The environment in which to embed the formula}
 
-\item{interactions}{Whether to include random factor interactions (i.e., counterbalancing factors) in the output}
+\item{include_interactions}{Whether to include random factor interactions (i.e., counterbalancing factors) in the output}
 }
 \value{
 \code{output.design} returns a list containing all output summaries, including the following named entities:

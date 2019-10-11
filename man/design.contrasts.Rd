@@ -6,11 +6,11 @@
 \title{Retrieve contrast codes for a design}
 \usage{
 design.contrasts(design, factors = names(fixed.factors(design)),
-  contrasts = NULL, expand = TRUE, rename.contrasts = "\%1$s\%2$s",
+  contrasts = NULL, expand = TRUE, rename_contrasts = "\%1$s\%2$s",
   intercept = FALSE, interactions = FALSE,
-  include.random.levels = FALSE)
+  include_random_levels = FALSE)
 
-contrast.names(design, ranfac = NULL, as.symbols = FALSE, ...)
+contrast.names(design, ranfac = NULL, as_symbols = FALSE, ...)
 }
 \arguments{
 \item{design}{A design object}
@@ -21,17 +21,17 @@ contrast.names(design, ranfac = NULL, as.symbols = FALSE, ...)
 
 \item{expand}{If TRUE, a design matrix is returned. If FALSE, all factors (and interactions) with their respective levels are returned.}
 
-\item{rename.contrasts}{This is the pattern after which columns in the design matrix are named. By default, this is a direct concatenation of factor name and contrast name.}
+\item{rename_contrasts}{This is the pattern after which columns in the design matrix are named. By default, this is a direct concatenation of factor name and contrast name.}
 
 \item{intercept}{If TRUE, an intercept is added to the matrix. Its value is 1 for all observations.}
 
 \item{interactions}{If TRUE, interactions of fixed factors are included.}
 
-\item{include.random.levels}{If TRUE, levels of random factors are included in the matrix.}
+\item{include_random_levels}{If TRUE, levels of random factors are included in the matrix.}
 
 \item{ranfac}{Return random-effects contrast names for a given random factor. If NULL, return fixed-effects contrast names.}
 
-\item{as.symbols}{Return contrast names as symbols rather than strings (character vectors).}
+\item{as_symbols}{Return contrast names as symbols rather than strings (character vectors).}
 
 \item{...}{Arguments to pass on to design.contrasts()}
 }

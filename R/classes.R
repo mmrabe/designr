@@ -77,10 +77,10 @@ random.factor <- function(name, groups = character(0), instances = 1L, ...) {
 #' @param replications Either a single integer or an integer vector of the same length as \code{levels} that is used to determine how many times each factor level should be repeated.
 #' @param blocked Set this to \code{TRUE} if the levels of this factor are blocked. In that case, a factor is created whose factor levels are different sequences of the levels specified in the function call.
 #' @param assign If \code{blocked = TRUE}, you may specify a different method of rotating levels. The default if \code{'latin.square'} but \code{'permutations'}, \code{'williams'}, and \code{'random.order'} are also available.
-#' @param character.as.factor If this is \code{TRUE}, character vectors passed in \code{levels} are automatically converted to a factor type.
-#' @param block.name If \code{blocked = TRUE}, by default, there is not only a design matrix column created that contains the complete sequence of block levels but also a column for each position of the sequence with its assigned level. You may specify a different naming pattern using \code{\link[base]{sprintf}} naming conventions. The first argument passed is the factor name and the second argument is the sequence position (starting at 1). The default column names will be \code{factor.1}, \code{factor.2}, etc. If \code{NULL}, no additional block columns are created.
+#' @param character_as_factor If this is \code{TRUE}, character vectors passed in \code{levels} are automatically converted to a factor type.
+#' @param block_name If \code{blocked = TRUE}, by default, there is not only a design matrix column created that contains the complete sequence of block levels but also a column for each position of the sequence with its assigned level. You may specify a different naming pattern using \code{\link[base]{sprintf}} naming conventions. The first argument passed is the factor name and the second argument is the sequence position (starting at 1). The default column names will be \code{factor.1}, \code{factor.2}, etc. If \code{NULL}, no additional block columns are created.
 #' @param groups Names of fixed factors in which to nest this fixed factor (see *Nesting fixed factors*).
-#' @param is.ordered Is this an ordered factor?
+#' @param is_ordered Is this an ordered factor?
 #' @param ... more data to save as attributes
 #' @return An instance of \code{fixedFactor}.
 #'
@@ -94,7 +94,7 @@ random.factor <- function(name, groups = character(0), instances = 1L, ...) {
 #'
 #' @seealso \code{\link[designr]{random.factor}}
 #' @export
-fixed.factor <- function(name, levels, blocked = FALSE, character.as.factor = TRUE, is.ordered = FALSE, block.name = "%1$s.%2$d", groups = character(0), replications = 1L, assign = "latin.square", ...) {
+fixed.factor <- function(name, levels, blocked = FALSE, character_as_factor = TRUE, is_ordered = FALSE, block_name = "%1$s.%2$d", groups = character(0), replications = 1L, assign = "latin.square", ...) {
   check_argument(groups, "character")
   is.grouped <- length(groups) > 0L
   check_argument(name, "character", 1)
@@ -103,8 +103,8 @@ fixed.factor <- function(name, levels, blocked = FALSE, character.as.factor = TR
   else if(length(groups) > 0L && (!is.list(levels) || !all(vapply(levels, function(glevels) is.vector(glevels) && length(glevels) >= 1L, logical(1))))) stop("If `groups` are given (i.e., factor is nested), `levels` must be a list of vectors, each with a minimum length of 1!")
   check_argument(replications, "numeric", function(x) !x%%1, expression(x >= 1), expression(length(x) == length(levels) || length(x) == 1))
   check_argument(blocked, "logical", 1)
-  check_argument(character.as.factor, "logical", 1)
-  check_argument(is.ordered, "logical", 1)
+  check_argument(character_as_factor, "logical", 1)
+  check_argument(is_ordered, "logical", 1)
   if(!is.list(levels) && is.vector(levels)) levels <- list(levels)
   if(length(unique(names(levels))) != length(names(levels))) stop("Names of levels list must be unique!")
   
@@ -120,17 +120,17 @@ fixed.factor <- function(name, levels, blocked = FALSE, character.as.factor = TR
         if(i>ncol(mat)) return(NA)
         vals <- levels[mat[,i,drop=TRUE]]
         if(!is.character(vals) && coerce.character) vals <- as.character(vals)
-        if(is.character(vals) && character.as.factor) factor(vals, levels=unique(levels), ordered = is.ordered)
+        if(is.character(vals) && character_as_factor) factor(vals, levels=unique(levels), ordered = is_ordered)
         else vals
       }))
-      if(!is.null(block.name)) colnames(lvmat) <- sprintf(block.name, name, seq_len(n.max.levels))
+      if(!is.null(block_name)) colnames(lvmat) <- sprintf(block_name, name, seq_len(n.max.levels))
       lvmat[,name] <- factor(apply(lvmat[,seq_along(levels),drop=FALSE], 1, paste, collapse="-"))
-      if(is.null(block.name)) lvmat[,-ncol(lvmat)] <- NULL
+      if(is.null(block_name)) lvmat[,-ncol(lvmat)] <- NULL
       levels <- lvmat
     }else {
       vals <- rep(levels, each=replications)
       if(!is.character(vals) && coerce.character) vals <- as.character(vals)
-      if(is.character(vals) && character.as.factor) levels <- data.frame(factor(vals, levels=unique(levels), ordered = is.ordered))
+      if(is.character(vals) && character_as_factor) levels <- data.frame(factor(vals, levels=unique(levels), ordered = is_ordered))
       else levels <- data.frame(x=vals)
       colnames(levels) <- name
     }
