@@ -16,3 +16,11 @@ A factorDesign object
 \description{
 By adding factors and designs by \code{+}, a new design is created that contains all of the components.
 }
+\examples{
+
+des <- fixed.factor("Factor1", c("1A","1B")) +
+       fixed.factor("Factor2", c("2A","2B")) +
+       random.factor("Subject", c("Factor1"))
+
+
+}

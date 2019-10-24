@@ -58,6 +58,18 @@ This function writes a design into a set of files. For each random factor, a uni
 \item \code{write.design.json}: Using default settings for writing JSON files (using the \code{jsonlite} package)
 }}
 
+\examples{
+
+des <- fixed.factor("Factor1", c("1A","1B")) +
+       fixed.factor("Factor2", c("2A","2B")) +
+       random.factor("Subject", c("Factor1"))
+    
+\dontrun{
+# This writes a CSV file for each subject and a CSV list of subjects
+write.design(des, group_by = "Subject", output_handler = write.csv)
+}
+
+}
 \seealso{
 \code{\link[designr]{output.design}} for use of \code{order_by} and \code{group_by}.
 }

@@ -11,11 +11,21 @@ subset(x, ...)
 \arguments{
 \item{x}{A factorDesign object}
 
-\item{...}{*subset*: Criteria along which to filter in planned observations / design matrix rows., *select*: Names of columns to keep in the design matrix}
+\item{...}{*subset*: Criteria along which to filter in planned observations / design matrix rows., *select*: Names of factors to keep in the design matrix}
 }
 \value{
 Returns a \code{factorDesign} object with a subsetted design matrix
 }
 \description{
 Subset factor designs
+}
+\examples{
+
+des <- fixed.factor("Factor1", c("1A","1B")) +
+       fixed.factor("Factor2", c("2A","2B")) +
+       random.factor("Subject", c("Factor1"))
+       
+subset(des, select = "Subject")
+subset(des, Factor1 == "1A" | Factor2 == "2B", "Subject")
+
 }

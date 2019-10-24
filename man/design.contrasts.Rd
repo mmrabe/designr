@@ -48,3 +48,24 @@ Use this function to retrieve the names for contrasts in an experimental design,
 \item \code{contrast.names}: Retrieve contrast names for a design
 }}
 
+\examples{
+
+
+des <- fixed.factor("Factor1", c("1A","1B")) +
+       fixed.factor("Factor2", c("2A","2B")) +
+       random.factor("Subject", c("Factor1"))
+
+              
+design.contrasts(des)
+
+contrast.names(des)
+
+stopifnot(contrast.names(des) == c("Factor11B", "Factor22B"))
+
+contrast.names(des, as_symbols = TRUE)
+
+design.contrasts(des, contrasts = list(Factor2 = contr.sum))
+
+contrast.names(des, contrasts = list(Factor2 = contr.sum))
+
+}
