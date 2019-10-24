@@ -16,3 +16,13 @@ The number of observations
 \description{
 Retrieve the number of observations
 }
+\examples{
+des <- fixed.factor("Factor1", c("1A","1B")) +
+       fixed.factor("Factor2", c("2A","2B")) +
+       random.factor("Subject", c("Factor1"))
+       
+nobs(des)
+
+stopifnot(nobs(des) == 4)
+
+}

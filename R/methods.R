@@ -17,6 +17,18 @@
 #' @param file_extension This is the file_extension to be added after each file name. Use '' if no file_extension is to be added. If `NULL`, the file_extension is guessed from the output_handler used.
 #' @param ... Other parameters to be passed on to \code{write.design} and the underlying output_handler.
 #' @seealso \code{\link[designr]{output.design}} for use of \code{order_by} and \code{group_by}.
+#' 
+#' @examples
+#' 
+#' des <- fixed.factor("Factor1", c("1A","1B")) +
+#'        fixed.factor("Factor2", c("2A","2B")) +
+#'        random.factor("Subject", c("Factor1"))
+#'     
+#' \dontrun{
+#' # This writes a CSV file for each subject and a CSV list of subjects
+#' write.design(des, group_by = "Subject", output_handler = write.csv)
+#' }
+#' 
 #' @export
 write.design <- function(design, group_by = NULL, order_by = NULL, randomize = FALSE, run_files = paste0("run",ifelse(length(group_by)>0L,paste0("_",group_by,"-%",seq_along(group_by),"$s",collapse=""),"")), code_files = "codes_%s", output_dir = getwd(), output_handler, file_extension = NULL, ...) {
   check_argument(design, "factorDesign")
@@ -106,6 +118,16 @@ write.design.json <- function(..., dataframe="columns") {
 #' 
 #' The functions \code{design.codes}, \code{design.formula} and \code{design.units} only return the values of the fields \code{codes} (a \code{tibble} or list or \code{tibble}s of experimental codes), \code{formulas} (a list of model formulas), and \code{units} (a list of random factors and their levels), respectively.
 #' 
+#' @examples 
+#' 
+#' des <- fixed.factor("Factor1", c("1A","1B")) +
+#'        fixed.factor("Factor2", c("2A","2B")) +
+#'        random.factor("Subject", c("Factor1"))
+#'        
+#' output.design(des)
+#' design.codes(des)
+#' design.units(des)
+#' design.formula(des)
 #'
 #' @seealso \code{\link[designr]{design.formula}} for more options generating model formulae other than the suggested default ones in the summary.
 #'
@@ -223,10 +245,19 @@ design.codes <- function(design, group_by = NULL, order_by = NULL, randomize = F
   for(ranfac in names(random.factors(design, include_interactions = FALSE))) {
     if(isTRUE(rename_random)) {
       data[,ranfac] <- rename_random_default(data[,ranfac], ranfac)
+      if(ranfac %in% group_by) {
+        file_groups[,ranfac] <- rename_random_default(file_groups[,ranfac], ranfac)
+      }
     } else if(is.function(rename_random)) {
       data[,ranfac] <- rename_random(data[,ranfac], ranfac)
+      if(ranfac %in% group_by) {
+        file_groups[,ranfac] <- rename_random(file_groups[,ranfac], ranfac)
+      }
     } else {
       data[,ranfac] <- as.integer(data[,ranfac])
+      if(ranfac %in% group_by) {
+        file_groups[,ranfac] <- as.integer(file_groups[,ranfac])
+      }
     }
   }
   if(length(group_by)>0L) lapply(seq_len(nrow(file_groups)), function(i) {
@@ -328,6 +359,16 @@ is.factorDesign <- function(fac) is(fac, "factorDesign")
 #' @param fac Object to check.
 #'
 #' @return \code{TRUE} or \code{FALSE}
+#' 
+#' @examples
+#' 
+#' x <- fixed.factor("factor", c("level1","level2"))
+#' y <- random.factor("factor")
+#' 
+#' stopifnot(is.fixedFactor(x) && !is.randomFactor(x))
+#' stopifnot(!is.fixedFactor(y) && is.randomFactor(y))
+#' stopifnot(is.designFactor(x) && is.designFactor(y))
+#' 
 #' @export
 is.designFactor <- function(fac) is(fac, "designFactor")
 
@@ -348,6 +389,19 @@ random.factors <- function(design, include_interactions = TRUE) {
 #' @param design The factor design to check.
 #'
 #' @return A list of factors that are either fixed or random.
+#' 
+#' @examples 
+#' 
+#' des <- fixed.factor("Factor1", c("1A","1B")) +
+#'        fixed.factor("Factor2", c("2A","2B")) +
+#'        random.factor("Subject", c("Factor1"))
+#'        
+#' random.factors(des)
+#' fixed.factors(des)
+#' 
+#' stopifnot(setequal(names(random.factors(des)), c("Subject")))
+#' stopifnot(setequal(names(fixed.factors(des)), c("Factor1","Factor2")))
+#' 
 #'
 #' @export
 fixed.factors <- function(design) {
@@ -362,6 +416,15 @@ fixed.factors <- function(design) {
 #' 
 #' @return The number of observations
 #' 
+#' @examples 
+#' des <- fixed.factor("Factor1", c("1A","1B")) +
+#'        fixed.factor("Factor2", c("2A","2B")) +
+#'        random.factor("Subject", c("Factor1"))
+#'        
+#' nobs(des)
+#' 
+#' stopifnot(nobs(des) == 4)
+#' 
 #' @export
 setMethod("nobs", "factorDesign", function(object) nrow(object@design))
 
@@ -371,6 +434,13 @@ setMethod("nobs", "factorDesign", function(object) nrow(object@design))
 #' 
 #' @param e1,e2 factor containers, such as factors or designs
 #' @return A factorDesign object
+#' 
+#' @examples 
+#' 
+#' des <- fixed.factor("Factor1", c("1A","1B")) +
+#'        fixed.factor("Factor2", c("2A","2B")) +
+#'        random.factor("Subject", c("Factor1"))
+#' 
 #'
 #' @export
 #'
@@ -390,7 +460,7 @@ subset.factorDesign <- function(x, subset, select = names(x), ...) {
     x[setdiff(names(x), fun.call$select)] <- NULL
   }
   keep.columns <- unique(unname(unlist(lapply(x, function(f) colnames(f@levels)))))
-  x@design <- subset(x@design, eval(fun.call$subset, x@design), keep.columns)
+  x@design <- base::subset(x@design, if(is.null(fun.call$subset)) TRUE else eval(fun.call$subset, x@design), keep.columns)
   return(x)
 }
 
@@ -401,9 +471,19 @@ subset.factorDesign <- function(x, subset, select = names(x), ...) {
 #' 
 #' @aliases subset
 #' @param x A factorDesign object
-#' @param ... *subset*: Criteria along which to filter in planned observations / design matrix rows., *select*: Names of columns to keep in the design matrix
+#' @param ... *subset*: Criteria along which to filter in planned observations / design matrix rows., *select*: Names of factors to keep in the design matrix
 #' 
 #' @return Returns a \code{factorDesign} object with a subsetted design matrix
+#' 
+#' @examples 
+#' 
+#' des <- fixed.factor("Factor1", c("1A","1B")) +
+#'        fixed.factor("Factor2", c("2A","2B")) +
+#'        random.factor("Subject", c("Factor1"))
+#'        
+#' subset(des, select = "Subject")
+#' subset(des, Factor1 == "1A" | Factor2 == "2B", "Subject")
+#' 
 #' @export
 setMethod("subset", c("factorDesign"), `subset.factorDesign`)
 
@@ -424,6 +504,27 @@ setMethod("subset", c("factorDesign"), `subset.factorDesign`)
 #' @param as_symbols Return contrast names as symbols rather than strings (character vectors).
 #' @param ... Arguments to pass on to design.contrasts()
 #' @return A design matrix (if expand==TRUE, default) or a list of factor levels (if expand==FALSE) for design.contrasts or contrast names for contrast.names.
+#' 
+#' @examples 
+#' 
+#' 
+#' des <- fixed.factor("Factor1", c("1A","1B")) +
+#'        fixed.factor("Factor2", c("2A","2B")) +
+#'        random.factor("Subject", c("Factor1"))
+#' 
+#'               
+#' design.contrasts(des)
+#' 
+#' contrast.names(des)
+#' 
+#' stopifnot(contrast.names(des) == c("Factor11B", "Factor22B"))
+#' 
+#' contrast.names(des, as_symbols = TRUE)
+#' 
+#' design.contrasts(des, contrasts = list(Factor2 = contr.sum))
+#' 
+#' contrast.names(des, contrasts = list(Factor2 = contr.sum))
+#' 
 #' @export
 design.contrasts <- function(design, factors = names(fixed.factors(design)), contrasts = NULL, expand = TRUE, rename_contrasts = "%1$s%2$s", intercept = FALSE, interactions = FALSE, include_random_levels = FALSE) {
   check_argument(design, "factorDesign")

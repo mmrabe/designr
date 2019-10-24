@@ -10,3 +10,8 @@
 \description{
 S4 Methods for designFactor
 }
+\examples{
+x <- fixed.factor("Factor1", c("1A","1B"))
+y <- random.factor("Subject", c("Factor1"))
+
+}

@@ -77,6 +77,18 @@ The function \code{design.units} returns the experimental units of the design. T
 \item \code{design.codes}: Retrieve only the codes of planned observations of an experimental design
 }}
 
+\examples{
+
+des <- fixed.factor("Factor1", c("1A","1B")) +
+       fixed.factor("Factor2", c("2A","2B")) +
+       random.factor("Subject", c("Factor1"))
+       
+output.design(des)
+design.codes(des)
+design.units(des)
+design.formula(des)
+
+}
 \seealso{
 \code{\link[designr]{design.formula}} for more options generating model formulae other than the suggested default ones in the summary.
 }

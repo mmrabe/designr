@@ -19,3 +19,10 @@ Design matrix S4 functions
 \item \code{show}: Display a factor container
 }}
 
+\examples{
+des <- factor.design()
+des <- fixed.factor("Factor1", c("1A","1B")) +
+       fixed.factor("Factor2", c("2A","2B")) +
+       random.factor("Subject", c("Factor1"))
+
+}

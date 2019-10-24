@@ -25,3 +25,17 @@ From a given design, extract contained random or fixed factors as a list.
 \item \code{random.factors}: Return fixed factors
 }}
 
+\examples{
+
+des <- fixed.factor("Factor1", c("1A","1B")) +
+       fixed.factor("Factor2", c("2A","2B")) +
+       random.factor("Subject", c("Factor1"))
+       
+random.factors(des)
+fixed.factors(des)
+
+stopifnot(setequal(names(random.factors(des)), c("Subject")))
+stopifnot(setequal(names(fixed.factors(des)), c("Factor1","Factor2")))
+
+
+}

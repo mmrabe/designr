@@ -8,6 +8,12 @@ NULL
 #' 
 #' @param object A \code{factorDesign} object.
 #' 
+#' @examples
+#' des <- factor.design()
+#' des <- fixed.factor("Factor1", c("1A","1B")) +
+#'        fixed.factor("Factor2", c("2A","2B")) +
+#'        random.factor("Subject", c("Factor1"))
+#' 
 #' @export
 setClass("factorContainer")
 setClass("designFactor", slots=c(name="character", levels="data.frame", extra="list", replications="integer", groups="character"), contains="factorContainer")
@@ -17,6 +23,10 @@ setClass("fixedFactor", slots=c(blocked="logical"), contains="designFactor")
 #' S4 Methods for designFactor
 #' 
 #' @param x a \code{factorDesign}
+#' 
+#' @examples 
+#' x <- fixed.factor("Factor1", c("1A","1B"))
+#' y <- random.factor("Subject", c("Factor1"))
 #' 
 #' @export
 setClass("factorDesign", slots=c(design="data.frame"), contains=c("list", "factorContainer"))

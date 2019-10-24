@@ -33,3 +33,13 @@ Check if argument is a design factor (either random or fixed factor), specifical
 \item \code{is.factorDesign}: Check if argument is a factor design.
 }}
 
+\examples{
+
+x <- fixed.factor("factor", c("level1","level2"))
+y <- random.factor("factor")
+
+stopifnot(is.fixedFactor(x) && !is.randomFactor(x))
+stopifnot(!is.fixedFactor(y) && is.randomFactor(y))
+stopifnot(is.designFactor(x) && is.designFactor(y))
+
+}
