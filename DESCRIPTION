@@ -1,6 +1,6 @@
 Package: designr
 Type: Package
-Title: Balanced Designs in R
+Title: Balanced factorial designs <https://github.com/mmrabe/designr>
 Version: 0.1.7
 Date: 2019-09-27
 URL: https://maxrabe.com/designr
