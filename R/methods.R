@@ -223,10 +223,19 @@ design.codes <- function(design, group_by = NULL, order_by = NULL, randomize = F
   for(ranfac in names(random.factors(design, include_interactions = FALSE))) {
     if(isTRUE(rename_random)) {
       data[,ranfac] <- rename_random_default(data[,ranfac], ranfac)
+      if(ranfac %in% group_by) {
+        file_groups[,ranfac] <- rename_random_default(file_groups[,ranfac], ranfac)
+      }
     } else if(is.function(rename_random)) {
       data[,ranfac] <- rename_random(data[,ranfac], ranfac)
+      if(ranfac %in% group_by) {
+        file_groups[,ranfac] <- rename_random(file_groups[,ranfac], ranfac)
+      }
     } else {
       data[,ranfac] <- as.integer(data[,ranfac])
+      if(ranfac %in% group_by) {
+        file_groups[,ranfac] <- as.integer(file_groups[,ranfac])
+      }
     }
   }
   if(length(group_by)>0L) lapply(seq_len(nrow(file_groups)), function(i) {
