@@ -399,7 +399,7 @@ subset.factorDesign <- function(x, subset, select = names(x), ...) {
     x[setdiff(names(x), fun.call$select)] <- NULL
   }
   keep.columns <- unique(unname(unlist(lapply(x, function(f) colnames(f@levels)))))
-  x@design <- subset(x@design, eval(fun.call$subset, x@design), keep.columns)
+  x@design <- base::subset(x@design, if(is.null(fun.call$subset)) TRUE else eval(fun.call$subset, x@design), keep.columns)
   return(x)
 }
 
@@ -410,9 +410,19 @@ subset.factorDesign <- function(x, subset, select = names(x), ...) {
 #' 
 #' @aliases subset
 #' @param x A factorDesign object
-#' @param ... *subset*: Criteria along which to filter in planned observations / design matrix rows., *select*: Names of columns to keep in the design matrix
+#' @param ... *subset*: Criteria along which to filter in planned observations / design matrix rows., *select*: Names of factors to keep in the design matrix
 #' 
 #' @return Returns a \code{factorDesign} object with a subsetted design matrix
+#' 
+#' @examples 
+#' 
+#' des <- fixed.factor("Factor1", c("1A","1B")) +
+#'        fixed.factor("Factor2", c("2A","2B")) +
+#'        random.factor("Subject", c("Factor1"))
+#'        
+#' subset(des, select = "Subject")
+#' subset(des, Factor1 == "1A" | Factor2 == "2B", "Subject")
+#' 
 #' @export
 setMethod("subset", c("factorDesign"), `subset.factorDesign`)
 
