@@ -24,13 +24,14 @@
 #'        fixed.factor("Factor2", c("2A","2B")) +
 #'        random.factor("Subject", c("Factor1"))
 #'     
-#' \dontrun{
 #' # This writes a CSV file for each subject and a CSV list of subjects
-#' write.design(des, group_by = "Subject", output_handler = write.csv)
-#' }
+#' write.design(des, group_by = "Subject", output_handler = write.csv, output_dir = tempdir())
+#' 
+#' # This writes a single CSV file for all subjects and a CSV list of subjects
+#' write.design(des, output_handler = write.csv, output_dir = tempdir())
 #' 
 #' @export
-write.design <- function(design, group_by = NULL, order_by = NULL, randomize = FALSE, run_files = paste0("run",ifelse(length(group_by)>0L,paste0("_",group_by,"-%",seq_along(group_by),"$s",collapse=""),"")), code_files = "codes_%s", output_dir = getwd(), output_handler, file_extension = NULL, ...) {
+write.design <- function(design, group_by = NULL, order_by = NULL, randomize = FALSE, run_files = paste0("run",ifelse(length(group_by)>0L,paste0("_",group_by,"-%",seq_along(group_by),"$s",collapse=""),"")), code_files = "codes_%s", output_dir, output_handler, file_extension = NULL, ...) {
   check_argument(design, "factorDesign")
   check_argument(run_files, "character", 1)
   check_argument(code_files, "character", 1)

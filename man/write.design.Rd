@@ -10,8 +10,8 @@
 write.design(design, group_by = NULL, order_by = NULL,
   randomize = FALSE, run_files = paste0("run", ifelse(length(group_by)
   > 0L, paste0("_", group_by, "-\%", seq_along(group_by), "$s", collapse =
-  ""), "")), code_files = "codes_\%s", output_dir = getwd(),
-  output_handler, file_extension = NULL, ...)
+  ""), "")), code_files = "codes_\%s", output_dir, output_handler,
+  file_extension = NULL, ...)
 
 write.design.csv(..., quote = FALSE, row.names = FALSE)
 
@@ -64,10 +64,11 @@ des <- fixed.factor("Factor1", c("1A","1B")) +
        fixed.factor("Factor2", c("2A","2B")) +
        random.factor("Subject", c("Factor1"))
     
-\dontrun{
 # This writes a CSV file for each subject and a CSV list of subjects
-write.design(des, group_by = "Subject", output_handler = write.csv)
-}
+write.design(des, group_by = "Subject", output_handler = write.csv, output_dir = tempdir())
+
+# This writes a single CSV file for all subjects and a CSV list of subjects
+write.design(des, output_handler = write.csv, output_dir = tempdir())
 
 }
 \seealso{
