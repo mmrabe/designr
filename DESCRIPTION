@@ -1,12 +1,11 @@
 Package: designr
 Type: Package
-Title: Balanced factorial designs <https://github.com/mmrabe/designr>
-Version: 0.1.7
-Date: 2019-09-27
+Title: Balanced Factorial Designs
+Version: 0.1.9
 URL: https://maxrabe.com/designr
 BugReports: https://github.com/mmrabe/designr/issues
 Authors@R: c(person("Maximilian", "Rabe", email = "maximilian.rabe@uni-potsdam.de", role = c("aut", "cre")), person("Reinhold", "Kliegl", email = "kliegl@uni-potsdam.de", role = c("aut")), person("Schad", "Daniel", email = "schad@uni-potsdam.de", role = c("aut")))
-Description: Generate balanced factorial designs with crossed and nested random and fixed effects.
+Description: Generate balanced factorial designs with crossed and nested random and fixed effects <https://github.com/mmrabe/designr>.
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
@@ -24,7 +23,6 @@ Imports:
 Suggests: 
     knitr,
     rmarkdown,
-    tidyverse,
     jsonlite,
     writexl
 VignetteBuilder: knitr
