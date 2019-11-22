@@ -20,7 +20,6 @@ Imports:
 Suggests: 
     knitr,
     rmarkdown,
-    tidyverse,
     jsonlite,
     writexl
 VignetteBuilder: knitr
