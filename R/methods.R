@@ -213,7 +213,7 @@ design.units <- function(design, rename_random = TRUE, include_interactions = FA
 
 #' @describeIn output.design Retrieve only the codes of planned observations of an experimental design
 #' @export
-design.codes <- function(design, group_by = NULL, order_by = NULL, randomize = FALSE, rename_random = TRUE) {
+design.codes <- function(design, group_by = NULL, order_by = names(random.factors(design, include_interactions = FALSE)), randomize = FALSE, rename_random = TRUE) {
   check_argument(group_by, c("NULL", "character"))
   check_argument(order_by, c("NULL", "character"))
   check_argument(randomize, "logical", 1)
@@ -243,6 +243,9 @@ design.codes <- function(design, group_by = NULL, order_by = NULL, randomize = F
     data <- data[do.call(order, unname(as.list(data[, order_by, drop=FALSE]))), , drop=FALSE]
   }
   rownames(data) <- NULL
+  ranfac_names <- intersect(names(random.factors(design, include_interactions = FALSE)), colnames(data))
+  fixfac_names <- intersect(names(fixed.factors(design)), colnames(data))
+  data <- data[,c(ranfac_names, fixfac_names, setdiff(colnames(data), c(ranfac_names, fixfac_names)))]
   for(ranfac in names(random.factors(design, include_interactions = FALSE))) {
     if(isTRUE(rename_random)) {
       data[,ranfac] <- rename_random_default(data[,ranfac], ranfac)
@@ -278,23 +281,26 @@ show.factorContainer <- function(object) {
   check_argument(object, c("factorDesign","randomFactor","fixedFactor"))
   if(is(object, "factorDesign")) {
     cat(sprintf("Factor design with %d factor(s):\n", length(object)))
-    print.listof(object)
-    cat(sprintf("\nDesign matrix:\n"))
-    show(object@design)
+    for(fac in object) {
+      cat(" - ")
+      show(fac)
+      cat("\n")
+    }
+    codes <- design.codes(object)
+    cat(sprintf("\nDesign matrix with %d planned observations:\n", nrow(codes)))
+    show(codes)
   } else if(is(object, "randomFactor")) {
     cat(sprintf("Random factor `%s` with %d group(s) and %d instance(s) (%d level(s) in total)", paste(object@name, collapse=":"), nrow(object@levels), object@replications, nrow(object@levels)*object@replications))
     if(length(object@groups)>0L) {
       cat(", grouped by ")
       cat(paste(object@groups, collapse=":"))
     }
-    cat("\n")
   } else if(is(object, "fixedFactor")) {
     cat(sprintf("Fixed factor `%s` with %d level(s) (%s) and %d replication(s)", paste(object@name, collapse=":"), nrow(object@levels), paste(object@levels[,object@name], collapse=", "), object@replications))
     if(length(object@groups)>0L) {
       cat(", grouped by ")
       cat(paste(object@groups, collapse=":"))
     }
-    cat("\n")
   } else {
     stop("Not a design factor or factor list!")
   }

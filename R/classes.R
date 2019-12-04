@@ -43,6 +43,7 @@ setClass("factorDesign", slots=c(design="data.frame"), contains=c("list", "facto
 #' @param name Name of the random factor as a character vector. Typically, this should be a length-1 vector (i.e., a single string) but you may pass multiple names of random factors whose interaction is to be nested in groups (see *Assignment Constraints*).
 #' @param instances Number of times (as a single integer value) each level (instantiation) is to be replicated.
 #' @param groups Names of fixed and random factors that are to be used as grouping (nesting/between) levels.
+#' @param assign For random factor interactions, use this method for counterbalancing instance assignment (see Assignment Constraints)
 #' @param ... Additional arguments to be stored as \code{extra} values.
 #' @return An instance of the class \code{randomFactor}.
 #'
@@ -69,13 +70,13 @@ setClass("factorDesign", slots=c(design="data.frame"), contains=c("list", "facto
 #'
 #' @seealso \code{\link[designr]{fixed.factor}}
 #' @export
-random.factor <- function(name, groups = character(0), instances = 1L, ...) {
+random.factor <- function(name, groups = character(0), instances = 1L, assign = "latin.square", ...) {
   check_argument(name, "character")
   if(any(vapply(name, function(n) substr(n,1,1) == '*', logical(1)))) stop("Factor names must not start with an asterisk!")
   check_argument(instances, "numeric", function(x) !x%%1, 1, expression(x >= 1))
   check_argument(groups, "character")
   levels <- do.call(data.frame, sapply(name, function(n) NA_integer_, USE.NAMES = TRUE, simplify = FALSE))
-  new("randomFactor", name = name, levels=levels, groups=groups, replications = as.integer(instances), extra = list(...))
+  new("randomFactor", name = name, levels=levels, groups=groups, replications = as.integer(instances), extra = list(assign = assign, ...))
 }
 
 #' Fixed factors

@@ -4,7 +4,8 @@
 \alias{random.factor}
 \title{Random factors}
 \usage{
-random.factor(name, groups = character(0), instances = 1L, ...)
+random.factor(name, groups = character(0), instances = 1L,
+  assign = "latin.square", ...)
 }
 \arguments{
 \item{name}{Name of the random factor as a character vector. Typically, this should be a length-1 vector (i.e., a single string) but you may pass multiple names of random factors whose interaction is to be nested in groups (see *Assignment Constraints*).}
@@ -12,6 +13,8 @@ random.factor(name, groups = character(0), instances = 1L, ...)
 \item{groups}{Names of fixed and random factors that are to be used as grouping (nesting/between) levels.}
 
 \item{instances}{Number of times (as a single integer value) each level (instantiation) is to be replicated.}
+
+\item{assign}{For random factor interactions, use this method for counterbalancing instance assignment (see Assignment Constraints)}
 
 \item{...}{Additional arguments to be stored as \code{extra} values.}
 }
