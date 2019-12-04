@@ -17,7 +17,8 @@ design.formula(design, contrasts = NULL,
 design.units(design, rename_random = TRUE,
   include_interactions = FALSE)
 
-design.codes(design, group_by = NULL, order_by = NULL,
+design.codes(design, group_by = NULL,
+  order_by = names(random.factors(design, include_interactions = FALSE)),
   randomize = FALSE, rename_random = TRUE)
 }
 \arguments{
