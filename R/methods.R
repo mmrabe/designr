@@ -213,7 +213,7 @@ design.units <- function(design, rename_random = TRUE, include_interactions = FA
 
 #' @describeIn output.design Retrieve only the codes of planned observations of an experimental design
 #' @export
-design.codes <- function(design, group_by = NULL, order_by = NULL, randomize = FALSE, rename_random = TRUE) {
+design.codes <- function(design, group_by = NULL, order_by = names(random.factors(design, include_interactions = FALSE)), randomize = FALSE, rename_random = TRUE) {
   check_argument(group_by, c("NULL", "character"))
   check_argument(order_by, c("NULL", "character"))
   check_argument(randomize, "logical", 1)
@@ -243,6 +243,9 @@ design.codes <- function(design, group_by = NULL, order_by = NULL, randomize = F
     data <- data[do.call(order, unname(as.list(data[, order_by, drop=FALSE]))), , drop=FALSE]
   }
   rownames(data) <- NULL
+  ranfac_names <- intersect(names(random.factors(design, include_interactions = FALSE)), colnames(data))
+  fixfac_names <- intersect(names(fixed.factors(design)), colnames(data))
+  data <- data[,c(ranfac_names, fixfac_names, setdiff(colnames(data), c(ranfac_names, fixfac_names)))]
   for(ranfac in names(random.factors(design, include_interactions = FALSE))) {
     if(isTRUE(rename_random)) {
       data[,ranfac] <- rename_random_default(data[,ranfac], ranfac)
