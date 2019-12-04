@@ -278,23 +278,26 @@ show.factorContainer <- function(object) {
   check_argument(object, c("factorDesign","randomFactor","fixedFactor"))
   if(is(object, "factorDesign")) {
     cat(sprintf("Factor design with %d factor(s):\n", length(object)))
-    print.listof(object)
-    cat(sprintf("\nDesign matrix:\n"))
-    show(object@design)
+    for(fac in object) {
+      cat(" - ")
+      show(fac)
+      cat("\n")
+    }
+    codes <- design.codes(object)
+    cat(sprintf("\nDesign matrix with %d planned observations:\n", nrow(codes)))
+    show(codes)
   } else if(is(object, "randomFactor")) {
     cat(sprintf("Random factor `%s` with %d group(s) and %d instance(s) (%d level(s) in total)", paste(object@name, collapse=":"), nrow(object@levels), object@replications, nrow(object@levels)*object@replications))
     if(length(object@groups)>0L) {
       cat(", grouped by ")
       cat(paste(object@groups, collapse=":"))
     }
-    cat("\n")
   } else if(is(object, "fixedFactor")) {
     cat(sprintf("Fixed factor `%s` with %d level(s) (%s) and %d replication(s)", paste(object@name, collapse=":"), nrow(object@levels), paste(object@levels[,object@name], collapse=", "), object@replications))
     if(length(object@groups)>0L) {
       cat(", grouped by ")
       cat(paste(object@groups, collapse=":"))
     }
-    cat("\n")
   } else {
     stop("Not a design factor or factor list!")
   }
