@@ -233,7 +233,7 @@ design.codes <- function(design, group_by = NULL, order_by = names(random.factor
   if(!is.logical(randomize)) {
     stop("`randomize` must be logical (TRUE or FALSE)!")
   }
-  file_groups <- unique(design@design[,group_by,drop=FALSE])
+  file_groups <- if(length(group_by) > 0) unique(design@design[,group_by,drop=FALSE]) else NULL
   if(randomize) {
     data <- design@design[sample(nrow(design@design)),,drop=FALSE]
   } else {

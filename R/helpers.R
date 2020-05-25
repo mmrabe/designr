@@ -35,7 +35,7 @@ replicate.factor <- function(fac, context=factor.design()) {
 
     df[, fac@name] <- seq_len(nrow(df))
     rownames(df) <- NULL
-    return(tibble::as.tibble(df))
+    return(tibble::as_tibble(df))
   }else if(is.randomFactor(fac) && length(fac@name) > 1L){
     id.factors <- unique(unlist(lapply(context[fac@name], function(f) colnames(f@levels)), use.names = FALSE)) # these are the factors that define one level of this interaction
     ids <- unique(context@design[, id.factors]) # these are all the realizations of this interaction
@@ -70,9 +70,9 @@ replicate.factor <- function(fac, context=factor.design()) {
     assign.to.ids <- do.call(rbind, lapply(id.groups, join, multiplications)) # the *facname columns will help create new random factor levels
     assign.to.ids[,paste0('*', fac@name)] <- (assign.to.ids[, fac@name, drop=FALSE] - 1L) * nrow(rotations) + assign.to.ids[, paste0('*', fac@name), drop=FALSE]
 
-    return(tibble::as.tibble(assign.to.ids))
+    return(tibble::as_tibble(assign.to.ids))
   }else if(is.fixedFactor(fac) && length(fac@groups) == 0L){
-    return(tibble::as.tibble(df[rep(seq_len(nrow(df)), each=fac@replications), , drop=FALSE]))
+    return(tibble::as_tibble(df[rep(seq_len(nrow(df)), each=fac@replications), , drop=FALSE]))
   }else if(is.fixedFactor(fac) && length(fac@groups) >= 1L){
     if(!all(vapply(context[fac@groups], is.fixedFactor, logical(1)))) stop("Fixed factor may only be nested within other fixed factors or fixed factor interactions but not within levels of random factors!")
     
@@ -93,7 +93,7 @@ replicate.factor <- function(fac, context=factor.design()) {
     ret[,'*'] <- NULL
     rownames(ret) <- NULL
     
-    return(tibble::as.tibble(ret))
+    return(tibble::as_tibble(ret))
   }else{
     stop("Don't know how to expand this factor!")
   }
