@@ -4,12 +4,15 @@ Title: Balanced Factorial Designs
 Version: 0.1.10
 URL: https://maxrabe.com/designr
 BugReports: https://github.com/mmrabe/designr/issues
-Authors@R: c(person("Maximilian", "Rabe", email = "maximilian.rabe@uni-potsdam.de", role = c("aut", "cre")), person("Reinhold", "Kliegl", email = "kliegl@uni-potsdam.de", role = c("aut")), person("Schad", "Daniel", email = "schad@uni-potsdam.de", role = c("aut")))
+Authors@R: c(
+    person("Maximilian M.", "Rabe", email = "maximilian.rabe@uni-potsdam.de", role = c("aut", "cre"), comment = c(ORCID = "0000-0002-2556-5644")),
+    person("Reinhold", "Kliegl", email = "kliegl@uni-potsdam.de", role = c("aut"), comment = c(ORCID = "0000-0002-0180-8488")),
+    person("Schad", "Daniel", email = "schad@uni-potsdam.de", role = c("aut"), comment = c(ORCID = "0000-0003-2586-6823")))
 Description: Generate balanced factorial designs with crossed and nested random and fixed effects <https://github.com/mmrabe/designr>.
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.0
 Imports:
     MASS,
     tibble,
