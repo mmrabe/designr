@@ -4,10 +4,18 @@
 \alias{fixed.factor}
 \title{Fixed factors}
 \usage{
-fixed.factor(name, levels, blocked = FALSE, character_as_factor = TRUE,
-  is_ordered = FALSE, block_name = "\%1$s.\%2$d",
-  groups = character(0), replications = 1L, assign = "latin.square",
-  ...)
+fixed.factor(
+  name,
+  levels,
+  blocked = FALSE,
+  character_as_factor = TRUE,
+  is_ordered = FALSE,
+  block_name = "\%1$s.\%2$d",
+  groups = character(0),
+  replications = 1L,
+  assign = "latin.square",
+  ...
+)
 }
 \arguments{
 \item{name}{Name of the fixed factor.}

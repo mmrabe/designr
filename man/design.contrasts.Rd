@@ -5,10 +5,16 @@
 \alias{contrast.names}
 \title{Retrieve contrast codes for a design}
 \usage{
-design.contrasts(design, factors = names(fixed.factors(design)),
-  contrasts = NULL, expand = TRUE, rename_contrasts = "\%1$s\%2$s",
-  intercept = FALSE, interactions = FALSE,
-  include_random_levels = FALSE)
+design.contrasts(
+  design,
+  factors = names(fixed.factors(design)),
+  contrasts = NULL,
+  expand = TRUE,
+  rename_contrasts = "\%1$s\%2$s",
+  intercept = FALSE,
+  interactions = FALSE,
+  include_random_levels = FALSE
+)
 
 contrast.names(design, ranfac = NULL, as_symbols = FALSE, ...)
 }

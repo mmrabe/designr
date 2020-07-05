@@ -4,8 +4,13 @@
 \alias{random.factor}
 \title{Random factors}
 \usage{
-random.factor(name, groups = character(0), instances = 1L,
-  assign = "latin.square", ...)
+random.factor(
+  name,
+  groups = character(0),
+  instances = 1L,
+  assign = "latin.square",
+  ...
+)
 }
 \arguments{
 \item{name}{Name of the random factor as a character vector. Typically, this should be a length-1 vector (i.e., a single string) but you may pass multiple names of random factors whose interaction is to be nested in groups (see *Assignment Constraints*).}

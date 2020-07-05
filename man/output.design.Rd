@@ -7,19 +7,33 @@
 \alias{design.codes}
 \title{Summary of Factor Designs}
 \usage{
-output.design(design, group_by = NULL, order_by = NULL,
-  randomize = FALSE, rename_random = TRUE)
+output.design(
+  design,
+  group_by = NULL,
+  order_by = NULL,
+  randomize = FALSE,
+  rename_random = TRUE
+)
 
-design.formula(design, contrasts = NULL,
-  expand_contrasts = !missing(contrasts), interactions = TRUE,
-  intercepts = TRUE, response = "dv", env = parent.frame())
+design.formula(
+  design,
+  contrasts = NULL,
+  expand_contrasts = !missing(contrasts),
+  interactions = TRUE,
+  intercepts = TRUE,
+  response = "dv",
+  env = parent.frame()
+)
 
-design.units(design, rename_random = TRUE,
-  include_interactions = FALSE)
+design.units(design, rename_random = TRUE, include_interactions = FALSE)
 
-design.codes(design, group_by = NULL,
+design.codes(
+  design,
+  group_by = NULL,
   order_by = names(random.factors(design, include_interactions = FALSE)),
-  randomize = FALSE, rename_random = TRUE)
+  randomize = FALSE,
+  rename_random = TRUE
+)
 }
 \arguments{
 \item{design}{The \code{factorDesign} object to summarize.}

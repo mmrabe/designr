@@ -7,11 +7,19 @@
 \alias{write.design.json}
 \title{Write Design Files}
 \usage{
-write.design(design, group_by = NULL, order_by = NULL,
-  randomize = FALSE, run_files = paste0("run", ifelse(length(group_by)
-  > 0L, paste0("_", group_by, "-\%", seq_along(group_by), "$s", collapse =
-  ""), "")), code_files = "codes_\%s", output_dir, output_handler,
-  file_extension = NULL, ...)
+write.design(
+  design,
+  group_by = NULL,
+  order_by = NULL,
+  randomize = FALSE,
+  run_files = paste0("run", ifelse(length(group_by) > 0L, paste0("_", group_by, "-\%",
+    seq_along(group_by), "$s", collapse = ""), "")),
+  code_files = "codes_\%s",
+  output_dir,
+  output_handler,
+  file_extension = NULL,
+  ...
+)
 
 write.design.csv(..., quote = FALSE, row.names = FALSE)
 
