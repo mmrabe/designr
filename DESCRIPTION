@@ -18,10 +18,12 @@ Imports:
     tibble,
     crossdes,
     methods,
-    dplyr
+    dplyr,
+    lme4,
 Suggests: 
     knitr,
     rmarkdown,
     jsonlite,
-    writexl
+    writexl,
+    lmerTest,
 VignetteBuilder: knitr
