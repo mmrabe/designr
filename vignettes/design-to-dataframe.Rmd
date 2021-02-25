@@ -1,7 +1,7 @@
 ---
-title: "Vignette 1: From Design to Dataframe"
+title: "From Design to Dataframe"
 author: "Maximilian M. Rabe & Reinhold Kliegl"
-date: '`r format(Sys.time())`'
+date: '2019-09-28'
 output:
   html_vignette:
 #    highlight: pygments
