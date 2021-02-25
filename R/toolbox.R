@@ -19,10 +19,10 @@
 #' 
 #' # Adding random factors
 #' # Assume we want to test different groups of subjects. Each subject will only be `old` or `young` 
-#' # but be tested with stimuli of both categories `word` and `image`. In a typical behavioral experiment,
-#' # `Age` would now be a between-subject/within-item factor and `Material` a within-subject/between-item
-#' # factor. In other words, `Material` is now nested within the instances of `Subject`, whereas `Subject`
-#' # is grouped by `Age`.
+#' # but be tested with stimuli of both categories `word` and `image`. In a typical behavioral
+#' # experiment, `Age` would now be a between-subject/within-item factor and `Material` a
+#' # within-subject/between-item factor. In other words, `Material` is now nested within the
+#' # instances of `Subject`, whereas `Subject` is grouped by `Age`.
 #' 
 #' design2 <- 
 #'   fixed.factor("Age", levels=c("young", "old")) +
