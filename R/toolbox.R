@@ -36,6 +36,17 @@
 NULL
 
 
+
+#' Gibson & Wu (2013)
+#' 
+#' The dataset \code{gibsonwu2013} contains data from self-paced reading in Chinese, comparing the processing of subject-extracted relative clauses (SRCs) and object-extracted relative clauses (ORCs) in supportive contexts.
+#'
+#' @name gibsonwu2013
+#' @docType data
+#' @references Gibson, E., & Wu, H.-H. I. (2013). Processing Chinese relative clauses in context. Language and Cognitive Processes, 28, 125–155. \url{https://doi.org/10.1080/01690965.2010.536656}
+#' @keywords data
+NULL
+
 # general tools
 
 
