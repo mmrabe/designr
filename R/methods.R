@@ -32,12 +32,12 @@
 #' 
 #' @export
 write.design <- function(design, group_by = NULL, order_by = NULL, randomize = FALSE, run_files = paste0("run",ifelse(length(group_by)>0L,paste0("_",group_by,"-%",seq_along(group_by),"$s",collapse=""),"")), code_files = "codes_%s", output_dir, output_handler, file_extension = NULL, ...) {
-  check_argument(design, "factorDesign")
-  check_argument(run_files, "character", 1)
-  check_argument(code_files, "character", 1)
-  check_argument(output_dir, "character", 1)
-  check_argument(output_handler, c("function", "character"), 1)
-  check_argument(file_extension, c("character","NULL"), 1)
+  .check_argument(design, "factorDesign")
+  .check_argument(run_files, "character", 1)
+  .check_argument(code_files, "character", 1)
+  .check_argument(output_dir, "character", 1)
+  .check_argument(output_handler, c("function", "character"), 1)
+  .check_argument(file_extension, c("character","NULL"), 1)
   clean.file.path <- function(paths) gsub("[^a-zA-Z0-9_.,]", "-", paths)
   output <- output.design(design=design, group_by=group_by, order_by=order_by, randomize=randomize)
   file_names <- file.path(output_dir, clean.file.path(paste0(do.call(sprintf, c(list(run_files), unname(as.list(output$groups)))), file_extension)))
@@ -134,7 +134,7 @@ write.design.json <- function(..., dataframe="columns") {
 #'
 #' @export
 output.design <- function(design, group_by = NULL, order_by = NULL, randomize = FALSE, rename_random = TRUE) {
-  check_argument(design, "factorDesign")
+  .check_argument(design, "factorDesign")
   list(
     codes = design.codes(design, group_by, order_by, randomize, rename_random),
     groups = if(missing(group_by) || is.null(group_by)) NULL else unique(design@design[,group_by,drop=FALSE]),
@@ -192,8 +192,8 @@ rename_random_default <- function(id, fac) factor(sprintf("%s%0*d", fac, nchar(a
 #' @param include_interactions Whether to include random factor interactions (i.e., counterbalancing factors) in the output
 #' @export
 design.units <- function(design, rename_random = TRUE, include_interactions = FALSE) {
-  check_argument(design, "factorDesign")
-  check_argument(rename_random, c("logical", "function"), 1)
+  .check_argument(design, "factorDesign")
+  .check_argument(rename_random, c("logical", "function"), 1)
   sapply(random.factors(design, include_interactions = include_interactions), function(f) {
     df <- unique(design@design[,colnames(f@levels),drop=FALSE])
     df <- df[do.call(order, as.list(df)), , drop=FALSE]
@@ -214,10 +214,10 @@ design.units <- function(design, rename_random = TRUE, include_interactions = FA
 #' @describeIn output.design Retrieve only the codes of planned observations of an experimental design
 #' @export
 design.codes <- function(design, group_by = NULL, order_by = names(random.factors(design, include_interactions = FALSE)), randomize = FALSE, rename_random = TRUE) {
-  check_argument(group_by, c("NULL", "character"))
-  check_argument(order_by, c("NULL", "character"))
-  check_argument(randomize, "logical", 1)
-  check_argument(rename_random, c("logical","function"))
+  .check_argument(group_by, c("NULL", "character"))
+  .check_argument(order_by, c("NULL", "character"))
+  .check_argument(randomize, "logical", 1)
+  .check_argument(rename_random, c("logical","function"))
   if(is.null(order_by)) {
     order_by <- character(0)
   }
@@ -278,7 +278,7 @@ design.codes <- function(design, group_by = NULL, order_by = names(random.factor
 #' @export
 #'
 show.factorContainer <- function(object) {
-  check_argument(object, c("factorDesign","randomFactor","fixedFactor"))
+  .check_argument(object, c("factorDesign","randomFactor","fixedFactor"))
   if(is(object, "factorDesign")) {
     cat(sprintf("Factor design with %d factor(s):\n", length(object)))
     for(fac in object) {
@@ -307,8 +307,8 @@ show.factorContainer <- function(object) {
 }
 
 `+.factorContainer` <- function(e1, e2) {
-  check_argument(e1, c("factorDesign","designFactor"))
-  check_argument(e2, c("factorDesign","designFactor"))
+  .check_argument(e1, c("factorDesign","designFactor"))
+  .check_argument(e2, c("factorDesign","designFactor"))
   if(is(e1, "factorDesign")) {
     if(is(e2, "factorDesign")) {
       if(length(e1) == 0) {
@@ -383,8 +383,8 @@ is.designFactor <- function(fac) is(fac, "designFactor")
 #' @param include_interactions Should random factor interactions be included?
 #' @export
 random.factors <- function(design, include_interactions = TRUE) {
-  check_argument(design, "factorDesign")
-  check_argument(include_interactions, "logical", 1)
+  .check_argument(design, "factorDesign")
+  .check_argument(include_interactions, "logical", 1)
   if(!is.factorDesign(design)&&!is.list(design)) stop("`design` must be a design factor or list!")
   return(design[vapply(design, if(include_interactions) is.randomFactor else function(f) is.randomFactor(f) && length(f@name) == 1L, logical(1))])
 }
@@ -412,7 +412,7 @@ random.factors <- function(design, include_interactions = TRUE) {
 #'
 #' @export
 fixed.factors <- function(design) {
-  check_argument(design, "factorDesign")
+  .check_argument(design, "factorDesign")
   if(!is.factorDesign(design)&&!is.list(design)) stop("`design` must be a design factor or list!")
   return(design[vapply(design, is.fixedFactor, logical(1))])
 }
@@ -459,7 +459,7 @@ setMethod("show", "factorContainer", `show.factorContainer`)
 
 
 subset.factorDesign <- function(x, subset, select = names(x), ...) {
-  check_argument(x, "factorDesign")
+  .check_argument(x, "factorDesign")
   if(as.character(sys.calls()[[1]][[1]]) != "subset.factorDesign") fun.call <- match.call(call=sys.call(-1L))
   else fun.call <- match.call()
   if(!is.null(fun.call$select)) {
@@ -534,14 +534,14 @@ setMethod("subset", c("factorDesign"), `subset.factorDesign`)
 #' 
 #' @export
 design.contrasts <- function(design, factors = names(fixed.factors(design)), contrasts = NULL, expand = TRUE, rename_contrasts = "%1$s%2$s", intercept = FALSE, interactions = FALSE, include_random_levels = FALSE) {
-  check_argument(design, "factorDesign")
-  check_argument(factors, "character")
-  check_argument(contrasts, c("NULL","list"))
-  check_argument(expand, "logical", 1)
-  check_argument(rename_contrasts, "character", 1)
-  check_argument(intercept, "logical", 1)
-  check_argument(interactions, "logical", 1)
-  check_argument(include_random_levels, "logical", 1)
+  .check_argument(design, "factorDesign")
+  .check_argument(factors, "character")
+  .check_argument(contrasts, c("NULL","list"))
+  .check_argument(expand, "logical", 1)
+  .check_argument(rename_contrasts, "character", 1)
+  .check_argument(intercept, "logical", 1)
+  .check_argument(interactions, "logical", 1)
+  .check_argument(include_random_levels, "logical", 1)
   if(!is.null(contrasts)&&!is.list(contrasts)) stop("`contrasts` must be NULL or a named list!")
   main.contrasts <- lapply(design[factors], function(fac) {
     if(is.null(fac)||!is.fixedFactor(fac)) stop(sprintf("At least one factor name given does not refer to a fixed factor"))
@@ -643,9 +643,9 @@ design.contrasts <- function(design, factors = names(fixed.factors(design)), con
 #' @describeIn design.contrasts Retrieve contrast names for a design
 #' @export
 contrast.names <- function(design, ranfac = NULL, as_symbols = FALSE, ...) {
-  check_argument(design, "factorDesign")
-  check_argument(ranfac, c("NULL","character"))
-  check_argument(as_symbols, "logical", 1)
+  .check_argument(design, "factorDesign")
+  .check_argument(ranfac, c("NULL","character"))
+  .check_argument(as_symbols, "logical", 1)
   facnames <- names(fixed.factors(design))
   if(!is.null(ranfac)) {
     if(is.null(design[[ranfac]])||!is.randomFactor(design[[ranfac]])) stop(sprintf("Random factor `%s` does not exist", ranfac))

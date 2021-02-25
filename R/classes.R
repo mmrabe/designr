@@ -71,10 +71,10 @@ setClass("factorDesign", slots=c(design="data.frame"), contains=c("list", "facto
 #' @seealso \code{\link[designr]{fixed.factor}}
 #' @export
 random.factor <- function(name, groups = character(0), instances = 1L, assign = "latin.square", ...) {
-  check_argument(name, "character")
+  .check_argument(name, "character")
   if(any(vapply(name, function(n) substr(n,1,1) == '*', logical(1)))) stop("Factor names must not start with an asterisk!")
-  check_argument(instances, "numeric", function(x) !x%%1, 1, expression(x >= 1))
-  check_argument(groups, "character")
+  .check_argument(instances, "numeric", function(x) !x%%1, 1, expression(x >= 1))
+  .check_argument(groups, "character")
   levels <- do.call(data.frame, sapply(name, function(n) NA_integer_, USE.NAMES = TRUE, simplify = FALSE))
   new("randomFactor", name = name, levels=levels, groups=groups, replications = as.integer(instances), extra = list(assign = assign, ...))
 }
@@ -106,16 +106,16 @@ random.factor <- function(name, groups = character(0), instances = 1L, assign = 
 #' @seealso \code{\link[designr]{random.factor}}
 #' @export
 fixed.factor <- function(name, levels, blocked = FALSE, character_as_factor = TRUE, is_ordered = FALSE, block_name = "%1$s.%2$d", groups = character(0), replications = 1L, assign = "latin.square", ...) {
-  check_argument(groups, "character")
+  .check_argument(groups, "character")
   is.grouped <- length(groups) > 0L
-  check_argument(name, "character", 1)
+  .check_argument(name, "character", 1)
   if(substr(name,1,1) == '*') stop("Factor names must not start with an asterisk!")
-  if(length(groups) == 0) check_argument(levels, c("character","numeric","logical"), expression(length(x) >= 1))
+  if(length(groups) == 0) .check_argument(levels, c("character","numeric","logical"), expression(length(x) >= 1))
   else if(length(groups) > 0L && (!is.list(levels) || !all(vapply(levels, function(glevels) is.vector(glevels) && length(glevels) >= 1L, logical(1))))) stop("If `groups` are given (i.e., factor is nested), `levels` must be a list of vectors, each with a minimum length of 1!")
-  check_argument(replications, "numeric", function(x) !x%%1, expression(x >= 1), expression(length(x) == length(levels) || length(x) == 1))
-  check_argument(blocked, "logical", 1)
-  check_argument(character_as_factor, "logical", 1)
-  check_argument(is_ordered, "logical", 1)
+  .check_argument(replications, "numeric", function(x) !x%%1, expression(x >= 1), expression(length(x) == length(levels) || length(x) == 1))
+  .check_argument(blocked, "logical", 1)
+  .check_argument(character_as_factor, "logical", 1)
+  .check_argument(is_ordered, "logical", 1)
   if(!is.list(levels) && is.vector(levels)) levels <- list(levels)
   if(length(unique(names(levels))) != length(names(levels))) stop("Names of levels list must be unique!")
   

@@ -3,7 +3,7 @@
 # general tools
 
 
-check_argument <- function(val, ...) {
+.check_argument <- function(val, ...) {
   val <- tryCatch(val, error = function(e) e)
   if(is(val, "error")) stop(val$message, call. = FALSE)
   argname <- as.character(as.expression(match.call()$val))
