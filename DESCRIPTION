@@ -1,7 +1,7 @@
 Package: designr
 Type: Package
 Title: Balanced Factorial Designs
-Version: 0.1.10
+Version: 0.1.11
 URL: https://maxrabe.com/designr
 BugReports: https://github.com/mmrabe/designr/issues
 Authors@R: c(
@@ -27,4 +27,7 @@ Suggests:
     jsonlite,
     writexl,
     lmerTest,
+    afex,
+    ggplot2,
+    gridExtra,
 VignetteBuilder: knitr
