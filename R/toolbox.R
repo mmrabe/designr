@@ -1,3 +1,39 @@
+#' designr
+#' 
+#' designr is an R package to create and simulate crossed factorial designs.
+#' 
+#' The package supports factorial designs with an arbitrary number of fixed and random factors. Fixed factors are factors for which levels are known and typically defined by the experimenter, e.g. an experimental condition or a quasi-experimental variable such as a subject’s age group. Conversely, the instances of random factors are usually not known before data collection. Examples for random factors are subjects or items in a typical psychological experiment, with the individual tested subjects and used items being the instances of those random factors.
+#' 
+#' @name designr
+#' @rdname designr
+#' @seealso \code{\link[designr]{fixed.factor}}, \code{\link[designr]{random.factor}}, \code{\link[designr]{design.codes}}
+#' @examples 
+#' # A fixed-effects design without repeated measurement is created as easily as this:
+#'   
+#' design1 <- 
+#'   fixed.factor("Age", levels=c("young", "old")) +
+#'   fixed.factor("Material",  levels=c("word", "image"))
+#' design1
+#' 
+#' # As can be seen, this experimental design requires 4 observations.
+#' 
+#' # Adding random factors
+#' # Assume we want to test different groups of subjects. Each subject will only be `old` or `young` 
+#' # but be tested with stimuli of both categories `word` and `image`. In a typical behavioral experiment,
+#' # `Age` would now be a between-subject/within-item factor and `Material` a within-subject/between-item
+#' # factor. In other words, `Material` is now nested within the instances of `Subject`, whereas `Subject`
+#' # is grouped by `Age`.
+#' 
+#' design2 <- 
+#'   fixed.factor("Age", levels=c("young", "old")) +
+#'   fixed.factor("Material",  levels=c("word", "image")) +
+#'   random.factor("Subject", groups = "Age")
+#' design.codes(design2)
+#' 
+#' # The minimal experimental design will still require 4 observations, assigning one subject to each
+#' # level of the between-subject factor `Age`.
+#' 
+NULL
 
 
 # general tools
