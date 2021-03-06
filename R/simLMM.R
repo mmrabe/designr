@@ -2,6 +2,7 @@
 
 #' @importFrom stats as.formula model.matrix runif terms
 #' @importFrom lme4 fixef VarCorr
+#' @importFrom MASS mvrnorm
 NULL
 
 #' Simulate data from a linear mixed-effects model
@@ -359,7 +360,7 @@ for (i in 1:length(ranef)) { # i <- 1
 		ranef[[i]]$cov <- diag(ranef[[i]]$sd) %*% ranef[[i]]$cor %*% diag(ranef[[i]]$sd)
 	}
 	instances <- as.character(unique(dat[,ranef[[i]]$by]))
-	w <- MASS::mvrnorm(length(instances), rep(0,length(ranef[[i]]$sd)), ranef[[i]]$cov, empirical=FALSE)
+	w <- mvrnorm(length(instances), rep(0,length(ranef[[i]]$sd)), ranef[[i]]$cov, empirical=FALSE)
 	for (j in 1:length(instances)) { # j <- 1
 		idx <- dat[,ranef[[i]]$by]==instances[j]
 		lp_ranef[idx,i] <- mm_ranef[idx,] %*% t(t(w[j,]))
@@ -376,9 +377,9 @@ lp <- rowSums(cbind(lp_fixef,lp_ranef))
 
 # simulate response
 if (family=="gaussian")
-  resp <- lp + MASS::mvrnorm(nrow(dat), 0, Sigma_res^2, empirical=FALSE)
+  resp <- lp + mvrnorm(nrow(dat), 0, Sigma_res^2, empirical=FALSE)
 if (family=="lognormal")
-  resp <- exp(lp + MASS::mvrnorm(nrow(dat), 0, Sigma_res^2, empirical=FALSE))
+  resp <- exp(lp + mvrnorm(nrow(dat), 0, Sigma_res^2, empirical=FALSE))
 if (family=="binomial")
   resp <- as.numeric(1/(1+exp(-lp)) > runif(length(lp)))
 if (family=="lp")
@@ -443,7 +444,7 @@ for (i in 1:length(ranef)) { # i <- 1
 		} else {
 			ranef[[i]]$cov <- diag(ranef[[i]]$sd*sqrt(besselFact)) %*% ranef[[i]]$cor %*% diag(ranef[[i]]$sd*sqrt(besselFact))
 		}
-		w <- MASS::mvrnorm(length(instances), rep(0,length(ranef[[i]]$sd)), ranef[[i]]$cov, empirical=TRUE)
+		w <- mvrnorm(length(instances), rep(0,length(ranef[[i]]$sd)), ranef[[i]]$cov, empirical=TRUE)
 		for (j in 1:length(instances)) { # j <- 1
 			idx <- dat[,ranef[[i]]$by]==instances[j]
 			lp_ranef[idx,i] <- mm_ranef[idx,] %*% t(t(w[j,]))
@@ -481,7 +482,7 @@ cellu <- unique(cell)
 besselFact <- (nrow(dat)-1)/(nrow(dat)-length(unique(cellu)))
 for (i in 1:length(cellu)) { # i <- 1
 	idx <- cell==cellu[i]
-	resp[idx] <- resp[idx] + MASS::mvrnorm(sum(idx), 0, Sigma_res^2*besselFact, empirical=TRUE)
+	resp[idx] <- resp[idx] + mvrnorm(sum(idx), 0, Sigma_res^2*besselFact, empirical=TRUE)
 }
 }
 

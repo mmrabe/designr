@@ -28,6 +28,7 @@ library(ggplot2)
 library(dplyr)
 library(designr)
 library(gridExtra)
+library(MASS)
 ```
 
 # What is statistical power?
@@ -405,7 +406,7 @@ length(unique(dat$Subj))
 head(dat,12)
 # set contrasts
 (contrasts(dat$A) <- c(-1, +1))
-(contrasts(dat$B) <- MASS::contr.sdif(3))
+(contrasts(dat$B) <- contr.sdif(3))
 # Recommendation: hypr-package for contrasts + Schad et al. (2020) JML
 dat$An  <- model.matrix(~A,dat)[,2]
 dat[,c("Bn1","Bn2")] <- model.matrix(~B,dat)[,2:3]
@@ -475,7 +476,7 @@ for (i in 1:nsim) { # i <- 1
   nsj <- length(unique(dat$Subj))
   # set contrasts & compute numeric predictor variables
   contrasts(dat$A) <- c(-1, +1)
-  contrasts(dat$B) <- MASS::contr.sdif(3)
+  contrasts(dat$B) <- contr.sdif(3)
   dat$An  <- model.matrix(~A,dat)[,2]
   dat[,c("Bn1","Bn2")] <- model.matrix(~B,dat)[,2:3]
   # compute factor F
@@ -765,7 +766,7 @@ tail(data.frame(dat),20)
 
 # transform dependent variable
 hist(datE$rt)
-MASS::boxcox(rt ~ so, data=datE)
+boxcox(rt ~ so, data=datE)
 datE$speed <- 1/datE$rt
 hist(datE$speed)
 qqnorm(datE$speed); qqline(datE$speed)
