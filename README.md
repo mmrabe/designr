@@ -1,8 +1,10 @@
 
 # designr
 
+
 [![CRAN](http://www.r-pkg.org/badges/version/designr)](https://cran.r-project.org/package=designr)
 [![downloads](http://cranlogs.r-pkg.org/badges/designr)](https://cran.r-project.org/package=designr)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4587102.svg)](https://doi.org/10.5281/zenodo.4587102)
 
 
 *designr* is an R package to create and simulate crossed factorial designs.
