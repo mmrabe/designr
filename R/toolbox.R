@@ -43,7 +43,7 @@ NULL
 #'
 #' @name gibsonwu2013
 #' @docType data
-#' @references Gibson, E., & Wu, H.-H. I. (2013). Processing Chinese relative clauses in context. Language and Cognitive Processes, 28, 125–155. \url{https://doi.org/10.1080/01690965.2010.536656}
+#' @references Gibson, E., & Wu, H.-H. I. (2013). Processing Chinese relative clauses in context. \emph{Language and Cognitive Processes, 28}, 125–155. \doi{10.1080/01690965.2010.536656}
 #' @keywords data
 NULL
 
