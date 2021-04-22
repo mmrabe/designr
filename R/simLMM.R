@@ -45,9 +45,9 @@ simLMM <- function(formula, data=NULL, Fixef, VC_sd, CP=0, LMM=NULL, empirical=F
 #------------------------------------------------------------------------
 
   if(family == "lognormal") {
-    cl <- as.list(sys.call())
+    cl <- sys.call()
     cl$family <- "gaussian"
-    return(exp(eval(as.call(cl)))) # rerun simLMM and exp-transform response variable
+    return(exp(eval(cl))) # rerun simLMM and exp-transform response variable
   }
 
 	if (!is.null(LMM)) {
