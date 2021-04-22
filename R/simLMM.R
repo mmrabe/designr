@@ -12,7 +12,7 @@ NULL
 #' @param formula A formula as used in a call to the \code{lmer} function: a one-sided linear formula object describing both the fixed-effects and random-effects part of the model, with no response variable to the left of the \code{~} operator.
 #' @param data a data frame containing the variables named in \code{formula}.
 #' @param Fixef a vector of all fixed-effect model parameters.
-#' @param VC_sd standard deviations of the variance components for the random effects. This is a list of vectors, where different list entries reflect different grouping structures, and each vector contains standard deviations of variance components (random intercepts and random slopes) for one grouping factor. The last list entry is the standard deviation of the residual noise term.
+#' @param VC_sd standard deviations of the variance components for the random effects. This is a list of vectors, where different list entries reflect different grouping structures, and each vector contains standard deviations of variance components (random intercepts and random slopes) for one grouping factor. The last list entry is the standard deviation of the residual noise term (for \code{gaussian} or \code{lognormal} families only).
 #' @param CP correlation parameters of the random effects. If \code{CP} is a single number, then all CP are set to this same value. If \code{CP} is a vector of length equal to the number of grouping factor, then each vector entry specifies one fixed value for all CP associated with this grouping factor. Otherwise, \code{CP} can be a list of correlation matrices, which specifies a full correlation matrix for each grouping structure.
 #' @param LMM if a \code{lmerMod} object containing a fitted \code{lmer} model is provided, then \code{simLMM} uses the estimated model parameters for data simulation.
 #' @param empirical logical. If true, \code{Fixef} specify the empirical not population fixed effects parameters. \code{empirical=TRUE} does not work for residual Bernoulli noise, and not if continuous covariates are used.
@@ -44,6 +44,11 @@ simLMM <- function(formula, data=NULL, Fixef, VC_sd, CP=0, LMM=NULL, empirical=F
 # simulate data from a linear mixed-effects model
 #------------------------------------------------------------------------
 
+  if(family == "lognormal") {
+    cl <- as.list(sys.call())
+    cl$family <- "gaussian"
+    return(exp(eval(as.call(cl)))) # rerun simLMM and exp-transform response variable
+  }
 
 	if (!is.null(LMM)) {
 

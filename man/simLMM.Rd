@@ -23,7 +23,7 @@ simLMM(
 
 \item{Fixef}{a vector of all fixed-effect model parameters.}
 
-\item{VC_sd}{standard deviations of the variance components for the random effects. This is a list of vectors, where different list entries reflect different grouping structures, and each vector contains standard deviations of variance components (random intercepts and random slopes) for one grouping factor. The last list entry is the standard deviation of the residual noise term.}
+\item{VC_sd}{standard deviations of the variance components for the random effects. This is a list of vectors, where different list entries reflect different grouping structures, and each vector contains standard deviations of variance components (random intercepts and random slopes) for one grouping factor. The last list entry is the standard deviation of the residual noise term (for \code{gaussian} or \code{lognormal} families only).}
 
 \item{CP}{correlation parameters of the random effects. If \code{CP} is a single number, then all CP are set to this same value. If \code{CP} is a vector of length equal to the number of grouping factor, then each vector entry specifies one fixed value for all CP associated with this grouping factor. Otherwise, \code{CP} can be a list of correlation matrices, which specifies a full correlation matrix for each grouping structure.}
 
