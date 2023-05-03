@@ -1,7 +1,7 @@
 Package: designr
 Type: Package
 Title: Balanced Factorial Designs
-Version: 0.1.12
+Version: 0.1.13
 URL: https://maxrabe.com/designr
 BugReports: https://github.com/mmrabe/designr/issues
 Authors@R: c(
