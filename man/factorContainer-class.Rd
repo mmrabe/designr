@@ -16,9 +16,9 @@ Design matrix S4 functions
 }
 \section{Methods (by generic)}{
 \itemize{
-\item \code{show}: Display a factor container
-}}
+\item \code{show(factorContainer)}: Display a factor container
 
+}}
 \examples{
 des <- factor.design()
 des <- fixed.factor("Factor1", c("1A","1B")) +

@@ -26,13 +26,13 @@ Check if argument is a design factor (either random or fixed factor), specifical
 }
 \section{Functions}{
 \itemize{
-\item \code{is.randomFactor}: Check if argument is a random factor.
+\item \code{is.randomFactor()}: Check if argument is a random factor.
 
-\item \code{is.fixedFactor}: Check if argument is a fixed factor.
+\item \code{is.fixedFactor()}: Check if argument is a fixed factor.
 
-\item \code{is.factorDesign}: Check if argument is a factor design.
+\item \code{is.factorDesign()}: Check if argument is a factor design.
+
 }}
-
 \examples{
 
 x <- fixed.factor("factor", c("level1","level2"))

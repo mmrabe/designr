@@ -59,13 +59,13 @@ This function writes a design into a set of files. For each random factor, a uni
 }
 \section{Functions}{
 \itemize{
-\item \code{write.design.csv}: Using default settings for writing CSV files
+\item \code{write.design.csv()}: Using default settings for writing CSV files
 
-\item \code{write.design.xlsx}: Using default settings for writing XLSX files (using the \code{writexl} package)
+\item \code{write.design.xlsx()}: Using default settings for writing XLSX files (using the \code{writexl} package)
 
-\item \code{write.design.json}: Using default settings for writing JSON files (using the \code{jsonlite} package)
+\item \code{write.design.json()}: Using default settings for writing JSON files (using the \code{jsonlite} package)
+
 }}
-
 \examples{
 
 des <- fixed.factor("Factor1", c("1A","1B")) +

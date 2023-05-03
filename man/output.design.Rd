@@ -85,13 +85,13 @@ The function \code{design.units} returns the experimental units of the design. T
 }
 \section{Functions}{
 \itemize{
-\item \code{design.formula}: Retrieve only the model formulas suitable for the design
+\item \code{design.formula()}: Retrieve only the model formulas suitable for the design
 
-\item \code{design.units}: Retrieve only the experimental units of a design
+\item \code{design.units()}: Retrieve only the experimental units of a design
 
-\item \code{design.codes}: Retrieve only the codes of planned observations of an experimental design
+\item \code{design.codes()}: Retrieve only the codes of planned observations of an experimental design
+
 }}
-
 \examples{
 
 des <- fixed.factor("Factor1", c("1A","1B")) +

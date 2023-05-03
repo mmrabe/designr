@@ -51,9 +51,9 @@ Use this function to retrieve the names for contrasts in an experimental design,
 }
 \section{Functions}{
 \itemize{
-\item \code{contrast.names}: Retrieve contrast names for a design
-}}
+\item \code{contrast.names()}: Retrieve contrast names for a design
 
+}}
 \examples{
 
 

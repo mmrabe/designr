@@ -22,9 +22,9 @@ From a given design, extract contained random or fixed factors as a list.
 }
 \section{Functions}{
 \itemize{
-\item \code{random.factors}: Return fixed factors
-}}
+\item \code{random.factors()}: Return fixed factors
 
+}}
 \examples{
 
 des <- fixed.factor("Factor1", c("1A","1B")) +
