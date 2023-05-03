@@ -10,11 +10,11 @@ NULL
 #' This function simulates artificial data from a linear mixed-effects model.
 #'
 #' @param formula A formula as used in a call to the \code{lmer} function: a one-sided linear formula object describing both the fixed-effects and random-effects part of the model, with no response variable to the left of the \code{~} operator.
-#' @param data a data frame containing the variables named in \code{formula}.
+#' @param data a data frame containing the variables named in \code{formula}. Optional if \code{LMM} is provided.
 #' @param Fixef a vector of all fixed-effect model parameters.
 #' @param VC_sd standard deviations of the variance components for the random effects. This is a list of vectors, where different list entries reflect different grouping structures, and each vector contains standard deviations of variance components (random intercepts and random slopes) for one grouping factor. The last list entry is the standard deviation of the residual noise term (for \code{gaussian} or \code{lognormal} families only).
 #' @param CP correlation parameters of the random effects. If \code{CP} is a single number, then all CP are set to this same value. If \code{CP} is a vector of length equal to the number of grouping factor, then each vector entry specifies one fixed value for all CP associated with this grouping factor. Otherwise, \code{CP} can be a list of correlation matrices, which specifies a full correlation matrix for each grouping structure.
-#' @param LMM if a \code{lmerMod} object containing a fitted \code{lmer} model is provided, then \code{simLMM} uses the estimated model parameters for data simulation.
+#' @param LMM if a \code{lmerMod} object containing a fitted \code{lmer} model is provided, then \code{simLMM} uses the estimated model parameters for data simulation. Note: If \code{LMM} is provided, \code{Fixef}, \code{VC_sd}, and \code{CP} are taken from the provided fitted model.
 #' @param empirical logical. If true, \code{Fixef} specify the empirical not population fixed effects parameters. \code{empirical=TRUE} does not work for residual Bernoulli noise, and not if continuous covariates are used.
 #' @param verbose logical. If \code{TRUE} (default), then information about the used model parameters is provided. If \code{FALSE}, then no output is generated.
 #' @param family string specifying the response distribution: \code{"gaussian"} (default) assumes a normal distribution, \code{binomial} specifies a Bernoulli distribution with a logit link function, \code{"lognormal"} specifies a log-normal distribution; with \code{"lp"}, only the linear predictor is generated with no residual noise.
@@ -51,6 +51,8 @@ simLMM <- function(formula, data=NULL, Fixef, VC_sd, CP=0, LMM=NULL, empirical=F
   }
 
 	if (!is.null(LMM)) {
+	  
+	  if(!missing(Fixef)||!missing(VC_sd)||!missing(CP)) stop('You can either provide the values for the parameters as Fixef, VC_sd, and CP, *or* a fitted model as LMM, but not both (see ?simLMM).')
 
 	  if (!class(LMM)%in%c("lmerModLmerTest","lmerMod")) stop('LMM must be a model object from a fit with the lmer() function.')
 		EF <- extractLMM(LMM)

@@ -19,7 +19,7 @@ simLMM(
 \arguments{
 \item{formula}{A formula as used in a call to the \code{lmer} function: a one-sided linear formula object describing both the fixed-effects and random-effects part of the model, with no response variable to the left of the \code{~} operator.}
 
-\item{data}{a data frame containing the variables named in \code{formula}.}
+\item{data}{a data frame containing the variables named in \code{formula}. Optional if \code{LMM} is provided.}
 
 \item{Fixef}{a vector of all fixed-effect model parameters.}
 
@@ -27,7 +27,7 @@ simLMM(
 
 \item{CP}{correlation parameters of the random effects. If \code{CP} is a single number, then all CP are set to this same value. If \code{CP} is a vector of length equal to the number of grouping factor, then each vector entry specifies one fixed value for all CP associated with this grouping factor. Otherwise, \code{CP} can be a list of correlation matrices, which specifies a full correlation matrix for each grouping structure.}
 
-\item{LMM}{if a \code{lmerMod} object containing a fitted \code{lmer} model is provided, then \code{simLMM} uses the estimated model parameters for data simulation.}
+\item{LMM}{if a \code{lmerMod} object containing a fitted \code{lmer} model is provided, then \code{simLMM} uses the estimated model parameters for data simulation. Note: If \code{LMM} is provided, \code{Fixef}, \code{VC_sd}, and \code{CP} are taken from the provided fitted model.}
 
 \item{empirical}{logical. If true, \code{Fixef} specify the empirical not population fixed effects parameters. \code{empirical=TRUE} does not work for residual Bernoulli noise, and not if continuous covariates are used.}
 
