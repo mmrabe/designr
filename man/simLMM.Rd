@@ -27,7 +27,7 @@ simLMM(
 
 \item{CP}{correlation parameters of the random effects. If \code{CP} is a single number, then all CP are set to this same value. If \code{CP} is a vector of length equal to the number of grouping factor, then each vector entry specifies one fixed value for all CP associated with this grouping factor. Otherwise, \code{CP} can be a list of correlation matrices, which specifies a full correlation matrix for each grouping structure.}
 
-\item{LMM}{if a \code{lmerMod} object containing a fitted \code{lmer} model is provided, then \code{simLMM} uses the estimated model parameters for data simulation. Note: If \code{LMM} is provided, \code{Fixef}, \code{VC_sd}, and \code{CP} are taken from the provided fitted model.}
+\item{LMM}{if a \code{lmerMod} object containing a fitted \code{lmer} model is provided, then \code{simLMM} uses the estimated model parameters for data simulation. Note: If \code{LMM} is provided, \code{formula}, \code{Fixef}, \code{VC_sd}, \code{CP}, and \code{family} are taken from the provided fitted model, the arguments are ignored in the model call, and a warning is given.}
 
 \item{empirical}{logical. If true, \code{Fixef} specify the empirical not population fixed effects parameters. \code{empirical=TRUE} does not work for residual Bernoulli noise, and not if continuous covariates are used.}
 
@@ -36,7 +36,7 @@ simLMM(
 \item{family}{string specifying the response distribution: \code{"gaussian"} (default) assumes a normal distribution, \code{binomial} specifies a Bernoulli distribution with a logit link function, \code{"lognormal"} specifies a log-normal distribution; with \code{"lp"}, only the linear predictor is generated with no residual noise.}
 }
 \description{
-This function simulates artificial data from a linear mixed-effects model.
+This function simulates artificial data from a linear mixed-effects model. Parameters can either be set by hand using the parameters listed below *or* using a fitted \code{lmerMod} object.
 }
 \examples{
 
